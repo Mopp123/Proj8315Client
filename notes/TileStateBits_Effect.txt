@@ -1,0 +1,9 @@
+
+<unsigned 2 bit integer>
+
+noEffect
+fire
+poison
+something?
+
+
