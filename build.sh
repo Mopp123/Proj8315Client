@@ -4,12 +4,11 @@ root_dir=`pwd`
 
 # These depends on your setup
 emsdk_dir=~/Documents/emsdk
-engine_src=/home/kalle/Documents/projects/PortablePesukarhu
+engine_src=`pwd`/PortablePesukarhu
 game_src=`pwd`/game
 html_shell_location=`pwd`/shell.html
 html_out=HelloEmscripten.html
-build_dir=`pwd`/build
-
+build_dir=/home/kalle/Documents/projects/web-proj/site/public-html
 
 echo "assigned root dir = ${root_dir}"
 echo "assigned engine src dir = ${engine_src}"

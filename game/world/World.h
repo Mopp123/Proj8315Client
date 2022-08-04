@@ -1,15 +1,9 @@
 #pragma once
 
 
-#include "../../pk/core/Scene.h"
-
-#include "../../pk/ecs/components/renderable/TerrainTileRenderable.h"
-#include "../../pk/ecs/components/renderable/Sprite3DRenderable.h"
-#include "../../pk/ecs/systems/animations/SpriteAnimations.h"
+#include "../../PortablePesukarhu/ppk.h"
 
 #include "../net/requests/Request.h"
-#include "../../pk/Common.h"
-#include "../../pk/utils/pkmath.h"
 
 #include <cstdint>
 #include <vector>

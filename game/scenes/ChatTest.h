@@ -1,11 +1,7 @@
 #pragma once
 
 
-#include "../../pk/core/Scene.h"
-
-#include "../../pk/ecs/systems/ui/combinedFunctional/Button.h"
-#include "../../pk/ecs/systems/ui/combinedFunctional/InputField.h"
-#include "../../pk/ecs/systems/ui/Text.h"
+#include "../../PortablePesukarhu/ppk.h"
 
 class ChatTest : public pk::Scene
 {

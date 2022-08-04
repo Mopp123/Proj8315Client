@@ -1,20 +1,7 @@
 #pragma once
 
 
-#include "../../pk/core/Scene.h"
-
-
-#include "../../pk/ecs/components/renderable/Sprite3DRenderable.h"
-#include "../../pk/ecs/components/renderable/TerrainTileRenderable.h"
-
-#include "../../pk/ecs/systems/ui/combinedFunctional/InputField.h"
-
-#include "../../pk/ecs/systems/ui/Text.h"
-#include "../../pk/ecs/systems/CameraUtils.h"
-#include "../../pk/ecs/systems/animations/SpriteAnimations.h"
-
-#include "../../pk/graphics/platform/web/WebTexture.h"
-
+#include "../../PortablePesukarhu/ppk.h"
 
 #include "../world/World.h"
 

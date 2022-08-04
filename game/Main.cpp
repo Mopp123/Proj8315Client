@@ -1,23 +1,10 @@
 
 
-#include "../pk/core/platform/web/WebWindow.h"
-#include "../pk/core/input/platform/web/WebInputManager.h"
-#include "../pk/core/Application.h"
-#include "../pk/graphics/platform/web/WebContext.h"
-
-#include "../pk/graphics/platform/web/WebMasterRenderer.h"
-#include "../pk/graphics/platform/web/WebGUIRenderer.h"
-#include "../pk/graphics/platform/web/WebFontRenderer.h"
-#include "../pk/graphics/platform/web/WebTerrainRenderer.h"
-#include "../pk/graphics/platform/web/WebSpriteRenderer.h"
-
+#include "../PortablePesukarhu/ppk.h"
 
 #include "scenes/LoginMenu.h"
 #include "scenes/CreateFactionMenu.h"
 #include "scenes/InGame.h"
-
-#include "../pk/core/Debug.h"
-
 
 #include "net/ByteBuffer.h"
 #include "net/Client.h"
@@ -64,8 +51,8 @@ int main(int argc, const char** argv)
 			{ ComponentType::PK_RENDERABLE_GUI,			pGuiRenderer	 },
 			{ ComponentType::PK_RENDERABLE_TEXT,		pFontRenderer	 }
 		});
-
-	Client::get_instance()->init("http://192.168.121.161:51421");
+	
+	Client::get_instance()->init("http://192.168.238.230:51421");
 
 	application.switchScene(new InGame);
 

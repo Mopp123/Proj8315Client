@@ -1,14 +1,9 @@
 
 #include "World.h"
 #include "Tile.h"
-#include "../../pk/graphics/platform/web/WebTexture.h"
 #include "../net/Client.h"
 #include "../net/requests/Commands.h"
 #include "../net/NetCommon.h"
-
-#include "../../pk/core/Application.h"
-#include "../../pk/utils/Algorithms.h"
-#include "../../pk/core/Timing.h"
 
 #include <algorithm>
 

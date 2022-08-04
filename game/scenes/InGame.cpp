@@ -7,11 +7,9 @@
 #include "../net/requests/Commands.h"
 #include "../net/NetCommon.h"
 
-#include "../../pk/ecs/components/lighting/Lights.h"
 #include "../world/Tile.h"
 
 
-#include "../../pk/core/Debug.h"
 #include <iostream>
 #include <chrono>
 

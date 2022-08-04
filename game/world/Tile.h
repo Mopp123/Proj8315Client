@@ -1,7 +1,7 @@
 #pragma once
 
 #include <cstdint>
-#include "../../pk/Common.h"
+#include "../../PortablePesukarhu/ppk.h"
 
 // Size of the full state (in bytes)
 #define TILE_STATE_SIZE_BYTES 		8

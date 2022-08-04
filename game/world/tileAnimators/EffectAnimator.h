@@ -1,9 +1,6 @@
 #pragma once
 
-#include "../../../pk/ecs/systems/System.h"
-#include "../../../pk/ecs/components/renderable/Sprite3DRenderable.h"
-#include "../../../pk/ecs/systems/animations/SpriteAnimations.h"
-#include "../../../pk/Common.h"
+#include "../../../PortablePesukarhu/ppk.h"
 
 #include <unordered_map>
 
