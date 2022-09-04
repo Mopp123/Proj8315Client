@@ -31,6 +31,9 @@ private:
 	pk::web::WebTexture* _terrainTexture3 = nullptr;
 	pk::web::WebTexture* _terrainTexture4 = nullptr;
 
+	pk::web::WebTexture* _pEffectsTexture = nullptr;
+	pk::web::WebTexture* _pObjectsTexture = nullptr;
+	
 
 	pk::ui::InputField* _inputField_position = nullptr;
 

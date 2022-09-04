@@ -28,17 +28,12 @@ echo "starting building to ${build_dir}"
 
 em++ \
 ${game_src}/Main.cpp \
-${game_src}/scenes/LoginMenu.cpp \
-${game_src}/scenes/CreateFactionMenu.cpp \
 ${game_src}/scenes/InGame.cpp \
-${game_src}/scenes/ChatTest.cpp \
 ${game_src}/world/World.cpp \
 ${game_src}/world/Tile.cpp \
 ${game_src}/net/Client.cpp \
+${game_src}/net/platform/web/WebClient.cpp \
 ${game_src}/net/ByteBuffer.cpp \
-${game_src}/net/requests/Request.cpp \
-${game_src}/net/requests/Commands.cpp \
-${game_src}/net/requests/platform/web/WebRequest.cpp \
 ${engine_src}/core/Debug.cpp \
 ${engine_src}/core/Timing.cpp \
 ${engine_src}/core/Window.cpp \
@@ -65,4 +60,9 @@ ${engine_src}/ecs/systems/ui/combinedFunctional/Button.cpp \
 ${engine_src}/ecs/systems/ui/combinedFunctional/InputField.cpp \
 ${engine_src}/ecs/systems/CameraUtils.cpp \
 ${engine_src}/ecs/systems/animations/SpriteAnimations.cpp \
--s FULL_ES2=1 -s WASM=1 --memory-init-file 0 -s USE_SDL=2 -s USE_SDL_IMAGE=2 -s USE_FREETYPE=1 --shell-file ${html_shell_location} -o ${html_out} --preload-file assets --use-preload-plugins -sFETCH -sALLOW_MEMORY_GROWTH
+-s FULL_ES2=1 -s WASM=1 --memory-init-file 0 -s USE_SDL=2 -s USE_SDL_IMAGE=2 -s USE_FREETYPE=1 --shell-file ${html_shell_location} -o ${html_out} --preload-file assets --use-preload-plugins -sFETCH -sALLOW_MEMORY_GROWTH -l websocket.js
+
+
+#EXPORTED_FUNCTIONS="[_main, _proxy_main]
+#-l websocket.js
+

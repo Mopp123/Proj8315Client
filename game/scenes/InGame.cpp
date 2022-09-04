@@ -69,6 +69,9 @@ InGame::~InGame()
 	delete _terrainTexture2;
 	delete _terrainTexture3;
 	delete _terrainTexture4;
+
+	delete _pEffectsTexture;
+	delete _pObjectsTexture;
 }
 
 
@@ -112,26 +115,33 @@ void InGame::init()
 	Client::get_instance()->setUserID("Persekorva666");
 
 	// Load channel textures for terrain's tiles
-	TextureSampler terrainTileTexSampler =
+	TextureSampler textureSampler =
 	{
 		TextureSamplerFilterMode::PK_SAMPLER_FILTER_MODE_LINEAR,
 		TextureSamplerAddressMode::PK_SAMPLER_ADDRESS_MODE_REPEAT,
 		2
 	};
-	_terrainTexture0 = new WebTexture("assets/deadland.png", terrainTileTexSampler);
-	_terrainTexture1 = new WebTexture("assets/water.png", terrainTileTexSampler);
-	_terrainTexture2 = new WebTexture("assets/snow.png", terrainTileTexSampler);
-	_terrainTexture3 = new WebTexture("assets/rock.png", terrainTileTexSampler);
-	_terrainTexture4 = new WebTexture("assets/grass.png", terrainTileTexSampler);
+	_terrainTexture0 = new WebTexture("assets/deadland.png", textureSampler);
+	_terrainTexture1 = new WebTexture("assets/water.png",	 textureSampler);
+	_terrainTexture2 = new WebTexture("assets/snow.png", 	 textureSampler);
+	_terrainTexture3 = new WebTexture("assets/rock.png", 	 textureSampler);
+	_terrainTexture4 = new WebTexture("assets/grass.png",	 textureSampler);
 	
-	TerrainTileRenderable::s_channelTexture0 = _terrainTexture0;
-	TerrainTileRenderable::s_channelTexture1 = _terrainTexture1;
-	TerrainTileRenderable::s_channelTexture2 = _terrainTexture2;
-	TerrainTileRenderable::s_channelTexture3 = _terrainTexture3;
-	TerrainTileRenderable::s_channelTexture4 = _terrainTexture4;
+	TerrainTileRenderable::s_channelTexture0 = (Texture*)_terrainTexture0;
+	TerrainTileRenderable::s_channelTexture1 = (Texture*)_terrainTexture1;
+	TerrainTileRenderable::s_channelTexture2 = (Texture*)_terrainTexture2;
+	TerrainTileRenderable::s_channelTexture3 = (Texture*)_terrainTexture3;
+	TerrainTileRenderable::s_channelTexture4 = (Texture*)_terrainTexture4;
 
-	_visualWorld = new world::VisualWorld(*this, 15);
-
+	// Load objects sprite sheet texture
+	TextureSampler spriteTextureSampler =
+	{
+		TextureSamplerFilterMode::PK_SAMPLER_FILTER_MODE_LINEAR,
+		TextureSamplerAddressMode::PK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE,
+		2
+	};
+	_pObjectsTexture = new WebTexture("assets/environment.png", spriteTextureSampler, 8);
+	_visualWorld = new world::VisualWorld((Scene&)*this, 15, (Texture*)_pEffectsTexture, (Texture*)_pObjectsTexture);
 
 
 	float delta = (std::chrono::duration<float>(std::chrono::high_resolution_clock::now() - startTime)).count();
@@ -143,25 +153,28 @@ void InGame::init()
 	_pCamTransform->setIdentity();
 	mat4& camTransform = *_pCamTransform;
 
-	camTransform[0 + 3 * 4] = 10.0f;
-	camTransform[1 + 3 * 4] = 10.0f;
-	camTransform[2 + 3 * 4] = 25.0f;
+	//camTransform[0 + 3 * 4] = 10.0f;
+	//camTransform[1 + 3 * 4] = 10.0f;
+	//camTransform[2 + 3 * 4] = 25.0f;
 
-	float angle = -0.7f;
+	//float angle = -0.7f;
 
-	camTransform[1 + 1 * 4] = cos(angle);
-	camTransform[1 + 2 * 4] = -sin(angle);
-	
-	camTransform[2 + 1 * 4] = sin(angle);
-	camTransform[2 + 2 * 4] = cos(angle);
+	//camTransform[1 + 1 * 4] = cos(angle);
+	//camTransform[1 + 2 * 4] = -sin(angle);
+	//
+	//camTransform[2 + 1 * 4] = sin(angle);
+	//camTransform[2 + 2 * 4] = cos(angle);
 
 
 	_pCamController = new RTSCamController(*activeCamera, this);
+	_pCamController->setPivotPoint({125.0f, 0, 125.0f});
 
 
 	// TESTING 3D sprites..
+	Texture* testSpriteTexture = (Texture*)(new WebTexture("assets/environment.png", textureSampler, 8));
+	
 	uint32_t spriteEntity = createEntity();
-	_testSprite = new Sprite3DRenderable({ 0,0,0 }, { 2,2 });
+	_testSprite = new Sprite3DRenderable({ 0,0,0 }, { 2,2 }, testSpriteTexture);
 	addComponent(spriteEntity, _testSprite);
 
 	
@@ -195,9 +208,6 @@ void InGame::init()
 
 void InGame::update()
 {
-	
-
-
 	vec3 camPivotPoint = _pCamController->getPivotPoint();
 	
 	// attempt to glue cam's height to terrain's height
@@ -205,11 +215,8 @@ void InGame::update()
 	_pCamController->setPivotPoint(camPivotPoint);
 	
 	_visualWorld->update(camPivotPoint.x, camPivotPoint.z);
-	
-	
 
 	_pText_debug_delta->accessRenderable()->accessStr() = "Delta: " + std::to_string(Timing::get_delta_time());
-
 
 	// debug mouse picking testing..
 	mat4 viewMatrix = *_pCamTransform;

@@ -1,17 +1,13 @@
 
 
+#include <unordered_set>
+#include <iostream>
+
 #include "../PortablePesukarhu/ppk.h"
-
-#include "scenes/LoginMenu.h"
-#include "scenes/CreateFactionMenu.h"
 #include "scenes/InGame.h"
-
-#include "net/ByteBuffer.h"
-#include "net/Client.h"
-#include "net/requests/platform/web/WebRequest.h"
+#include "net/platform/web/WebClient.h"
 #include "net/NetCommon.h"
 
-#include <unordered_set>
 
 using namespace pk;
 using namespace pk::web;
@@ -19,9 +15,10 @@ using namespace ui;
 using namespace net::web;
 using namespace net;
 
-
 int main(int argc, const char** argv)
 {
+
+	std::cout << "___TESTINGTESTING___123123123\n";
 
 	std::unordered_set<int> test;
 
@@ -52,26 +49,10 @@ int main(int argc, const char** argv)
 			{ ComponentType::PK_RENDERABLE_TEXT,		pFontRenderer	 }
 		});
 	
-	Client::get_instance()->init("http://192.168.238.230:51421");
-
-	application.switchScene(new InGame);
-
-	// TESTING NET
-
-	
-	/*PK_byte messageType = 1;
-	ByteBuffer bbHeader(messageType);
-
-	std::string message = "Hello server!";
-	ByteBuffer bbMessage(message.data(), message.size());
-	
-	WebRequest* req = new WebRequest(Request::ReqType::POST, new CustomOnCompletionEvent, { bbHeader, bbMessage }, bbHeader.getSize() + bbMessage.getSize());
-	*/
+	WebClient* client = new WebClient("ws://127.0.0.1:51421");
+	application.switchScene((Scene*)(new InGame));
 
 	application.run();
-
-	// set "main loop"
-	//emscripten_set_main_loop(update, 0, 0);
 
 	return 0;
 }
