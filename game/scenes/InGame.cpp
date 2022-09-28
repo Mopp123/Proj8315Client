@@ -9,7 +9,7 @@
 
 #include "../world/Tile.h"
 
-
+#include <cmath>
 #include <iostream>
 #include <chrono>
 
@@ -69,9 +69,6 @@ InGame::~InGame()
 	delete _terrainTexture2;
 	delete _terrainTexture3;
 	delete _terrainTexture4;
-
-	delete _pEffectsTexture;
-	delete _pObjectsTexture;
 }
 
 
@@ -90,8 +87,6 @@ void InGame::init()
 	lightDir.normalize();
 	addComponent(lightEntity, new DirectionalLight({ 1,1,1 }, lightDir));
 
-
-
 	const float textSize = 16;
 	const float rowPadding = 5;
 
@@ -108,7 +103,6 @@ void InGame::init()
 			{ ConstraintType::PIXEL_LEFT, 5 }
 		}
 	);
-
 
 	std::chrono::time_point<std::chrono::steady_clock> startTime = std::chrono::high_resolution_clock::now();
 	
@@ -140,35 +134,21 @@ void InGame::init()
 		TextureSamplerAddressMode::PK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE,
 		2
 	};
-	_pObjectsTexture = new WebTexture("assets/environment.png", spriteTextureSampler, 8);
-	_visualWorld = new world::VisualWorld((Scene&)*this, 15, (Texture*)_pEffectsTexture, (Texture*)_pObjectsTexture);
+
+	Transform* camTransformComponent = (Transform*)((Scene*)this)->getComponent(activeCamera->getEntity(), ComponentType::PK_TRANSFORM);
+	_visualWorld = new world::VisualWorld((Scene&)*this, camTransformComponent, 15);
 
 
 	float delta = (std::chrono::duration<float>(std::chrono::high_resolution_clock::now() - startTime)).count();
 	
 	Debug::log("building took: " + std::to_string(delta));
 
-	Transform* camTransformComponent = (Transform*)getComponent(activeCamera->getEntity(), ComponentType::PK_TRANSFORM);
 	_pCamTransform = &(camTransformComponent)->accessTransformationMatrix();
 	_pCamTransform->setIdentity();
 	mat4& camTransform = *_pCamTransform;
 
-	//camTransform[0 + 3 * 4] = 10.0f;
-	//camTransform[1 + 3 * 4] = 10.0f;
-	//camTransform[2 + 3 * 4] = 25.0f;
-
-	//float angle = -0.7f;
-
-	//camTransform[1 + 1 * 4] = cos(angle);
-	//camTransform[1 + 2 * 4] = -sin(angle);
-	//
-	//camTransform[2 + 1 * 4] = sin(angle);
-	//camTransform[2 + 2 * 4] = cos(angle);
-
-
 	_pCamController = new RTSCamController(*activeCamera, this);
 	_pCamController->setPivotPoint({125.0f, 0, 125.0f});
-
 
 	// TESTING 3D sprites..
 	Texture* testSpriteTexture = (Texture*)(new WebTexture("assets/environment.png", textureSampler, 8));
@@ -206,6 +186,7 @@ void InGame::init()
 	);
 }
 
+
 void InGame::update()
 {
 	vec3 camPivotPoint = _pCamController->getPivotPoint();
@@ -213,7 +194,7 @@ void InGame::update()
 	// attempt to glue cam's height to terrain's height
 	camPivotPoint.y = _visualWorld->getTileVisualHeightAt(camPivotPoint.x, camPivotPoint.z);
 	_pCamController->setPivotPoint(camPivotPoint);
-	
+
 	_visualWorld->update(camPivotPoint.x, camPivotPoint.z);
 
 	_pText_debug_delta->accessRenderable()->accessStr() = "Delta: " + std::to_string(Timing::get_delta_time());

@@ -78,7 +78,6 @@ namespace world
 
 	struct Tile
 	{
-
 		uint64_t state = 0;
 	};
 

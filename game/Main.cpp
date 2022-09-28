@@ -18,7 +18,7 @@ using namespace net;
 int main(int argc, const char** argv)
 {
 
-	std::cout << "___TESTINGTESTING___123123123\n";
+	std::cout << "___TESTINGTESTING__222\n";
 
 	std::unordered_set<int> test;
 

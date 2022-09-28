@@ -52,10 +52,26 @@ namespace world
 	}
 
 
-	VisualWorld::VisualWorld(pk::Scene& scene, int observeRadius, Texture* effectsTexture, Texture* objectsTexture) :
-		_sceneRef(scene)
+	VisualWorld::VisualWorld(pk::Scene& scene, pk::Transform* pCamTransform, int observeRadius) :
+		_sceneRef(scene),
+		_pCamTransform(pCamTransform)
 	{
 		_observer.observeRadius = observeRadius;
+
+		// Load all sprite textures
+		TextureSampler spriteTextureSampler =
+		{
+			TextureSamplerFilterMode::PK_SAMPLER_FILTER_MODE_LINEAR,
+			TextureSamplerAddressMode::PK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE,
+			2
+		};
+		_spriteTextures.push_back(new WebTexture("assets/environment.png", spriteTextureSampler, 8));
+		_spriteTextures.push_back(new WebTexture("assets/MovementTest.png", spriteTextureSampler, 8));
+
+		// TODO: Fetch "object info library" from server when logging in / connecting
+		_objectInfo.push_back({"Empty", "", 0, nullptr, false});
+        	_objectInfo.push_back({"Tree1", "A testing tree object", 0, _spriteTextures[0], false});
+        	_objectInfo.push_back({"Movement Test", "For testing movement stuff", 1, _spriteTextures[1], true});
 		
 		// Create visual tiles at first as "blank" -> we configure these eventually, when we fetch world state from server
 		const int observeAreaWidth = _observer.observeRadius * 2 + 1;
@@ -74,12 +90,12 @@ namespace world
 				Sprite3DRenderable* effectRenderable = new Sprite3DRenderable(
 						{ x * _tileVisualScale, 0, y * _tileVisualScale }, 
 						{ _tileVisualScale, _tileVisualScale }, 
-						effectsTexture
+						nullptr
 					);
 				Sprite3DRenderable* objectRenderable = new Sprite3DRenderable(
 						{ x * _tileVisualScale, 0, y * _tileVisualScale }, 
 						{ _tileVisualScale, _tileVisualScale }, 
-						objectsTexture
+						nullptr
 					);
 				
 				_sceneRef.addComponent(tileEntity, tileRenderable);
@@ -111,12 +127,16 @@ namespace world
 		TerrainTileRenderable::s_gridWidth = _blendmapWidth;
 
 		// init anim mappings
-		SpriteAnimator* effectSpriteAnimator = new SpriteAnimator({ {0,0},{1,0},{2,0},{1,0} }, 0.25f);
-		_sceneRef.addSystem(effectSpriteAnimator);
-		_tileEffectAnimMapping.insert(std::make_pair((PK_ubyte)TileStateTerrEffectFlags::TILE_STATE_terrEffectRain, effectSpriteAnimator));
-		
-		effectSpriteAnimator->enableLooping(true);
-		effectSpriteAnimator->play();
+		//SpriteAnimator* effectSpriteAnimator = new SpriteAnimator({ {0,0},{1,0},{2,0},{1,0} }, 0.25f);
+		//_sceneRef.addSystem(effectSpriteAnimator);
+		//_tileEffectAnimMapping.insert(
+		//		std::make_pair(
+		//			(PK_ubyte)TileStateTerrEffectFlags::TILE_STATE_terrEffectRain, 
+		//			effectSpriteAnimator
+		//		)
+		//);
+		//effectSpriteAnimator->enableLooping(true);
+		//effectSpriteAnimator->play();
 
 		// Create "tile progressions table"
 		const size_t tileCount = observeAreaWidth * observeAreaWidth;
@@ -132,6 +152,11 @@ namespace world
 	VisualWorld::~VisualWorld()
 	{
 		delete[] _pBlendmapData;
+
+		for (WebTexture* texture : _spriteTextures)
+			delete texture;
+
+		_spriteTextures.clear();
 	}
 
 	// ..quite shit and inefficient
@@ -229,7 +254,7 @@ namespace world
 				const float spriteWorldZ = ((float)tileRenderable->worldZ + _tileVisualScale * 0.5f) + _tileMovements[tileIndex].y;
 				
 				Sprite3DRenderable* tileEffectSprite = _tileData[tileIndex].second.renderable_effect;
-				Sprite3DRenderable* tileObjectSprite = _tileData[tileIndex].second.renderable_object;
+				objects::VisualObject& visualObject = _tileData[tileIndex].second.visualObject;
 
 				// * Currently no effects exists yet!
 				tileEffectSprite->setActive(false);
@@ -241,75 +266,89 @@ namespace world
 				// Set tile object sprite
 				if (tileObject)
 				{
-					tileObjectSprite->position.x = spriteWorldX;
-					tileObjectSprite->position.z = spriteWorldZ;
-					tileObjectSprite->setActive(true);
-					// TODO: Sprite animating
-					// TODO: Object speeds and stats
-					const float objSpeed = 1.0f;
-					tileObjectSprite->textureOffset = vec2((float)tileObject, 0.0f);
-					// Testing movement thing...
-					if (tileAction)
-						moveObjSprite(_tileData[tileIndex], tileIndex, objSpeed);
-					const float tileVisualHeight = getTileVisualHeightAt(tileObjectSprite->position.x, tileObjectSprite->position.z);
-					tileObjectSprite->position.y = tileVisualHeight;
+					const float tileVisualHeight = getTileVisualHeightAt(spriteWorldX, spriteWorldZ);
+					int objDir = (int)get_tile_facingdir(tileState);
+					
+					if (tileObject < _objectInfo.size())
+					{
+						visualObject.show(
+							tileObject, 
+							tileAction, 
+							objDir,
+							_cameraDirection,
+							_objectInfo[tileObject],
+							spriteWorldX, 
+							tileVisualHeight, 
+							spriteWorldZ
+						);
+						// Testing movement thing...
+						const float objSpeed = 1.0f;
+						if (tileAction == TileStateAction::TILE_STATE_actionMove)
+							moveObjSprite(objDir, tileIndex, objSpeed);
+					}
+					else
+					{
+						Debug::log(
+							"Failed to find client side info for object of type: " + 
+							std::to_string(tileObject),
+							Debug::MessageType::PK_ERROR
+						);
+					}
 				}
 				else
 				{
-					tileObjectSprite->setActive(false);
+					visualObject.hide();
 				}
 			}
 		}
 	}
 
-	void VisualWorld::moveObjSprite(std::pair<uint64_t, VisualTile>& tile, int tileIndex, float speed)
+	void VisualWorld::moveObjSprite(int dir, int tileIndex, float speed)
 	{
-		PK_ubyte direction = get_tile_facingdir(tile.first);
 		// *default val is North
-		vec2 dir(0.0f, -1.0f);
+		vec2 dirVec(0.0f, -1.0f);
 		bool diag = false;
-		switch (direction)
+		switch (dir)
 		{
 			case TileStateDirection::TILE_STATE_dirN:
 				break;
 			case TileStateDirection::TILE_STATE_dirNE:
-				dir = vec2(1.0f, -1.0f);
+				dirVec = vec2(1.0f, -1.0f);
 				diag = true;
 				break;
 			case TileStateDirection::TILE_STATE_dirE:
-				dir = vec2(1.0f, 0.0f);
+				dirVec = vec2(1.0f, 0.0f);
 				break;
 			case TileStateDirection::TILE_STATE_dirSE:
-				dir = vec2(1.0f, 1.0f);
+				dirVec = vec2(1.0f, 1.0f);
 				diag = true;
 				break;
 			case TileStateDirection::TILE_STATE_dirS:
-				dir = vec2(0.0, 1.0f);
+				dirVec = vec2(0.0, 1.0f);
 				break;
 			case TileStateDirection::TILE_STATE_dirSW:
-				dir = vec2(-1.0f, 1.0f);
+				dirVec = vec2(-1.0f, 1.0f);
 				diag = true;
 				break;
 			case TileStateDirection::TILE_STATE_dirW:
-				dir = vec2(-1.0f, 0.0f);
+				dirVec = vec2(-1.0f, 0.0f);
 				break;
 			case TileStateDirection::TILE_STATE_dirNW:
-				dir = vec2(-1.0f, -1.0f);
+				dirVec = vec2(-1.0f, -1.0f);
 				diag = true;
 				break;
 			default:
 				break;
 		}
 		
-		dir.normalize();
+		dirVec.normalize();
 		if (diag)
-			dir = dir * 1.4f;
+			dirVec = dirVec * 1.4f;
 
 		float& visualObjX = _tileMovements[tileIndex].x;
 		float& visualObjZ = _tileMovements[tileIndex].y;
-		// NOTE: I have no idea why * 1.625 appears to be working quite smoothly...
-		visualObjX += dir.x * speed * 1.625f * Timing::get_delta_time();
-		visualObjZ += dir.y * speed * 1.625f * Timing::get_delta_time();
+		visualObjX += dirVec.x * speed * 2.0f * Timing::get_delta_time();
+		visualObjZ += dirVec.y * speed * 2.0f * Timing::get_delta_time();
 	}
 
 	// Shifts "movements"-table, if moved camera, to make it look smooth
@@ -393,6 +432,21 @@ namespace world
 		int32_t tileY = (int32_t)std::floor((_worldZ - (float)_observer.observeRadius * _tileVisualScale) / _tileVisualScale);
 		_observer.requestedMapX = tileX;
 		_observer.requestedMapY = tileY;
+
+		// Update cam facing direction
+		vec3 camForward = _pCamTransform->forward();
+		vec2 camDirVec(camForward.x, camForward.z);
+		camDirVec.normalize();
+		float angle = std::atan2(camDirVec.y, camDirVec.x);
+		const float base = 8.0f;
+		const float displace = M_PI / base;
+		float fDir = (angle + displace + M_PI * 0.5f) / (M_PI / (base * 0.5f));
+		if (fDir < 0.0f)
+			fDir = base + fDir;
+
+		_cameraDirection = (int)std::floor(fDir);
+
+		Debug::log("___TEST__cam facing dir = " + std::to_string(_cameraDirection));
 
 		updateSprites();
 		shift(tileX, tileY);

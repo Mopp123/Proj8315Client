@@ -6,6 +6,8 @@
 
 #include "../../PortablePesukarhu/ppk.h"
 #include "../net/Client.h"
+#include "Object.h"
+#include "Tile.h"
 
 namespace world
 {
@@ -23,28 +25,33 @@ namespace world
 	};
 
 
-	// *NOTE! Visual tile doesnt own any of this mem. Its just collection of ptrs to elsewhere managed mem
+	// NOTE: Visual tile doesnt own any of the mem of these ptrs. Its just collection of ptrs to elsewhere managed mem
 	struct VisualTile
 	{
 		uint32_t entity = 0;
 		pk::TerrainTileRenderable* renderable_tile = nullptr;
 		pk::Sprite3DRenderable*	renderable_effect = nullptr;
-		pk::Sprite3DRenderable*	renderable_object = nullptr;
+		objects::VisualObject visualObject;
 
-		VisualTile(uint32_t owningEntity, pk::TerrainTileRenderable* tile, pk::Sprite3DRenderable* effect, pk::Sprite3DRenderable* object) :
-			entity(owningEntity)
+		VisualTile(
+			uint32_t owningEntity, 
+			pk::TerrainTileRenderable* tile, 
+			pk::Sprite3DRenderable* effect, 
+			pk::Sprite3DRenderable* object
+		) :
+			entity(owningEntity),
+			visualObject(object)
 		{
 			renderable_tile	= tile;
 			renderable_effect = effect;
-			renderable_object = object;
 		}
 
 		VisualTile(const VisualTile& other):
-			entity(other.entity)
+			entity(other.entity),
+			visualObject(other.visualObject)
 		{
 			renderable_tile	= other.renderable_tile;
 			renderable_effect = other.renderable_effect;
-			renderable_object = other.renderable_object;
 		}
 	};
 
@@ -53,15 +60,6 @@ namespace world
 	class VisualWorld
 	{
 	private:
-		/*
-		class OnCompletion_fetchWorldState : public net::OnCompletionEvent
-		{
-		public:
-			VisualWorld& visualWorldRef;
-			OnCompletion_fetchWorldState(world::VisualWorld& visualWorld) : visualWorldRef(visualWorld) {}
-			virtual void func(const PK_byte* data, size_t dataSize);
-		};
-		*/
 		class OnMessage_worldState : public net::OnMessageEvent
 		{
 		public:
@@ -92,11 +90,17 @@ namespace world
 		PK_byte* _pBlendmapData = nullptr;
 		int _blendmapWidth = 0;
 		
-		// Just temp here -> clean up later..
-		std::unordered_map<PK_ubyte, pk::SpriteAnimator*> _tileEffectAnimMapping;
+		// All usable sprite textures (owned by this object)
+		std::vector<pk::web::WebTexture*> _spriteTextures;
+		// This is the same as server-side (objects library) but includes some additional visual info
+		std::vector<objects::ObjectInfo> _objectInfo;
+
+		pk::Transform* _pCamTransform = nullptr;
+		// Facing direction of the camera, in form of TileStateDirection::north, etc..
+		int _cameraDirection = 0;
 
 	public:
-		VisualWorld(pk::Scene& scene, int observeRadius, pk::Texture* effectsTexture, pk::Texture* objectsTexture);
+		VisualWorld(pk::Scene& scene, pk::Transform* pCamTransform, int observeRadius);
 		~VisualWorld();
 
 		void updateObservedArea(const uint64_t* mapState);
@@ -110,7 +114,7 @@ namespace world
 
 	private:
 		void updateSprites();
-		void moveObjSprite(std::pair<uint64_t, VisualTile>& tile, int tileIndex, float speed);
+		void moveObjSprite(int dir, int tileIndex, float speed);
 		// Shifts "movements"-table, if moved camera, to make it look smooth
 		void shift(int32_t tileX, int32_t tileY);
 		

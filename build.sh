@@ -31,6 +31,7 @@ ${game_src}/Main.cpp \
 ${game_src}/scenes/InGame.cpp \
 ${game_src}/world/World.cpp \
 ${game_src}/world/Tile.cpp \
+${game_src}/world/Object.cpp \
 ${game_src}/net/Client.cpp \
 ${game_src}/net/platform/web/WebClient.cpp \
 ${game_src}/net/ByteBuffer.cpp \
