@@ -16,11 +16,6 @@ private:
 	world::VisualWorld* _visualWorld = nullptr;
 
 	pk::Sprite3DRenderable* _testSprite = nullptr;
-	pk::SpriteAnimator* _spriteAnimator = nullptr;
-
-	// just testing tile animating..
-	pk::SpriteAnimator* _animator_water = nullptr;
-	pk::SpriteAnimator* _animator_grass = nullptr;
 
 	pk::RTSCamController* _pCamController = nullptr;
 	pk::mat4* _pCamTransform = nullptr;

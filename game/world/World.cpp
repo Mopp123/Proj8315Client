@@ -446,8 +446,6 @@ namespace world
 
 		_cameraDirection = (int)std::floor(fDir);
 
-		Debug::log("___TEST__cam facing dir = " + std::to_string(_cameraDirection));
-
 		updateSprites();
 		shift(tileX, tileY);
 	}

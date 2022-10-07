@@ -25,6 +25,7 @@ namespace world
 			// Client exclusive properties:
 			pk::web::WebTexture* pTexture = nullptr; // *NOTE! ObjectInfo doesn't own its' texture
 			bool rotateableSprite = false;
+			int animationFrames = 8;
 
 			ObjectInfo(
 			        const char* objName,
@@ -59,6 +60,8 @@ namespace world
 		{
 		private:
 			pk::Sprite3DRenderable* _pSprite = nullptr;
+			int _currentAnim = 0;
+			std::vector<pk::Animation*> _animations;
 			
 			// *NOTE! Below was bad idea, especially when object rotates in middle of anim..
 			// Outermost vector[8] is for each different direction(N,NE,E...) of the sprite

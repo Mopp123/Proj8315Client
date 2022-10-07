@@ -60,7 +60,7 @@ ${engine_src}/ecs/systems/ui/GUIImage.cpp \
 ${engine_src}/ecs/systems/ui/combinedFunctional/Button.cpp \
 ${engine_src}/ecs/systems/ui/combinedFunctional/InputField.cpp \
 ${engine_src}/ecs/systems/CameraUtils.cpp \
-${engine_src}/ecs/systems/animations/SpriteAnimations.cpp \
+${engine_src}/ecs/systems/animations/Animations.cpp \
 -s FULL_ES2=1 -s WASM=1 --memory-init-file 0 -s USE_SDL=2 -s USE_SDL_IMAGE=2 -s USE_FREETYPE=1 --shell-file ${html_shell_location} -o ${html_out} --preload-file assets --use-preload-plugins -sFETCH -sALLOW_MEMORY_GROWTH -l websocket.js
 
 

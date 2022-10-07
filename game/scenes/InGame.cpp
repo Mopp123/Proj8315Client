@@ -157,22 +157,6 @@ void InGame::init()
 	_testSprite = new Sprite3DRenderable({ 0,0,0 }, { 2,2 }, testSpriteTexture);
 	addComponent(spriteEntity, _testSprite);
 
-	
-
-	// TESTING tile anims
-	_animator_water = new SpriteAnimator({ {0,1},{1,1},{2,1} }, 3.0f);
-	_animator_water->enableLooping(true);
-	_animator_water->play();
-	addSystem(_animator_water);
-
-	_animator_grass = new SpriteAnimator({ {2,0},{3,0},{4,0},{3,0} }, 4.0f);
-	_animator_grass->enableLooping(true);
-	_animator_grass->play();
-	addSystem(_animator_grass);
-
-
-
-
 	// JUST FOR DEBUGGING
 	_inputField_position = new InputField(
 		" Enter message",
