@@ -1,10 +1,9 @@
-
-
 #include <unordered_set>
 #include <iostream>
 
 #include "../PortablePesukarhu/ppk.h"
 #include "scenes/InGame.h"
+#include "scenes/LoginMenu.h"
 #include "net/platform/web/WebClient.h"
 #include "net/NetCommon.h"
 
@@ -15,10 +14,10 @@ using namespace ui;
 using namespace net::web;
 using namespace net;
 
+
 int main(int argc, const char** argv)
 {
-
-	std::cout << "___TESTINGTESTING__222\n";
+	std::cout << "___TESTINGTESTING___123\n";
 
 	std::unordered_set<int> test;
 
@@ -33,10 +32,10 @@ int main(int argc, const char** argv)
 	WebInputManager inputManager;
 
 	WebMasterRenderer masterRenderer;
-	Renderer* pTerrainRenderer =	(Renderer*)(new WebTerrainRenderer);
-	Renderer* pSpriteRenderer =		(Renderer*)(new WebSpriteRenderer);
-	Renderer* pGuiRenderer =		(Renderer*)(new WebGUIRenderer);
-	Renderer* pFontRenderer =		(Renderer*)(new WebFontRenderer);
+	Renderer* pTerrainRenderer 	=	(Renderer*)(new WebTerrainRenderer);
+	Renderer* pSpriteRenderer 	=	(Renderer*)(new WebSpriteRenderer);
+	Renderer* pGuiRenderer 		=	(Renderer*)(new WebGUIRenderer);
+	Renderer* pFontRenderer 	=	(Renderer*)(new WebFontRenderer);
 
 	Application application(
 		"Emscripten testing..", 
@@ -50,8 +49,7 @@ int main(int argc, const char** argv)
 		});
 	
 	WebClient* client = new WebClient("ws://127.0.0.1:51421");
-	application.switchScene((Scene*)(new InGame));
-
+	application.switchScene((Scene*)(new LoginMenu));
 	application.run();
 
 	return 0;

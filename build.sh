@@ -28,6 +28,7 @@ echo "starting building to ${build_dir}"
 
 em++ \
 ${game_src}/Main.cpp \
+${game_src}/scenes/LoginMenu.cpp \
 ${game_src}/scenes/InGame.cpp \
 ${game_src}/world/World.cpp \
 ${game_src}/world/Tile.cpp \

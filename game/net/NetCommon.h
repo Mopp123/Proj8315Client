@@ -9,8 +9,14 @@
 
 #define NULL_MESSAGE Message(NULL_CLIENT, nullptr, 0)
 
-#define MESSAGE_TYPE__GetServerMessage 		0x1
-#define MESSAGE_TYPE__CreateFaction 		0x2
-#define MESSAGE_TYPE__GetWorldState 		0x3
-#define MESSAGE_TYPE__UpdateObserverProperties	0x4
-#define MESSAGE_TYPE__ServerShutdown 		0x5
+#define USER_NAME_LEN  	32
+#define USER_PASSWD_LEN	32
+
+#define MESSAGE_TYPE__GetServerMessage 			0x1
+#define MESSAGE_TYPE__Login 					0x2
+#define MESSAGE_TYPE__Logout 					0x3
+#define MESSAGE_TYPE__GetObjInfoLib 			0x4
+#define MESSAGE_TYPE__CreateFaction 			0x5
+#define MESSAGE_TYPE__GetWorldState 			0x6
+#define MESSAGE_TYPE__UpdateObserverProperties	0x7
+#define MESSAGE_TYPE__ServerShutdown 			0x8

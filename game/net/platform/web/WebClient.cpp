@@ -13,13 +13,9 @@ namespace net
 	{
 		EM_BOOL onopen(int eventType, const EmscriptenWebSocketOpenEvent *websocketEvent, void *userData) {
 		    	WebClient* client = (WebClient*)(Client::get_instance());
-			EMSCRIPTEN_RESULT result;
-			std::string test = "asasdasdasdasd"; // sending initial message..
 			client->_connSD = websocketEvent->socket;
-		   	result = emscripten_websocket_send_binary(websocketEvent->socket, (void*)test.data(), (uint32_t)test.size());
-		   	if (result) {
-		   	    printf("Failed to emscripten_websocket_send_utf8_text(): %d\n", result);
-		   	}
+			Debug::log("Websocket connection established");
+			client->_connected = true;
 		   	return EM_TRUE;
 		}
 		
@@ -35,6 +31,7 @@ namespace net
 			return EM_TRUE;
 		
 		}
+
 
 		EM_BOOL onmessage(int eventType, const EmscriptenWebSocketMessageEvent *websocketEvent, void *userData) {
 			//std::string message((char*)websocketEvent->data, (size_t)websocketEvent->numBytes);
@@ -102,11 +99,24 @@ namespace net
 				Debug::log("Websockets were closed successfully");
 		}
 
-		void WebClient::send(PK_byte* data, size_t dataSize)
+		int WebClient::send(PK_byte* data, size_t dataSize)
 		{
+			if (!_connected)
+			{
+				//Debug::log("___WEBSOCKET_ERROR___");
+				return 0;
+			}
+
    			EMSCRIPTEN_RESULT result = emscripten_websocket_send_binary(_connSD, (void*)data, (uint32_t)dataSize);
 			if (result < 0)
-				Debug::log("Failed WebClient::send(byte*, size_t) ");
+			{
+				Debug::log("Failed WebClient::send(byte*, size_t) EMSCRIPTEN_ERROR = " + std::to_string(result));
+				return 0;
+			}
+			else
+			{
+				return 1;
+			}
 		}
 	}
 }

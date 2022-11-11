@@ -1,16 +1,15 @@
 #pragma once
 
-
 #include "../../PortablePesukarhu/ppk.h"
 
 class LoginMenu : public pk::Scene
 {
 private:
 
-	pk::ui::InputField* _inputField_username = nullptr;
-	pk::ui::InputField* _inputField_password = nullptr;
+	pk::ui::InputField* _inputFieldUsername = nullptr;
+	pk::ui::InputField* _inputFieldPassword = nullptr;
 
-	pk::ui::Button* _button_login = nullptr;
+	pk::ui::Button* _loginButton = nullptr;
 
 public:
 

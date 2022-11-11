@@ -1,4 +1,3 @@
-
 #include "InGame.h"
 
 #include "../net/Client.h"
@@ -12,6 +11,7 @@
 #include <cmath>
 #include <iostream>
 #include <chrono>
+
 
 using namespace pk;
 using namespace pk::web;
@@ -49,8 +49,8 @@ public:
 		camController->setPivotPoint({ worldX, 0, worldZ });
 
 	};
-
 };
+
 
 InGame::InGame()
 {}
@@ -70,8 +70,6 @@ InGame::~InGame()
 	delete _terrainTexture3;
 	delete _terrainTexture4;
 }
-
-
 
 
 static std::string s_TEST_worldstate;
@@ -137,7 +135,6 @@ void InGame::init()
 
 	Transform* camTransformComponent = (Transform*)((Scene*)this)->getComponent(activeCamera->getEntity(), ComponentType::PK_TRANSFORM);
 	_visualWorld = new world::VisualWorld((Scene&)*this, camTransformComponent, 15);
-
 
 	float delta = (std::chrono::duration<float>(std::chrono::high_resolution_clock::now() - startTime)).count();
 	

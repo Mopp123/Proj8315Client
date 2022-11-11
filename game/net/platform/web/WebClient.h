@@ -19,7 +19,7 @@ namespace net
 			WebClient(const std::string& hostname);
 			~WebClient();
 
-			virtual void send(PK_byte* data, size_t dataSize) override;
+			virtual int send(PK_byte* data, size_t dataSize) override;
 
 		private:
 			friend EM_BOOL onopen(int eventType, const EmscriptenWebSocketOpenEvent *websocketEvent, void *userData);

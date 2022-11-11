@@ -25,6 +25,7 @@ namespace net
 		std::string _userID;
 
 		static Client* s_pInstance;
+		bool _connected = false;
 
 		std::unordered_map<int32_t, OnMessageEvent*> _onMessageEvents;
 
@@ -33,7 +34,10 @@ namespace net
 		virtual ~Client() {};
 		Client(const Client& other) = delete;
 
-		virtual void send(PK_byte* data, size_t dataSize) {};
+		// Returns status code
+		// 	0 = fail
+		// 	1 = success
+		virtual int send(PK_byte* data, size_t dataSize) {};
 		void addOnMessageEvent(int32_t messageType, OnMessageEvent* event);
 		void clearOnMessageEvents();
 
@@ -41,6 +45,7 @@ namespace net
 
 		inline const std::string& getHostname() const { return _hostname; }
 		inline const std::string& getUserID() const { return _userID; }
+		inline bool isConnected() const { return _connected; }
 
 		static Client* get_instance();
 	};

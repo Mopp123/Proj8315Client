@@ -1,4 +1,3 @@
-
 #include "Client.h"
 
 
@@ -6,13 +5,15 @@ namespace net
 {
 	Client* Client::s_pInstance = nullptr;
 
-	
 	void Client::addOnMessageEvent(int32_t messageType, OnMessageEvent* event)
 	{
 		if (_onMessageEvents.find(messageType) == _onMessageEvents.end())
 			_onMessageEvents.insert({ messageType, event });
 		else
-			pk::Debug::log("Attempted to add OnMessageEvent but event with same type already exists", pk::Debug::MessageType::PK_ERROR);
+			pk::Debug::log(
+				"Attempted to add OnMessageEvent but event with same type already exists", 
+				pk::Debug::MessageType::PK_FATAL_ERROR
+			);
 	}
 
 	void Client::clearOnMessageEvents()

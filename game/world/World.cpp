@@ -289,7 +289,6 @@ namespace world
                 const PK_ubyte tileObject = get_tile_thingid(tileState);
                 const PK_ubyte tileAction = get_tile_action(tileState);
                 visualObj.assignAnimFrames(tileObject, tileAction, _tileAnimStates[tileIndex].anim);
-
             }
         }
 
@@ -306,12 +305,15 @@ namespace world
                     for (int i = 0; i < 2; ++i)
                     {
                         // This looks fucking disqusting, but for now it prevents "heightbleedingbugthing"
-                        if ((x == observeAreaWidth - 1 && i == 1) || (x == 0 && i == 0)) 
-                            continue;
+						int addX = 0;
+						if (x == 0 && i == 0)
+							addX = 1;
+						if (x == observeAreaWidth - 1 && i == 1)
+							addX = -1;
 
-                        int heightIndex = i + j * 2;
-                        int sharedVertexIndex = (x + i) + (y + j) * observeAreaWidth;
-                        tileRenderable->vertexHeights[heightIndex] = sharedVertexHeights[sharedVertexIndex];
+						int heightIndex = i + j * 2;
+						int sharedVertexIndex = (x + i + addX) + (y + j) * observeAreaWidth;
+						tileRenderable->vertexHeights[heightIndex] = sharedVertexHeights[sharedVertexIndex];
                     }
                 }
 
@@ -383,7 +385,7 @@ namespace world
                 else
                 {
                     visualObject.hide();
-                    _tileAnimStates[tileIndex].anim->reset();
+                    //_tileAnimStates[tileIndex].anim->reset();
                 }
             }
         }
@@ -394,90 +396,59 @@ namespace world
     {
         const int observeAreaWidth = _observer.observeRadius * 2 + 1;
 
-        if (tileX < _prevTileX)
-        {
-            // moving right (shift left)
-            for (int y = 0; y < observeAreaWidth; ++y)
-            {
-                pk::vec3 prevPos = _tileAnimStates[0 + y * observeAreaWidth].pos;
-                Animation* prevAnim = _tileAnimStates[0 + y * observeAreaWidth].anim;
-                prevAnim->reset();
-                for (int x = 0; x < observeAreaWidth; ++x)
-                {
-                    const int tileIndex = x + y * observeAreaWidth;
-                    pk::vec3 currentPos = _tileAnimStates[tileIndex].pos;
-                    Animation* currentAnim = _tileAnimStates[tileIndex].anim;
-                    _tileAnimStates[tileIndex].pos = prevPos;
-                    _tileAnimStates[tileIndex].anim->copyFrom(*currentAnim);
+        Animation* tempAnim = new Animation({ 0 }, 1.0f);
+        // moving right(default) (shift left)
+        int startX = tileX > _prevTileX ? observeAreaWidth - 1 : 0;
+        int startY = tileY > _prevTileY ? observeAreaWidth - 1 : 0;
+        bool incrX = !(tileX > _prevTileX);
+        bool incrY = !(tileY > _prevTileY);
 
-                    prevPos = currentPos;
-                    prevAnim->copyFrom(*currentAnim);
-                }
-            }
-        }
-        if (tileX > _prevTileX)
-        {
-            // moving left (shift right)
-            for (int y = 0; y < observeAreaWidth; ++y)
-            {
-                pk::vec3 prevPos = _tileAnimStates[0 + y * observeAreaWidth].pos;
-                Animation* prevAnim = _tileAnimStates[0 + y * observeAreaWidth].anim;
-                prevAnim->reset();
-                for (int x = observeAreaWidth - 1; x >= 0; --x)
-                {
-                    const int tileIndex = x + y * observeAreaWidth;
-                    pk::vec3 currentPos = _tileAnimStates[tileIndex].pos;
-                    Animation* currentAnim = _tileAnimStates[tileIndex].anim;
-                    _tileAnimStates[tileIndex].pos = prevPos;
-                    _tileAnimStates[tileIndex].anim->copyFrom(*currentAnim);
+		// Horizontal shifting
+		if (tileX != _prevTileX)
+		{
+        	for (int y = 0; y < observeAreaWidth; ++y)
+        	{
+        	    pk::vec3 prevPos = _tileAnimStates[0 + y * observeAreaWidth].pos;
+        	    Animation* prevAnim = _tileAnimStates[0 + y * observeAreaWidth].anim;
+        	    prevAnim->reset();
+        	    for (int x = startX; incrX ? x < observeAreaWidth : x >= 0; incrX ? ++x : --x)
+        	    {
+        	        const int tileIndex = x + y * observeAreaWidth;
+        	        pk::vec3 currentPos = _tileAnimStates[tileIndex].pos;
+        	        Animation* currentAnim = _tileAnimStates[tileIndex].anim;
+        	        tempAnim->copyFrom(*currentAnim);
+        	        _tileAnimStates[tileIndex].pos = prevPos;
+        	        _tileAnimStates[tileIndex].anim->copyFrom(*prevAnim);
 
-                    prevPos = currentPos;
-                    prevAnim->copyFrom(*currentAnim);
-                }
-            }
-        }
-        if (tileY < _prevTileY)
-        {
-            // moving forward(north) (shift back)
-            for (int x = 0; x < observeAreaWidth; ++x)
-            {
-                pk::vec3 prevPos = _tileAnimStates[x + 0 * observeAreaWidth].pos;
-                Animation* prevAnim = _tileAnimStates[x + 0 * observeAreaWidth].anim;
-                prevAnim->reset();
-                for (int y = 0; y < observeAreaWidth; ++y)
-                {
-                    const int tileIndex = x + y * observeAreaWidth;
-                    pk::vec3 currentPos = _tileAnimStates[tileIndex].pos;
-                    Animation* currentAnim = _tileAnimStates[tileIndex].anim;
-                    _tileAnimStates[tileIndex].pos = prevPos;
-                    _tileAnimStates[tileIndex].anim->copyFrom(*currentAnim);
+        	        prevPos = currentPos;
+        	        prevAnim->copyFrom(*tempAnim);
+        	    }
+        	}
+		}
+		// Vertical shifting
+		if (tileY != _prevTileY)
+		{
+        	for (int x = 0; x < observeAreaWidth; ++x)
+        	{
+        	    pk::vec3 prevPos = _tileAnimStates[x + 0 * observeAreaWidth].pos;
+        	    Animation* prevAnim = _tileAnimStates[x + 0 * observeAreaWidth].anim;
+        	    prevAnim->reset();
+        	    for (int y = startY; incrY ? y < observeAreaWidth : y >= 0; incrY ? ++y : --y)
+        	    {
+        	        const int tileIndex = x + y * observeAreaWidth;
+        	        pk::vec3 currentPos = _tileAnimStates[tileIndex].pos;
+        	        Animation* currentAnim = _tileAnimStates[tileIndex].anim;
+        	        tempAnim->copyFrom(*currentAnim);
+        	        _tileAnimStates[tileIndex].pos = prevPos;
+        	        _tileAnimStates[tileIndex].anim->copyFrom(*prevAnim);
 
-                    prevPos = currentPos;
-                    prevAnim->copyFrom(*currentAnim);
-                }
-            }
-        }
-        if (tileY > _prevTileY)
-        {
-            // moving backwards(south) (shift forward)
-            for (int x = 0; x < observeAreaWidth; ++x)
-            {
-                pk::vec3 prevPos = _tileAnimStates[x + 0 * observeAreaWidth].pos;
-                Animation* prevAnim = _tileAnimStates[x + 0 * observeAreaWidth].anim;
-                prevAnim->reset();
-                for (int y = observeAreaWidth - 1; y >= 0 ; --y)
-                {
-                    const int tileIndex = x + y * observeAreaWidth;
-                    pk::vec3 currentPos = _tileAnimStates[tileIndex].pos;
-                    Animation* currentAnim = _tileAnimStates[tileIndex].anim;
-                    _tileAnimStates[tileIndex].pos = prevPos;
-                    _tileAnimStates[tileIndex].anim->copyFrom(*currentAnim);
+        	        prevPos = currentPos;
+        	        prevAnim->copyFrom(*tempAnim);
+        	    }
+        	}
+		}
 
-                    prevPos = currentPos;
-                    prevAnim->copyFrom(*currentAnim);
-                }
-            }
-        }
+        delete tempAnim;
         
         // Save previous tile pos
         _prevTileX = tileX;

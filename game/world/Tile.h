@@ -7,12 +7,14 @@
 #define TILE_STATE_SIZE_BYTES 		8
 
 // Sizes of different portions (exact size in BITS NOT BYTES!)
+#define TILE_STATE_SIZE			64
 #define TILE_STATE_SIZE_uid		32
 #define TILE_STATE_SIZE_properties	32
 
 #define TILE_STATE_SIZE_terrElevation	4
 #define TILE_STATE_SIZE_terrType	3
 #define TILE_STATE_SIZE_terrEffect	4
+#define TILE_STATE_SIZE_objProperties	21
 #define TILE_STATE_SIZE_thingCategory	3
 #define TILE_STATE_SIZE_thingID		8
 #define TILE_STATE_SIZE_action		3
@@ -26,11 +28,16 @@
 #define TILE_STATE_POS_terrElevation	0
 #define TILE_STATE_POS_terrType		4
 #define TILE_STATE_POS_terrEffect	7
+#define TILE_STATE_POS_objProperties	11
 #define TILE_STATE_POS_thingCategory	11
 #define TILE_STATE_POS_thingID		14
 #define TILE_STATE_POS_action		22
 #define TILE_STATE_POS_dir		25
 #define TILE_STATE_POS_customVar	28
+
+// Max values of specific properties
+#define TILE_STATE_MAX_terrElevation 15
+#define TILE_STATE_MAX_action 7
 
 namespace world
 {
@@ -52,13 +59,13 @@ namespace world
 
 	enum TileStateAction
 	{
-		TILE_STATE_actionIdle = 0,
-		TILE_STATE_actionMove = 1,
-		TILE_STATE_actionClassAction1 = 2,
-		TILE_STATE_actionClassAction2 = 3,
+		TILE_STATE_actionIdle = 	0,
+		TILE_STATE_actionMove = 	1,
+		TILE_STATE_actionMoveVertical = 2,
+		TILE_STATE_actionClassAction1 = 3,
+		TILE_STATE_actionClassAction2 = 4,
 
 		// Not decided yet, what would these be? ( these are also available values to use..)
-		TILE_STATE_actionPENDING1 = 4,
 		TILE_STATE_actionPENDING2 = 5,
 		TILE_STATE_actionPENDING3 = 6,
 		TILE_STATE_actionPENDING4 = 7,
