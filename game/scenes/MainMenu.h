@@ -3,15 +3,13 @@
 #include "../../PortablePesukarhu/ppk.h"
 
 
-class LoginMenu : public pk::Scene
+class MainMenu : public pk::Scene
 {
 private:
-
 public:
-    LoginMenu();
-    ~LoginMenu();
+    MainMenu();
+    ~MainMenu();
 
     virtual void init();
     virtual void update();
-
 };

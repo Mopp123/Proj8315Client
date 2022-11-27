@@ -29,10 +29,7 @@ echo "starting building to ${build_dir}"
 em++ \
 ${game_src}/Main.cpp \
 ${game_src}/scenes/LoginMenu.cpp \
-${game_src}/scenes/InGame.cpp \
-${game_src}/world/World.cpp \
-${game_src}/world/Tile.cpp \
-${game_src}/world/Object.cpp \
+${game_src}/scenes/MainMenu.cpp \
 ${game_src}/net/Client.cpp \
 ${game_src}/net/platform/web/WebClient.cpp \
 ${game_src}/net/ByteBuffer.cpp \
@@ -56,12 +53,9 @@ ${engine_src}/graphics/platform/web/WebTerrainRenderer.cpp \
 ${engine_src}/graphics/platform/web/WebSpriteRenderer.cpp \
 ${engine_src}/graphics/platform/web/WebBuffers.cpp \
 ${engine_src}/graphics/platform/web/shaders/WebShader.cpp \
-${engine_src}/ecs/systems/ui/Text.cpp \
-${engine_src}/ecs/systems/ui/GUIImage.cpp \
-${engine_src}/ecs/systems/ui/combinedFunctional/Button.cpp \
-${engine_src}/ecs/systems/ui/combinedFunctional/InputField.cpp \
 ${engine_src}/ecs/systems/CameraUtils.cpp \
 ${engine_src}/ecs/systems/animations/Animations.cpp \
+${engine_src}/ecs/factories/ui/UIFactories.cpp \
 -s FULL_ES2=1 -s WASM=1 --memory-init-file 0 -s USE_SDL=2 -s USE_SDL_IMAGE=2 -s USE_FREETYPE=1 --shell-file ${html_shell_location} -o ${html_out} --preload-file assets --use-preload-plugins -sFETCH -sALLOW_MEMORY_GROWTH -l websocket.js
 
 

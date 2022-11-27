@@ -2,8 +2,10 @@
 #include <iostream>
 
 #include "../PortablePesukarhu/ppk.h"
-#include "scenes/InGame.h"
+
 #include "scenes/LoginMenu.h"
+//#include "scenes/InGame.h"
+
 #include "net/platform/web/WebClient.h"
 #include "net/NetCommon.h"
 
@@ -17,42 +19,42 @@ using namespace net;
 
 int main(int argc, const char** argv)
 {
-	std::cout << "___TESTINGTESTING___123\n";
+    std::cout << "___TESTINGTESTING___666\n";
 
-	std::unordered_set<int> test;
+    std::unordered_set<int> test;
 
-	for (auto w : test)
-	{
-	}
+    for (auto w : test)
+    {
+    }
 
-	bool initSuccess = true;
+    bool initSuccess = true;
 
-	WebWindow window;
-	WebContext graphicsContext;
-	WebInputManager inputManager;
+    WebWindow window;
+    WebContext graphicsContext;
+    WebInputManager inputManager;
 
-	WebMasterRenderer masterRenderer;
-	Renderer* pTerrainRenderer 	=	(Renderer*)(new WebTerrainRenderer);
-	Renderer* pSpriteRenderer 	=	(Renderer*)(new WebSpriteRenderer);
-	Renderer* pGuiRenderer 		=	(Renderer*)(new WebGUIRenderer);
-	Renderer* pFontRenderer 	=	(Renderer*)(new WebFontRenderer);
+    WebMasterRenderer masterRenderer;
+    Renderer* pTerrainRenderer      =       (Renderer*)(new WebTerrainRenderer);
+    Renderer* pSpriteRenderer       =       (Renderer*)(new WebSpriteRenderer);
+    Renderer* pGuiRenderer          =       (Renderer*)(new WebGUIRenderer);
+    Renderer* pFontRenderer         =       (Renderer*)(new WebFontRenderer);
 
-	Application application(
-		"Emscripten testing..", 
-		&window, &graphicsContext, &inputManager, 
-		&masterRenderer, 
-		{ 
-			{ ComponentType::PK_RENDERABLE_TERRAINTILE,	pTerrainRenderer },
-			{ ComponentType::PK_RENDERABLE_SPRITE3D,	pSpriteRenderer	 },
-			{ ComponentType::PK_RENDERABLE_GUI,			pGuiRenderer	 },
-			{ ComponentType::PK_RENDERABLE_TEXT,		pFontRenderer	 }
-		});
-	
-	WebClient* client = new WebClient("ws://127.0.0.1:51421");
-	application.switchScene((Scene*)(new LoginMenu));
-	application.run();
+    Application application(
+            "Emscripten testing..", 
+            &window, &graphicsContext, &inputManager, 
+            &masterRenderer, 
+            { 
+            { ComponentType::PK_RENDERABLE_TERRAINTILE,     pTerrainRenderer },
+            { ComponentType::PK_RENDERABLE_SPRITE3D,        pSpriteRenderer  },
+            { ComponentType::PK_RENDERABLE_GUI,             pGuiRenderer     },
+            { ComponentType::PK_RENDERABLE_TEXT,            pFontRenderer    }
+            });
 
-	return 0;
+    WebClient* client = new WebClient("ws://127.0.0.1:51421");
+    application.switchScene((Scene*)(new LoginMenu));
+    application.run();
+
+    return 0;
 }
 
 // Testing emsc networking capabilities...
@@ -74,56 +76,56 @@ using namespace web;
 
 
 void downloadSucceeded(emscripten_fetch_t* fetch) {
-	//printf("Finished downloading %llu bytes from URL %s.\n", fetch->numBytes, fetch->url);
-	
-	char* data = new char[fetch->numBytes];
-	memcpy(data, fetch->data, fetch->numBytes);
+//printf("Finished downloading %llu bytes from URL %s.\n", fetch->numBytes, fetch->url);
 
-	std::cout << "fetched data: " << data << std::endl;
-	delete[] data;
-	//printf("Data was: %s", data);
-	// The data is now available at fetch->data[0] through fetch->data[fetch->numBytes-1];
-	emscripten_fetch_close(fetch); // Free data associated with the fetch.
+char* data = new char[fetch->numBytes];
+memcpy(data, fetch->data, fetch->numBytes);
+
+std::cout << "fetched data: " << data << std::endl;
+delete[] data;
+//printf("Data was: %s", data);
+// The data is now available at fetch->data[0] through fetch->data[fetch->numBytes-1];
+emscripten_fetch_close(fetch); // Free data associated with the fetch.
 
 }
 
 void downloadFailed(emscripten_fetch_t* fetch) {
-	printf("Downloading %s failed, HTTP failure status code: %d.\n", fetch->url, fetch->status);
-	emscripten_fetch_close(fetch); // Also free data on failure.
+printf("Downloading %s failed, HTTP failure status code: %d.\n", fetch->url, fetch->status);
+emscripten_fetch_close(fetch); // Also free data on failure.
 }*/
 
 /*
-void loop()
-{
-	
-}
+   void loop()
+   {
 
-class CustomOnCompletion : public OnCompletionEvent
-{
-public:
+   }
 
-	virtual void func(const std::vector<ByteBuffer>& data)
-	{
-		std::string dat_str = data[0].getString();
-		Debug::log("Custom onCompletion: data was: " + dat_str);
+   class CustomOnCompletion : public OnCompletionEvent
+   {
+   public:
 
-		std::string message = "Well hello hello!!";
-		ByteBuffer body(message.data(), message.size());
-		WebRequest* req = new WebRequest(Request::ReqType::POST, nullptr, body);
-	}
-};
+   virtual void func(const std::vector<ByteBuffer>& data)
+   {
+   std::string dat_str = data[0].getString();
+   Debug::log("Custom onCompletion: data was: " + dat_str);
 
-int main() 
-{
+   std::string message = "Well hello hello!!";
+   ByteBuffer body(message.data(), message.size());
+   WebRequest* req = new WebRequest(Request::ReqType::POST, nullptr, body);
+   }
+   };
 
-	Client* c = Client::get_instance();
-	c->init("http://192.168.160.249:51421");
+   int main() 
+   {
 
-	std::string message = "Testing";
-	ByteBuffer body(message.data(), message.size());
-	WebRequest* req = new WebRequest(Request::ReqType::POST, new CustomOnCompletion, body);
+   Client* c = Client::get_instance();
+   c->init("http://192.168.160.249:51421");
 
-	emscripten_set_main_loop(loop, 0, 1);
+   std::string message = "Testing";
+   ByteBuffer body(message.data(), message.size());
+   WebRequest* req = new WebRequest(Request::ReqType::POST, new CustomOnCompletion, body);
 
-	return 0;
-}*/
+   emscripten_set_main_loop(loop, 0, 1);
+
+   return 0;
+   }*/

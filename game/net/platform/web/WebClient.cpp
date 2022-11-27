@@ -1,4 +1,3 @@
-
 #include "WebClient.h"
 #include <string>
 
@@ -40,12 +39,13 @@ namespace net
 			PK_byte* messageData = (PK_byte*)websocketEvent->data;
 			const size_t messageSize = (size_t)websocketEvent->numBytes;
 
-		    	WebClient* client = (WebClient*)(Client::get_instance());
+		    WebClient* client = (WebClient*)(Client::get_instance());
 			if (messageSize >= MESSAGE_MIN_DATA_SIZE)
 			{
 				// Attempt to parse "header"(first 32 bits) to find the "MessageType"
 				int32_t messageType = -1;
 				memcpy(&messageType, (const void*)messageData, sizeof(int32_t));
+				//Debug::log("___TEST___Received msg of size: " + std::to_string(messageSize) + " parsed type: " + std::to_string(messageType));
 				auto event = client->_onMessageEvents.find(messageType);
 				if (event != client->_onMessageEvents.end())
 					(*event).second->onMessage(messageData + sizeof(int32_t), messageSize - sizeof(int32_t));
