@@ -31,6 +31,7 @@ ${game_src}/Main.cpp \
 ${game_src}/scenes/LoginMenu.cpp \
 ${game_src}/scenes/MainMenu.cpp \
 ${game_src}/net/Client.cpp \
+${game_src}/ui/ui.cpp \
 ${game_src}/net/platform/web/WebClient.cpp \
 ${game_src}/net/ByteBuffer.cpp \
 ${engine_src}/core/Debug.cpp \
