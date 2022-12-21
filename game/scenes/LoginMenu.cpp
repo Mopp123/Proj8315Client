@@ -50,7 +50,6 @@ class OnClickLogin : public OnClickEvent
 
         virtual void onClick(InputMouseButtonName button)
         {
-            Debug::log("___TEST___ON CLICK!!!");
             if (button == InputMouseButtonName::PK_INPUT_MOUSE_LEFT)
             {
                 const size_t usernameLen = _usernameFieldRef.length();
@@ -66,20 +65,22 @@ class OnClickLogin : public OnClickEvent
                     Debug::log("Invalid password length", Debug::MessageType::PK_ERROR);
                     return;
                 }
-
-                size_t bufSize = sizeof(int32_t) + USER_NAME_LEN + USER_PASSWD_LEN;
-                PK_byte* pSendBuf = new PK_byte[bufSize];
-                memset(pSendBuf, 0, bufSize);
-
-                const int32_t messageType = MESSAGE_TYPE__Login;
-                memcpy(pSendBuf, &messageType, sizeof(int32_t));
-                memcpy(pSendBuf + sizeof(int32_t), _usernameFieldRef.c_str(), usernameLen);
-                memcpy(pSendBuf + sizeof(int32_t) + USER_NAME_LEN, _passwdFieldRef.c_str(), passwdLen);
-
                 Client* client = Client::get_instance();
-                client->send(pSendBuf, bufSize);
-
-                delete[] pSendBuf;
+                client->send(
+                    (int32_t)MESSAGE_TYPE__UserLogin,
+                    {
+                        {
+                            (PK_byte*)_usernameFieldRef.data(),
+                            usernameLen,
+                            USER_NAME_LEN
+                        },
+                        {
+                            (PK_byte*)_passwdFieldRef.data(), 
+                            passwdLen, 
+                            USER_PASSWD_LEN
+                        }
+                    }
+                );
             }
         }
 };
@@ -130,20 +131,9 @@ void LoginMenu::init()
         buttonSize,
         new OnClickLogin(usernameStr, passwdStr)
     );
-    /*
-    _loginButton = new Button(
-        "Login",
-        {
-            {ConstraintType::PIXEL_CENTER_HORIZONTAL, -panelOffsetX},
-            {ConstraintType::PIXEL_CENTER_VERTICAL, panelOffsetY - textSize * 2.0f}
-        },
-        100,
-        buttonSize,
-        new OnClickLogin(_inputFieldUsername, _inputFieldPassword)
-    );*/
 
     Client* client = Client::get_instance();
-    client->addOnMessageEvent(MESSAGE_TYPE__Login, (OnMessageEvent*)(new OnMessageLoginRequest(*this)));
+    client->addOnMessageEvent(MESSAGE_TYPE__UserLogin, (OnMessageEvent*)(new OnMessageLoginRequest(*this)));
 }
 
 void LoginMenu::update()

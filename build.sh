@@ -30,6 +30,7 @@ em++ \
 ${game_src}/Main.cpp \
 ${game_src}/scenes/LoginMenu.cpp \
 ${game_src}/scenes/MainMenu.cpp \
+${game_src}/scenes/DeploymentMenu.cpp \
 ${game_src}/net/Client.cpp \
 ${game_src}/ui/ui.cpp \
 ${game_src}/net/platform/web/WebClient.cpp \
@@ -57,6 +58,7 @@ ${engine_src}/graphics/platform/web/shaders/WebShader.cpp \
 ${engine_src}/ecs/systems/CameraUtils.cpp \
 ${engine_src}/ecs/systems/animations/Animations.cpp \
 ${engine_src}/ecs/factories/ui/UIFactories.cpp \
+${engine_src}/ecs/components/renderable/UIRenderableComponent.cpp \
 -s FULL_ES2=1 -s WASM=1 --memory-init-file 0 -s USE_SDL=2 -s USE_SDL_IMAGE=2 -s USE_FREETYPE=1 --shell-file ${html_shell_location} -o ${html_out} --preload-file assets --use-preload-plugins -sFETCH -sALLOW_MEMORY_GROWTH -l websocket.js
 
 

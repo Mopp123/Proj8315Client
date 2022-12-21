@@ -36,7 +36,8 @@ namespace world
             observerRef.lastReceivedMapX = visualWorldRef._observer.requestedMapX;
             observerRef.lastReceivedMapY = visualWorldRef._observer.requestedMapY;
 
-            // TODO: Delete below, deprecated after moving away from "requests"!!!
+            // TODO: Delete below, deprecated after moving away from "requests"!!! (?)
+            /*
             Client* client = Client::get_instance();
             size_t bufSize = sizeof(int) * 4;
             PK_byte* pSendBuf = new PK_byte[bufSize];
@@ -51,6 +52,26 @@ namespace world
             client->send(pSendBuf, bufSize);
 
             delete[] pSendBuf;
+            */
+
+            Client::get_instance()->send(
+                (int32_t)MESSAGE_TYPE__UpdateObserverProperties,
+                {
+                    {
+                        (PK_byte*)(&observerRef.requestedMapX),
+                        sizeof(int32_t), sizeof(int32_t)
+                    },
+                    {
+                        (PK_byte*)(&observerRef.requestedMapY),
+                        sizeof(int32_t), sizeof(int32_t)
+                    },
+                    {
+                        (PK_byte*)(&observerRef.observeRadius),
+                        sizeof(int32_t), sizeof(int32_t)
+                    }
+                }
+            );
+
         }
     }
 
@@ -136,13 +157,6 @@ namespace world
         _spriteTextures.push_back(new WebTexture("assets/environment.png", spriteTextureSampler, 8));
         _spriteTextures.push_back(new WebTexture("assets/MovementTest.png", spriteTextureSampler, 8));
         _spriteTextures.push_back(new WebTexture("assets/landings.png", spriteTextureSampler, 4));
-
-
-
-        // TODO: Fetch "object info library" from server when logging in / connecting
-        //_objectInfo.push_back({"Empty", "", 0, nullptr, false});
-            //_objectInfo.push_back({"Tree1", "A testing tree object", 0, _spriteTextures[0], false});
-            //_objectInfo.push_back({"Movement Test", "For testing movement stuff", 1, _spriteTextures[1], true});
         
         // Create visual tiles at first as "blank" 
         //  -> we configure these eventually, when we fetch world state from server
@@ -462,11 +476,18 @@ namespace world
         if (!_worldInitialized)
         {
             // Fetch obj. info lib from server
+            
+            /*
+            // OLD WAY OF SENDING..
             const int32_t msgTypeFetchObjInfo = MESSAGE_TYPE__GetObjInfoLib;
             PK_byte* sendBuf = new PK_byte[sizeof(int32_t)];
             memcpy(sendBuf, &msgTypeFetchObjInfo, sizeof(int32_t));
             Client::get_instance()->send(sendBuf, sizeof(int32_t));
             delete[] sendBuf;
+            */
+            Client::get_instance()->send(
+                MESSAGE_TYPE__GetObjInfoLib
+            );
             return;
         }
 
