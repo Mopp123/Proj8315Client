@@ -1,0 +1,11 @@
+
+version: "3.7"
+
+services:
+  site:
+    container_name: proj_site_test
+    image: proj-site
+    volumes:
+      - ./public-html:/usr/local/apache2/htdocs
+    ports:
+      - 8080:80

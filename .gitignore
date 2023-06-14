@@ -1,4 +1,5 @@
-build/
-build-old.sh
+public-html/*.*
+public-html/assets/*.*
+!.gitkeep
 compile_commands.json
 *.swp

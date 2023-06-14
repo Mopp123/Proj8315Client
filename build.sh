@@ -5,11 +5,12 @@ root_dir=`pwd`
 # These depends on your setup
 #emsdk_dir=~/Documents/emsdk
 emsdk_dir=emsdk
-engine_src=`pwd`/PortablePesukarhu
-game_src=`pwd`/game
-html_shell_location=`pwd`/shell.html
-html_out=HelloEmscripten.html
-build_dir=/home/kalle/Documents/projects/web-proj/site/public-html
+engine_src=${root_dir}/PortablePesukarhu
+game_src=${root_dir}/game
+html_shell_location=${root_dir}/shell.html
+html_out=Proj8315.html
+build_dir=${root_dir}/public-html
+assets_dir=assets
 
 echo "assigned root dir = ${root_dir}"
 echo "assigned engine src dir = ${engine_src}"
@@ -17,6 +18,7 @@ echo "assigned game src dir = ${game_src}"
 echo "assigned html shell location = ${html_shell_location}"
 echo "assigned html out = ${html_out}"
 echo "assigned build dir = ${build_dir}"
+echo "assigned assets dir = ${assets_dir}"
 
 echo "activating emsdk from: ${emsdk_dir}"
 cd $emsdk_dir
@@ -67,7 +69,7 @@ ${engine_src}/ecs/systems/CameraUtils.cpp \
 ${engine_src}/ecs/systems/animations/Animations.cpp \
 ${engine_src}/ecs/factories/ui/UIFactories.cpp \
 ${engine_src}/ecs/components/renderable/UIRenderableComponent.cpp \
--s FULL_ES2=1 -s WASM=1 --memory-init-file 0 -s USE_SDL=2 -s USE_SDL_IMAGE=2 -s USE_FREETYPE=1 --shell-file ${html_shell_location} -o ${html_out} --preload-file assets --use-preload-plugins -sFETCH -sALLOW_MEMORY_GROWTH -l websocket.js
+-s FULL_ES2=1 -s WASM=1 --memory-init-file 0 -s USE_SDL=2 -s USE_SDL_IMAGE=2 -s USE_FREETYPE=1 --shell-file ${html_shell_location} -o ${html_out} --preload-file ${assets_dir} --use-preload-plugins -sFETCH -sALLOW_MEMORY_GROWTH -l websocket.js
 
 
 #EXPORTED_FUNCTIONS="[_main, _proxy_main]

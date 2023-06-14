@@ -19,7 +19,7 @@ using namespace net;
 
 int main(int argc, const char** argv)
 {
-    std::cout << "___TESTINGTESTING___12333\n";
+    std::cout << "___TESTINGTESTING___PROJ RESTRUCTURE123\n";
 
     std::unordered_set<int> test;
 
@@ -40,10 +40,10 @@ int main(int argc, const char** argv)
     Renderer* pFontRenderer         =       (Renderer*)(new WebFontRenderer);
 
     Application application(
-            "Emscripten testing..", 
-            &window, &graphicsContext, &inputManager, 
-            &masterRenderer, 
-            { 
+            "Emscripten testing..",
+            &window, &graphicsContext, &inputManager,
+            &masterRenderer,
+            {
             { ComponentType::PK_RENDERABLE_TERRAINTILE,     pTerrainRenderer },
             { ComponentType::PK_RENDERABLE_SPRITE3D,        pSpriteRenderer  },
             { ComponentType::PK_RENDERABLE_GUI,             pGuiRenderer     },
@@ -115,7 +115,7 @@ emscripten_fetch_close(fetch); // Also free data on failure.
    }
    };
 
-   int main() 
+   int main()
    {
 
    Client* c = Client::get_instance();
