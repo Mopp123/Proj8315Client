@@ -17,6 +17,15 @@ namespace net
         size_t maxSize = 0;
     } MsgDataPart;
 
+
+    typedef struct UserData
+    {
+        std::string name= "";
+        bool hasFaction = false;
+        std::string faction = "";
+    } UserData;
+
+
     class OnMessageEvent
     {
     public:
@@ -25,12 +34,12 @@ namespace net
         virtual void onMessage(const PK_byte* data, size_t dataSize) = 0;
     };
 
+
     class Client
     {
     protected:
-        // actually its the complete url to server...
+        // The complete url to server...
         std::string _hostname;
-        std::string _userID;
 
         static Client* s_pInstance;
         bool _connected = false;
@@ -38,6 +47,8 @@ namespace net
         std::unordered_map<int32_t, OnMessageEvent*> _onMessageEvents;
 
     public:
+        UserData user;
+
         Client(const std::string& hostname) : _hostname(hostname) {};
         virtual ~Client() {};
         Client(const Client& other) = delete;
@@ -46,27 +57,24 @@ namespace net
         // 	0 = fail
         // 	1 = success
         virtual int send_raw(
-            PK_byte* data, 
+            PK_byte* data,
             size_t dataSize
-        ) 
-        { 
-            return 0; 
+        )
+        {
+            return 0;
         }
 
         virtual int send(
-            int32_t messageType, 
-            std::vector<MsgDataPart> data) 
-        { 
+            int32_t messageType,
+            std::vector<MsgDataPart> data)
+        {
             return 0;
         }
 
         void addOnMessageEvent(int32_t messageType, OnMessageEvent* event);
         void clearOnMessageEvents();
 
-        inline void setUserID(const std::string& id) { _userID = id; }
-
         inline const std::string& getHostname() const { return _hostname; }
-        inline const std::string& getUserID() const { return _userID; }
         inline bool isConnected() const { return _connected; }
 
         static Client* get_instance();

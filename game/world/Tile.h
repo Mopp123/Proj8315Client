@@ -41,74 +41,73 @@
 
 namespace world
 {
-	enum TileStateTerrElevation
-	{
-		TILE_STATE_terrElevAbyss =		0,
-		TILE_STATE_terrElevMid1 =		1,
-		TILE_STATE_terrElevMid2 =		2,
-		TILE_STATE_terrElevHighland =		3,
-		TILE_STATE_terrElevHills =		4,
-		TILE_STATE_terrElevMountains =		5,
-		TILE_STATE_terrElevHighMountains =	6
-	};
+    enum TileStateTerrElevation
+    {
+        TILE_STATE_terrElevAbyss =		0,
+        TILE_STATE_terrElevMid1 =		1,
+        TILE_STATE_terrElevMid2 =		2,
+        TILE_STATE_terrElevHighland =		3,
+        TILE_STATE_terrElevHills =		4,
+        TILE_STATE_terrElevMountains =		5,
+        TILE_STATE_terrElevHighMountains =	6
+    };
 
-	enum TileStateTerrEffectFlags
-	{
-		TILE_STATE_terrEffectRain = 0x01
-	};
+    enum TileStateTerrEffectFlags
+    {
+        TILE_STATE_terrEffectRain = 0x01
+    };
 
-	enum TileStateAction
-	{
-		TILE_STATE_actionIdle = 	0,
-		TILE_STATE_actionMove = 	1,
-		TILE_STATE_actionMoveVertical = 2,
-		TILE_STATE_actionClassAction1 = 3,
-		TILE_STATE_actionClassAction2 = 4,
+    enum TileStateAction
+    {
+        TILE_STATE_actionIdle = 	0,
+        TILE_STATE_actionMove = 	1,
+        TILE_STATE_actionMoveVertical = 2,
+        TILE_STATE_actionClassAction1 = 3,
+        TILE_STATE_actionClassAction2 = 4,
 
-		// Not decided yet, what would these be? ( these are also available values to use..)
-		TILE_STATE_actionPENDING2 = 5,
-		TILE_STATE_actionPENDING3 = 6,
-		TILE_STATE_actionPENDING4 = 7,
-	};
+        // Not decided yet, what would these be? ( these are also available values to use..)
+        TILE_STATE_actionPENDING2 = 5,
+        TILE_STATE_actionPENDING3 = 6,
+        TILE_STATE_actionPENDING4 = 7,
+    };
 
-	enum TileStateDirection
-	{
-		TILE_STATE_dirN = 	0,
-		TILE_STATE_dirNE = 	1,
-		TILE_STATE_dirE = 	2,
-		TILE_STATE_dirSE = 	3,
-		TILE_STATE_dirS = 	4,
-		TILE_STATE_dirSW = 	5,
-		TILE_STATE_dirW = 	6,
-		TILE_STATE_dirNW = 	7
-	};
+    enum TileStateDirection
+    {
+        TILE_STATE_dirN = 	0,
+        TILE_STATE_dirNE = 	1,
+        TILE_STATE_dirE = 	2,
+        TILE_STATE_dirSE = 	3,
+        TILE_STATE_dirS = 	4,
+        TILE_STATE_dirSW = 	5,
+        TILE_STATE_dirW = 	6,
+        TILE_STATE_dirNW = 	7
+    };
 
-	struct Tile
-	{
-		uint64_t state = 0;
-	};
-
-
-	void set_tile_uid(uint64_t& tile, uint32_t uid);
-	void set_tile_terrelevation(uint64_t& tile, PK_ubyte value);
-	void set_tile_terrtype(uint64_t& tile, PK_ubyte value);
-	void set_tile_terreffect(uint64_t& tile, PK_ubyte value);
-	void set_tile_thingcategory(uint64_t& tile, PK_ubyte value);
-	void set_tile_thingid(uint64_t& tile, PK_ubyte value);
-	void set_tile_action(uint64_t& tile, PK_ubyte value);
-	void set_tile_facingdir(uint64_t& tile, PK_ubyte value);
-	void set_tile_customvar(uint64_t& tile, PK_ubyte value);
+    struct Tile
+    {
+        uint64_t state = 0;
+    };
 
 
-	uint32_t get_tile_uid(uint64_t tile);
-	PK_ubyte get_tile_terrelevation(uint64_t tile);
-	PK_ubyte get_tile_terrtype(uint64_t tile);
-	PK_ubyte get_tile_terreffect(uint64_t tile);
-	PK_ubyte get_tile_thingcategory(uint64_t tile);
-	PK_ubyte get_tile_thingid(uint64_t tile);
-	PK_ubyte get_tile_action(uint64_t tile);
-	PK_ubyte get_tile_facingdir(uint64_t tile);
-	PK_ubyte get_tile_customvar(uint64_t tile);
+    void set_tile_uid(uint64_t& tile, uint32_t uid);
+    void set_tile_terrelevation(uint64_t& tile, PK_ubyte value);
+    void set_tile_terrtype(uint64_t& tile, PK_ubyte value);
+    void set_tile_terreffect(uint64_t& tile, PK_ubyte value);
+    void set_tile_thingcategory(uint64_t& tile, PK_ubyte value);
+    void set_tile_thingid(uint64_t& tile, PK_ubyte value);
+    void set_tile_action(uint64_t& tile, PK_ubyte value);
+    void set_tile_facingdir(uint64_t& tile, PK_ubyte value);
+    void set_tile_customvar(uint64_t& tile, PK_ubyte value);
+
+
+    uint32_t get_tile_uid(uint64_t tile);
+    PK_ubyte get_tile_terrelevation(uint64_t tile);
+    PK_ubyte get_tile_terrtype(uint64_t tile);
+    PK_ubyte get_tile_terreffect(uint64_t tile);
+    PK_ubyte get_tile_thingcategory(uint64_t tile);
+    PK_ubyte get_tile_thingid(uint64_t tile);
+    PK_ubyte get_tile_action(uint64_t tile);
+    PK_ubyte get_tile_facingdir(uint64_t tile);
+    PK_ubyte get_tile_customvar(uint64_t tile);
 }
-
 

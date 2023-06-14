@@ -10,124 +10,163 @@
 #define OBJECT_DATA_STRLEN_NAME 32
 #define OBJECT_DATA_STRLEN_DESCRIPTION 32
 #define OBJECT_DATA_STRLEN_ACTION_NAME 16
-                                                                                                       
+
 #define OBJECT_DATA_COUNT_STATS 1
 #define OBJECT_DATA_COUNT_TOTAL ((1 + 1) + (TILE_STATE_MAX_action + 1) + OBJECT_DATA_COUNT_STATS)
 
 
 namespace world
 {
-	class VisualWorld;
+    class World;
 
-	namespace objects
-	{
-		struct ObjectInfo
+    namespace objects
+    {
+        struct ObjectInfo
+        {
+            // misc. stuff
+            char name[OBJECT_DATA_STRLEN_NAME];
+            char description[OBJECT_DATA_STRLEN_DESCRIPTION];
+
+            char actionSlot[TILE_STATE_MAX_action + 1][OBJECT_DATA_STRLEN_ACTION_NAME];
+
+            // stats
+            PK_ubyte speed;
+
+            // Client exclusive properties:
+            pk::web::WebTexture* pTexture = nullptr; // *NOTE! ObjectInfo doesn't own its' texture
+            // How to crop texture to display portrait in ui
+            typedef struct TexturePortraitCropping
+            {
+                // How many individual images in sprite sheet
+                float rowCount = 8.0f;
+                pk::vec2 pos;
+                pk::vec2 scale;
+
+                TexturePortraitCropping() :
+                    TexturePortraitCropping (8.0f, { 1.0f, 3.0f }, 64.0f)
+                {}
+                TexturePortraitCropping(float rows, pk::vec2 cropBegin, float cropScale)
                 {
-			// misc. stuff
-			char name[OBJECT_DATA_STRLEN_NAME];
-			char description[OBJECT_DATA_STRLEN_DESCRIPTION];
-			
-			char actionSlot[TILE_STATE_MAX_action + 1][OBJECT_DATA_STRLEN_ACTION_NAME];
+                    rowCount = rows;
+                    pos = pk::vec2(cropBegin.x / rowCount, cropBegin.y / rowCount);
+                    scale = pk::vec2(cropScale / (rowCount * cropScale), cropScale / (rowCount * cropScale));
+                }
 
-			// stats
-			PK_ubyte speed;
+            } TexturePortraitCropping;
 
-			// Client exclusive properties:
-			pk::web::WebTexture* pTexture = nullptr; // *NOTE! ObjectInfo doesn't own its' texture
-			bool rotateableSprite = false;
+            TexturePortraitCropping portraitCropping;
 
-			ObjectInfo(
-				std::string objName,
-				std::string objDescription,
-				std::vector<std::string> actionSlots,
-				PK_ubyte speedVal
-			):
-				speed(speedVal)
-			{
+            bool rotateableSprite = false;
 
-				memset(name, 0, sizeof(char) * OBJECT_DATA_STRLEN_NAME);
-				memset(description, 0, sizeof(char) * OBJECT_DATA_STRLEN_DESCRIPTION);
-				
-				size_t nameLen = objName.size();
-				size_t descriptionLen = objDescription.size();
+            static TexturePortraitCropping s_defaultPortraitCropping;
 
-				if (nameLen > OBJECT_DATA_STRLEN_NAME || nameLen == 0)
-					nameLen = OBJECT_DATA_STRLEN_NAME;
-				if (descriptionLen > OBJECT_DATA_STRLEN_DESCRIPTION || nameLen == 0)
-					descriptionLen = OBJECT_DATA_STRLEN_DESCRIPTION;
+            ObjectInfo(
+                    std::string objName,
+                    std::string objDescription,
+                    std::vector<std::string> actionSlots,
+                    PK_ubyte speedVal
+                    ):
+                speed(speedVal)
+            {
 
-				memcpy(name, objName.c_str(), sizeof(char) * nameLen);
-				memcpy(description, objDescription.c_str(), sizeof(char) * descriptionLen);
-				
-				for (size_t i = 0; i < TILE_STATE_MAX_action + 1; ++i)
-				{
-					memset(actionSlot[i], 0, sizeof(char) * OBJECT_DATA_STRLEN_ACTION_NAME);
-					if (i < actionSlots.size())
-					{
-						const std::string& slotName = actionSlots[i];
-						size_t slotLen = slotName.size();
-						if (slotLen > OBJECT_DATA_STRLEN_ACTION_NAME)
-							slotLen = OBJECT_DATA_STRLEN_ACTION_NAME;
+                memset(name, 0, sizeof(char) * OBJECT_DATA_STRLEN_NAME);
+                memset(description, 0, sizeof(char) * OBJECT_DATA_STRLEN_DESCRIPTION);
 
-						memcpy(actionSlot[i], slotName.c_str(), sizeof(char) * slotLen);
-					}
-				}
-			}
-			
-			ObjectInfo(const ObjectInfo& other):
-				speed(other.speed),
-				pTexture(other.pTexture),
-				rotateableSprite(other.rotateableSprite)
-			{
-				memcpy(this->name, other.name, OBJECT_DATA_STRLEN_NAME);
-				memcpy(this->description, other.description, OBJECT_DATA_STRLEN_DESCRIPTION);
-				for (int i = 0; i < TILE_STATE_MAX_action + 1; ++i)
-					memcpy(actionSlot[i], other.actionSlot[i], OBJECT_DATA_STRLEN_ACTION_NAME);
-			}
-                };
-		
+                size_t nameLen = objName.size();
+                size_t descriptionLen = objDescription.size();
 
-		// Returns the size of data moving accross netw (excludes server and client specific data)
-		size_t get_netw_objinfo_size();
+                if (nameLen > OBJECT_DATA_STRLEN_NAME || nameLen == 0)
+                    nameLen = OBJECT_DATA_STRLEN_NAME;
+                if (descriptionLen > OBJECT_DATA_STRLEN_DESCRIPTION || nameLen == 0)
+                    descriptionLen = OBJECT_DATA_STRLEN_DESCRIPTION;
+
+                memcpy(name, objName.c_str(), sizeof(char) * nameLen);
+                memcpy(description, objDescription.c_str(), sizeof(char) * descriptionLen);
+
+                for (size_t i = 0; i < TILE_STATE_MAX_action + 1; ++i)
+                {
+                    memset(actionSlot[i], 0, sizeof(char) * OBJECT_DATA_STRLEN_ACTION_NAME);
+                    if (i < actionSlots.size())
+                    {
+                        const std::string& slotName = actionSlots[i];
+                        size_t slotLen = slotName.size();
+                        if (slotLen > OBJECT_DATA_STRLEN_ACTION_NAME)
+                            slotLen = OBJECT_DATA_STRLEN_ACTION_NAME;
+
+                        memcpy(actionSlot[i], slotName.c_str(), sizeof(char) * slotLen);
+                    }
+                }
+            }
+
+            ObjectInfo(const ObjectInfo& other):
+                speed(other.speed),
+                pTexture(other.pTexture),
+                rotateableSprite(other.rotateableSprite)
+            {
+                memcpy(this->name, other.name, OBJECT_DATA_STRLEN_NAME);
+                memcpy(this->description, other.description, OBJECT_DATA_STRLEN_DESCRIPTION);
+                for (int i = 0; i < TILE_STATE_MAX_action + 1; ++i)
+                    memcpy(actionSlot[i], other.actionSlot[i], OBJECT_DATA_STRLEN_ACTION_NAME);
+            }
+        };
 
 
-		// NOTE: Visual object doesnt own any of mem of these ptrs. 
-		// Its just collection of ptrs to elsewhere managed mem
-		// (atm like like World's "VisualTile")
-		class VisualObject
-		{
-		private:
-			VisualWorld& _worldRef;
-			pk::Sprite3DRenderable* _pSprite = nullptr;
-			float _verticalOffset = 0.0f;
-			
-			// *NOTE! Below was bad idea, especially when object rotates in middle of anim..
-			// Outermost vector[8] is for each different direction(N,NE,E...) of the sprite
-			// Inner vector[varying] is for each animation of a single direction (as many anims we want)
-			//std::vector<std::vector<pk::SpriteAnimator*>> _anims;
-		public:
-			VisualObject(pk::Scene& scene, VisualWorld& worldRef, pk::Sprite3DRenderable* pSprite);
-			VisualObject(const VisualObject& other);
-			~VisualObject();
+        // Returns the size of data moving accross netw (excludes server and client specific data)
+        size_t get_netw_objinfo_size();
 
-			void assignAnimFrames(PK_ubyte tileObject, PK_ubyte tileAction, pk::Animation* anim);
-			
-			void show(
-				PK_ubyte tileObject, 
-				PK_ubyte tileAction, 
-				int objDir,
-				int camDir,
-				const ObjectInfo& staticObjInfo,
-				float worldX, 
-			       	float worldZ,
-				pk::Animation* animation,
-				pk::vec3& tileMovement
-			);
-			void hide();
 
-		private:
-			void move(int dir, float speed, pk::vec3& tileMovement);
-			void moveVertical(int dir, float speed, pk::vec3& tileMovement);
-		};
-	}
+        // NOTE: Visual object doesnt own any of mem of these ptrs.
+        // Its just collection of ptrs to elsewhere managed mem
+        // (atm like like World's "VisualTile")
+        class VisualObject
+        {
+        private:
+            World& _worldRef;
+            pk::Sprite3DRenderable* _pSprite = nullptr;
+            float _verticalOffset = 0.0f;
+
+            // *NOTE! Below was bad idea, especially when object rotates in middle of anim..
+            // Outermost vector[8] is for each different direction(N,NE,E...) of the sprite
+            // Inner vector[varying] is for each animation of a single direction (as many anims we want)
+            //std::vector<std::vector<pk::SpriteAnimator*>> _anims;
+        public:
+            VisualObject(pk::Scene& scene, World& worldRef, pk::Sprite3DRenderable* pSprite);
+            VisualObject(const VisualObject& other);
+            ~VisualObject();
+
+            void assignAnimFrames(PK_ubyte tileObject, PK_ubyte tileAction, pk::Animation* anim);
+
+            void show(
+                PK_ubyte tileObject,
+                PK_ubyte tileAction,
+                int objDir,
+                int camDir,
+                const ObjectInfo& staticObjInfo,
+                float worldX,
+                float worldZ,
+                pk::Animation* animation,
+                pk::vec3& tileMovement
+            );
+            void hide();
+
+        private:
+            void move(int dir, float speed, pk::vec3& tileMovement);
+            void moveVertical(int dir, float speed, pk::vec3& tileMovement);
+        };
+
+
+        class ObjectInfoLib
+        {
+        private:
+            static bool s_initialized;
+            static std::vector<pk::web::WebTexture*> s_pTextures;
+            static std::vector<ObjectInfo> s_objects;
+
+        public:
+            static ObjectInfo* get(int index);
+            static size_t get_size();
+            static void create(const PK_byte* data, size_t dataSize);
+            static void destroy();
+        };
+    }
 }

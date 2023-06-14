@@ -1,45 +1,73 @@
 #pragma once
 
 #include "../../PortablePesukarhu/ppk.h"
+#include "BaseScene.h"
+#include "../net/Client.h"
 #include "../ui/ui.h"
 #include <unordered_map>
 
 
-class FactionBuilding
+class MainMenu : public BaseScene
 {
 private:
-    uint32_t _entity = 0;
-    pk::Sprite3DRenderable* _pRenderable = nullptr;
-    std::string _type;
+    // On click events
+    class OnClickCreateFaction : public pk::ui::OnClickEvent
+    {
+    public:
+        pk::TextRenderable* pCreateFactionInputFieldTxt = nullptr;
 
-public:
-    FactionBuilding(
-        std::string type, 
-        pk::vec3 pos, 
-        pk::vec2 scale, 
-        pk::Scene* scene, 
-        pk::Texture* spriteSheetTexture,
-        pk::vec2 texOffset
-    );
+        OnClickCreateFaction(pk::TextRenderable* pCreateFactionInputFieldTxt)
+        {
+            this->pCreateFactionInputFieldTxt = pCreateFactionInputFieldTxt;
+        }
 
-    FactionBuilding(const FactionBuilding& other);
-};
+        virtual void onClick(pk::InputMouseButtonName button);
+    };
 
 
-class MainMenu : public pk::Scene
-{
-private:
-    Panel* _mainFuncPanel = nullptr;
-    Panel* _createFactionPanel = nullptr;
-    std::vector<pk::Component*> _buildingsUIComponents;
+    class OnClickDeploymentMenu : public pk::ui::OnClickEvent
+    {
+    public:
+        virtual void onClick(pk::InputMouseButtonName button);
+    };
 
-    pk::web::WebTexture* _pBuildingsTexture = nullptr;
-    bool _userFactionExists = false;
+    class OnClickLogout : public pk::ui::OnClickEvent
+    {
+    public:
+        // TODO: Send the actual logout message
+        virtual void onClick(pk::InputMouseButtonName button);
+    };
+
+    // On message events
+    class OnMessageMOTD : public net::OnMessageEvent
+    {
+    public:
+        pk::TextRenderable* pMOTDTxt = nullptr;
+
+        OnMessageMOTD(pk::TextRenderable* pMOTD) :
+            pMOTDTxt(pMOTD)
+        {}
+
+        virtual void onMessage(const PK_byte* data, size_t dataSize);
+    };
+
+    class OnMessageCreateFaction : public net::OnMessageEvent
+    {
+    public:
+        MainMenu& sceneRef;
+
+        OnMessageCreateFaction(MainMenu& sceneRef) :
+            sceneRef(sceneRef)
+        {}
+
+        virtual void onMessage(const PK_byte* data, size_t dataSize);
+    };
+
+    Panel _mainFuncPanel;
+    Panel _createFactionPanel;
 
     pk::TextRenderable* _pMOTDTxt = nullptr;
-
-    static std::unordered_map<std::string, pk::Texture*> s_textures;
-    static std::unordered_map<std::string, FactionBuilding> s_factionBuildings;
+    pk::TextRenderable* _pFactionInfoTxt = nullptr;
 
 public:
     MainMenu();

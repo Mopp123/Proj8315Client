@@ -1,19 +1,41 @@
 #pragma once
 
 #include "../../PortablePesukarhu/ppk.h"
-
+#include "BaseScene.h"
+#include "../net/Client.h"
 #include "../world/World.h"
-
 #include <vector>
 
 
-class InGame : public pk::Scene
+class InGame : public BaseScene
 {
 private:
+    // On message events
+    class OnMessageGetAllFactions : public net::OnMessageEvent
+    {
+    public:
+        world::World& worldRef;
 
-    pk::ui::Text* _pText_debug_delta = nullptr;
+        OnMessageGetAllFactions(world::World& worldRef) :
+            worldRef(worldRef)
+        {}
 
-    world::VisualWorld* _visualWorld = nullptr;
+        virtual void onMessage(const PK_byte* data, size_t dataSize);
+    };
+
+    class OnMessageGetChangedFactions : public net::OnMessageEvent
+    {
+    public:
+        world::World& worldRef;
+
+        OnMessageGetChangedFactions(world::World& worldRef) :
+            worldRef(worldRef)
+        {}
+
+        virtual void onMessage(const PK_byte* data, size_t dataSize);
+    };
+
+    world::World* _world = nullptr;
 
     pk::Sprite3DRenderable* _testSprite = nullptr;
 
@@ -26,10 +48,7 @@ private:
     pk::web::WebTexture* _terrainTexture3 = nullptr;
     pk::web::WebTexture* _terrainTexture4 = nullptr;
 
-    pk::ui::InputField* _inputField_position = nullptr;
-
 public:
-
     InGame();
     ~InGame();
 

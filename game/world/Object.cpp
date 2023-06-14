@@ -1,15 +1,20 @@
-
 #include "Object.h"
 #include <unordered_map>
-
 #include "World.h"
+#include <string>
+
 
 using namespace pk;
+using namespace pk::web;
+
 
 namespace world
 {
     namespace objects
     {
+
+        ObjectInfo::TexturePortraitCropping ObjectInfo::s_defaultPortraitCropping;
+
         size_t get_netw_objinfo_size()
         {
             size_t combinedStrLen = (OBJECT_DATA_STRLEN_NAME + OBJECT_DATA_STRLEN_DESCRIPTION);
@@ -29,28 +34,28 @@ namespace world
             else
                 return directionCount - dist;
         }
-        
+
         // indexes: [objectType][action][animFrames]
-        static std::vector<std::vector<std::vector<int>>> s_animationFrames = 
+        static std::vector<std::vector<std::vector<int>>> s_animationFrames =
         {
-            { 
+            {
+                { 2 }
+            },
+            {
                 { 0 }
             },
-            { 
-                { 0 }
-            },
-            { 
+            {
                 { 0 },
                 { 1, 2 }
             },
-            { 
+            {
                 { 3 },
                 { 0 },
                 { 0, 1, 2, 3 }
             }
         };
-        
-        VisualObject::VisualObject(pk::Scene& scene, VisualWorld& worldRef, pk::Sprite3DRenderable* pSprite) :
+
+        VisualObject::VisualObject(pk::Scene& scene, World& worldRef, pk::Sprite3DRenderable* pSprite) :
             _worldRef(worldRef),
             _pSprite(pSprite)
         {}
@@ -62,7 +67,7 @@ namespace world
             _pSprite = other._pSprite;
         }
 
-        VisualObject::~VisualObject() 
+        VisualObject::~VisualObject()
         {}
 
         void VisualObject::assignAnimFrames(PK_ubyte tileObject, PK_ubyte tileAction, Animation* anim)
@@ -78,12 +83,12 @@ namespace world
         // TODO: Sprite animating
         // TODO: Object speeds and stats
         void VisualObject::show(
-            PK_ubyte tileObject, 
-            PK_ubyte tileAction, 
+            PK_ubyte tileObject,
+            PK_ubyte tileAction,
             int objDir,
             int camDir,
             const ObjectInfo& staticObjInfo,
-            float worldX, 
+            float worldX,
             float worldZ,
             pk::Animation* animation,
             pk::vec3& tileMovement
@@ -102,6 +107,10 @@ namespace world
             {
                 //animation->enableLooping(false);
                 _pSprite->scale = vec2(8, 8);
+            }
+            else if (tileObject == 2)
+            {
+                _pSprite->scale = vec2(1.5f, 1.5f);
             }
             else
             {
@@ -128,7 +137,6 @@ namespace world
             // If action == movement of some kind -> move the sprite
             switch (tileAction)
             {
-
                 case TileStateAction::TILE_STATE_actionMove:
                     move(objDir, speedStat, tileMovement);
                     break;
@@ -142,17 +150,17 @@ namespace world
             // JUST FOR TESTING: reset vertical offset, if someone had changed it for some reason..
             if (tileAction != TileStateAction::TILE_STATE_actionMoveVertical)
                 _verticalOffset = 0.0f;
-            
+
             // Animate sprite
             _pSprite->textureOffset.x = animation->getCurrentFrame();
 
             _pSprite->position.x = worldX + tileMovement.x;
             _pSprite->position.z = worldZ + tileMovement.z;
-            // Update sprite's height depending on visual tile terrain 
+            // Update sprite's height depending on visual tile terrain
             // (needs to be done after everything else so we get the "real accurate place"
             // -> for example all above code might change the sprite's "current visual tile")
             _pSprite->position.y = _worldRef.getTileVisualHeightAt(
-                _pSprite->position.x, 
+                _pSprite->position.x,
                 _pSprite->position.z
             ) + _verticalOffset + tileMovement.y;
         }
@@ -199,7 +207,7 @@ namespace world
                 default:
                     break;
             }
-            
+
             dirVec.normalize();
             if (diag)
                 dirVec = dirVec * 1.4f;
@@ -216,6 +224,111 @@ namespace world
                 tileMovement.y += speed * 2.0f * Timing::get_delta_time();
             else if (dir == TileStateDirection::TILE_STATE_dirS)
                 tileMovement.y -= speed * 2.0f * Timing::get_delta_time();
+        }
+
+
+        bool ObjectInfoLib::s_initialized = false;
+        std::vector<WebTexture*> ObjectInfoLib::s_pTextures;
+        std::vector<ObjectInfo> ObjectInfoLib::s_objects;
+
+        ObjectInfo* ObjectInfoLib::get(int index)
+        {
+            if (index < 0 || index >= s_objects.size())
+            {
+                Debug::log(
+                    "Attempted to access invalid index of Object Info lib. Index: " + std::to_string(index) + " Info lib size was: " + std::to_string(s_objects.size()),
+                    Debug::MessageType::PK_ERROR);
+                return nullptr;
+            }
+            return &s_objects[index];
+        }
+
+        size_t ObjectInfoLib::get_size()
+        {
+            return s_objects.size();
+        }
+
+        void ObjectInfoLib::create(const PK_byte* data, size_t dataSize)
+        {
+            if (s_initialized)
+            {
+                Debug::log(
+                    "Attempted to create Object Info lib while previous one still exists",
+                    Debug::MessageType::PK_ERROR
+                );
+                return;
+            }
+            const size_t objCount = dataSize / get_netw_objinfo_size();
+            int currentDataPos = 0;
+            for (size_t i = 0; i < objCount; ++i)
+            {
+                PK_byte name[OBJECT_DATA_STRLEN_NAME];
+                memcpy(name, data + currentDataPos, OBJECT_DATA_STRLEN_NAME);
+                std::string name_str(name, OBJECT_DATA_STRLEN_NAME);
+
+                PK_byte description[OBJECT_DATA_STRLEN_DESCRIPTION];
+                memcpy(
+                    description,
+                    data + currentDataPos + OBJECT_DATA_STRLEN_NAME,
+                    OBJECT_DATA_STRLEN_DESCRIPTION
+                );
+                std::string description_str(description, OBJECT_DATA_STRLEN_DESCRIPTION);
+
+                std::vector<std::string> actions;
+                int currentPtr = OBJECT_DATA_STRLEN_NAME + OBJECT_DATA_STRLEN_DESCRIPTION;
+                for (int j = 0; j < TILE_STATE_MAX_action + 1; ++j)
+                {
+                    PK_byte action[OBJECT_DATA_STRLEN_ACTION_NAME];
+                    memcpy(action, data + currentDataPos + currentPtr, OBJECT_DATA_STRLEN_ACTION_NAME);
+                    std::string action_str(action, OBJECT_DATA_STRLEN_ACTION_NAME);
+                    actions.push_back(action_str);
+                    currentPtr += OBJECT_DATA_STRLEN_ACTION_NAME;
+                }
+                // obj stats..
+                PK_ubyte speed = 0;
+                memcpy(&speed, data + currentDataPos + currentPtr, 1);
+                ObjectInfo objInfo(name_str, description_str, actions, speed);
+
+                // TODO: Make below somehow more less dumb..
+                // Set these objects' visual properties
+                // *use 'i' since index of that list is equal to the object's type id
+
+                // Load all sprite textures
+                TextureSampler spriteTextureSampler =
+                {
+                    TextureSamplerFilterMode::PK_SAMPLER_FILTER_MODE_LINEAR,
+                    TextureSamplerAddressMode::PK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE,
+                    2
+                };
+                s_pTextures.push_back(new WebTexture("assets/environment.png", spriteTextureSampler, 8));
+                s_pTextures.push_back(new WebTexture("assets/MovementTest.png", spriteTextureSampler, 8));
+                s_pTextures.push_back(new WebTexture("assets/landings.png", spriteTextureSampler, 4));
+                switch (i)
+                {
+                    case 1:
+                        objInfo.pTexture = s_pTextures[0];
+                        break;
+                    case 2:
+                        objInfo.rotateableSprite = true;
+                        objInfo.pTexture = s_pTextures[1];
+                        break;
+                    case 3:
+                        objInfo.pTexture = s_pTextures[2];
+                        break;
+                    default:
+                        break;
+                }
+                s_objects.push_back(objInfo);
+                currentDataPos += currentPtr + 1; // +1 since the one byte stat
+            }
+            s_initialized = true;
+        }
+
+        void ObjectInfoLib::destroy()
+        {
+            for (WebTexture* pTex : s_pTextures)
+                delete pTex;
+            s_initialized = false;
         }
     }
 }

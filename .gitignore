@@ -1,3 +1,4 @@
 build/
 build-old.sh
 compile_commands.json
+*.swp

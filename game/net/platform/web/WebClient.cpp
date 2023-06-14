@@ -11,8 +11,8 @@ namespace net
     namespace web
     {
         EM_BOOL onopen(
-            int eventType, 
-            const EmscriptenWebSocketOpenEvent *websocketEvent, 
+            int eventType,
+            const EmscriptenWebSocketOpenEvent *websocketEvent,
             void *userData
         )
         {
@@ -25,8 +25,8 @@ namespace net
 
 
         EM_BOOL onerror(
-            int eventType, 
-            const EmscriptenWebSocketErrorEvent *websocketEvent, 
+            int eventType,
+            const EmscriptenWebSocketErrorEvent *websocketEvent,
             void *userData
         )
         {
@@ -36,8 +36,8 @@ namespace net
 
 
         EM_BOOL onclose(
-            int eventType, 
-            const EmscriptenWebSocketCloseEvent *websocketEvent, 
+            int eventType,
+            const EmscriptenWebSocketCloseEvent *websocketEvent,
             void *userData
         )
         {
@@ -47,8 +47,8 @@ namespace net
 
 
         EM_BOOL onmessage(
-            int eventType, 
-            const EmscriptenWebSocketMessageEvent *websocketEvent, 
+            int eventType,
+            const EmscriptenWebSocketMessageEvent *websocketEvent,
             void *userData
         )
         {
@@ -64,6 +64,10 @@ namespace net
                 // Attempt to parse "header"(first 32 bits) to find the "MessageType"
                 int32_t messageType = -1;
                 memcpy(&messageType, (const void*)messageData, sizeof(int32_t));
+
+                //if (messageType != MESSAGE_TYPE__GetWorldState)
+                //    Debug::log("___TEST___onmessage: " + std::to_string(messageType));
+
                 auto event = client->_onMessageEvents.find(messageType);
                 if (event != client->_onMessageEvents.end())
                     (*event).second->onMessage(messageData + sizeof(int32_t), messageSize - sizeof(int32_t));
@@ -87,7 +91,7 @@ namespace net
 
             _ws = emscripten_websocket_new(&ws_attrs);
             if (_ws == 0)
-                Debug::log("Websocket was not supporte", Debug::MessageType::PK_ERROR);
+                Debug::log("Websocket was not supported", Debug::MessageType::PK_ERROR);
             else if (_ws < 0)
                 Debug::log("Failed to connect to: " + _hostname, Debug::MessageType::PK_ERROR);
 
@@ -121,7 +125,6 @@ namespace net
                 //Debug::log("___WEBSOCKET_ERROR___");
                 return 0;
             }
-
             EMSCRIPTEN_RESULT result = emscripten_websocket_send_binary(_connSD, (void*)data, (uint32_t)dataSize);
             if (result < 0)
             {
@@ -157,9 +160,10 @@ namespace net
                 bufSize += fullSize;
             }
 
+            Debug::log("___TEST___sending with size: " + std::to_string(sendBuf.size()));
             EMSCRIPTEN_RESULT result = emscripten_websocket_send_binary(
-                _connSD, 
-                sendBuf.data(), 
+                _connSD,
+                sendBuf.data(),
                 (uint32_t)sendBuf.size()
             );
             if (result < 0)

@@ -3,7 +3,8 @@
 root_dir=`pwd`
 
 # These depends on your setup
-emsdk_dir=~/Documents/emsdk
+#emsdk_dir=~/Documents/emsdk
+emsdk_dir=emsdk
 engine_src=`pwd`/PortablePesukarhu
 game_src=`pwd`/game
 html_shell_location=`pwd`/shell.html
@@ -28,9 +29,16 @@ echo "starting building to ${build_dir}"
 
 em++ \
 ${game_src}/Main.cpp \
+${game_src}/scenes/BaseScene.cpp \
 ${game_src}/scenes/LoginMenu.cpp \
+${game_src}/scenes/RegisterMenu.cpp \
 ${game_src}/scenes/MainMenu.cpp \
 ${game_src}/scenes/DeploymentMenu.cpp \
+${game_src}/scenes/InGame.cpp \
+${game_src}/world/World.cpp \
+${game_src}/world/Object.cpp \
+${game_src}/world/Tile.cpp \
+${game_src}/world/Faction.cpp \
 ${game_src}/net/Client.cpp \
 ${game_src}/ui/ui.cpp \
 ${game_src}/net/platform/web/WebClient.cpp \

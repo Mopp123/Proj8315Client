@@ -11,8 +11,8 @@ namespace net
             _onMessageEvents.insert({ messageType, event });
         else
             pk::Debug::log(
-                "Attempted to add OnMessageEvent but event with same type already exists", 
-                pk::Debug::MessageType::PK_FATAL_ERROR
+                "Attempted to add OnMessageEvent but event with same type already exists",
+                pk::Debug::MessageType::PK_ERROR
             );
     }
 

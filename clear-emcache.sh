@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # These depends on your setup
-emsdk_dir=~/Documents/emsdk
+emsdk_dir=emsdk
 
 cd $emsdk_dir
 ./emsdk activate latest

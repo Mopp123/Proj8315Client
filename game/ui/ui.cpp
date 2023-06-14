@@ -5,70 +5,87 @@ using namespace pk;
 using namespace ui;
 
 
-Panel::Panel(
+void Panel::init(
     std::pair<pk::ui::ConstraintType, float> horizontalConstraint,
     std::pair<pk::ui::ConstraintType, float> verticalConstraint,
     vec2 slotScale,
     bool drawBackground, pk::vec2 backgroundScale,
     PanelLayoutType layoutType
-) :
-    _horizontalConstraint(horizontalConstraint),
-    _verticalConstraint(verticalConstraint),
-    _slotScale(slotScale),
-    _layoutType(layoutType)
+)
 {
+    _horizontalConstraint = horizontalConstraint;
+    _verticalConstraint = verticalConstraint;
+    _slotScale = slotScale;
+    _layoutType = layoutType;
+
     _pCurrentScene = Application::get()->accessCurrentScene();
     _entity = _pCurrentScene->createEntity();
 
     if (drawBackground)
     {
-        // NOTE: Not configured for other than vertical center constraint!!!
-        uint32_t backgroundImg = create_image(
-            horizontalConstraint.first, horizontalConstraint.second,
-            verticalConstraint.first, verticalConstraint.second - backgroundScale.y * 0.5f,
+        uint32_t backgroundImg = 0;
+        backgroundImg = create_image(
+            horizontalConstraint.first, horizontalConstraint.second - _slotPadding,
+            verticalConstraint.first, verticalConstraint.second + _slotPadding,
             backgroundScale.x, backgroundScale.y,
             false,
+            nullptr,
+            { 0, 0, 1, 1},
             { 0.1f, 0.1f, 0.1f }
         );
-        _pCurrentScene->addChild(_entity, backgroundImg);
+        if (backgroundImg)
+            _pCurrentScene->addChild(_entity, backgroundImg);
     }
 }
 
 Panel::~Panel()
 {}
 
-void Panel::addText(std::string txt)
+std::pair<uint32_t, TextRenderable*> Panel::addText(std::string txt)
 {
     float charSize = (32.0f * 0.5f) * 0.5f;
     vec2 toAdd = calcNewSlotPos();
-    uint32_t txtEntity = create_text(
+    std::pair<uint32_t, TextRenderable*> txtObj = create_text(
         txt,
-        _horizontalConstraint.first, 
-        _horizontalConstraint.second + toAdd.x - txt.size() * charSize,
-        _verticalConstraint.first, 
+        _horizontalConstraint.first,
+        _horizontalConstraint.second + toAdd.x,
+        _verticalConstraint.first,
         _verticalConstraint.second + toAdd.y
-    ).first;
-    _pCurrentScene->addChild(_entity, txtEntity);
-   _slotCount++;
+    );
+    _pCurrentScene->addChild(_entity, txtObj.first);
+    _slotCount++;
+    return txtObj;
 }
 
-void Panel::addButton(std::string txt, pk::ui::OnClickEvent* onClick)
+uint32_t Panel::addButton(
+        std::string txt,
+        pk::ui::OnClickEvent* onClick,
+        bool selectable,
+        pk::Texture* texture,
+        pk::vec4 textureCropping,
+        pk::vec3 color
+)
 {
     vec2 toAdd = calcNewSlotPos();
     uint32_t buttonEntity = create_button(
         txt,
-        _horizontalConstraint.first, 
+        _horizontalConstraint.first,
         _horizontalConstraint.second + toAdd.x,
-        _verticalConstraint.first, 
+        _verticalConstraint.first,
         _verticalConstraint.second + toAdd.y,
         _slotScale.x, _slotScale.y,
-        onClick
+        onClick,
+        selectable,
+        texture,
+        textureCropping,
+        color
     );
     _pCurrentScene->addChild(_entity, buttonEntity);
     _slotCount++;
+    return buttonEntity;
 }
 
-void Panel::addInputField(
+std::pair<uint32_t, pk::TextRenderable*> Panel::addInputField(
     std::string infoTxt,
     float width,
     pk::ui::InputFieldOnSubmitEvent* onSubmit,
@@ -76,18 +93,19 @@ void Panel::addInputField(
 )
 {
     vec2 toAdd = calcNewSlotPos();
-    uint32_t inputFieldEntity = create_input_field(
+    std::pair<uint32_t, TextRenderable*> inputField = create_input_field(
         infoTxt,
-        _horizontalConstraint.first, 
+        _horizontalConstraint.first,
         _horizontalConstraint.second + toAdd.x,
-        _verticalConstraint.first, 
+        _verticalConstraint.first,
         _verticalConstraint.second + toAdd.y,
         width,
         onSubmit,
         clearOnSubmit
-    ).first;
-    _pCurrentScene->addChild(_entity, inputFieldEntity);
+    );
+    _pCurrentScene->addChild(_entity, inputField.first);
     _slotCount++;
+    return inputField;
 }
 
 void Panel::setActive(bool arg)
@@ -99,7 +117,6 @@ void Panel::setActive(bool arg)
         c->setActive(arg);
         count++;
     }
-    Debug::log("___TEST___FOUND COUNT = " + std::to_string(count));
 }
 
 vec2 Panel::calcNewSlotPos()

@@ -1,9 +1,6 @@
 #include "InGame.h"
 
 #include "../net/Client.h"
-
-#include "../net/Client.h"
-#include "../net/requests/Commands.h"
 #include "../net/NetCommon.h"
 
 #include "../world/Tile.h"
@@ -18,38 +15,63 @@ using namespace pk::web;
 
 using namespace ui;
 using namespace net;
-using namespace net::web;
 
 
-class OnSubmit_position : public InputFieldOnSubmitEvent
+void InGame::OnMessageGetAllFactions::onMessage(const PK_byte* data, size_t dataSize)
 {
-public:
-    RTSCamController* camController = nullptr;
-    OnSubmit_position(RTSCamController* camcontrol)
+    if (dataSize >= Faction::get_netw_size())
     {
-        camController = camcontrol;
+        const size_t factionDataSize = Faction::get_netw_size();
+        const int receivedFactionsCount = dataSize / (int)factionDataSize;
+        int dataPos = 0;
+        for (int i = 0; i < receivedFactionsCount; ++i)
+        {
+            if (dataPos + factionDataSize > dataSize)
+            {
+                Debug::log(
+                    "@OnMessageGetAllFactions received message's dataSize wasn't multiple of "
+                    "Faction class' netw size. Single faction's netw size: " +
+                    std::to_string(factionDataSize) + " received size: " + std::to_string(dataSize) +
+                    " determined received faction count: " + std::to_string(receivedFactionsCount)
+                );
+                break;
+            }
+            worldRef.addFaction(Faction(data + dataPos));
+            dataPos += factionDataSize;
+        }
     }
+}
 
-    void onSubmit(std::string inputFieldText)
+
+void InGame::OnMessageGetChangedFactions::onMessage(const PK_byte* data, size_t dataSize)
+{
+    Debug::log("___TEST___RECEIVED CHANGED FACTIONS!");
+    if (dataSize >= Faction::get_netw_size())
     {
-        std::string total = inputFieldText;
-
-        size_t delimPos = total.find(',');
-        std::string x_str = total.substr(0, delimPos);
-        total.erase(0, delimPos + 1);
-        std::string z_str = total;
-
-        Debug::log("parse result: x=" + x_str + " z=" + z_str);
-
-        const int tileSize = 2;
-
-        float worldX = (float)(std::stoi(x_str) * tileSize);
-        float worldZ = (float)(std::stoi(z_str) * tileSize);
-
-        camController->setPivotPoint({ worldX, 0, worldZ });
-
-    };
-};
+        const size_t factionDataSize = Faction::get_netw_size();
+        const int receivedFactionsCount = dataSize / (int)factionDataSize;
+        int dataPos = 0;
+        for (int i = 0; i < receivedFactionsCount; ++i)
+        {
+            if (dataPos + factionDataSize > dataSize)
+            {
+                Debug::log(
+                    "@OnMessageGetChangedFactions received message's dataSize wasn't multiple of "
+                    "Faction class' netw size. Single faction's netw size: " +
+                    std::to_string(factionDataSize) + " received size: " + std::to_string(dataSize) +
+                    " determined received faction count: " + std::to_string(receivedFactionsCount)
+                );
+                break;
+            }
+            Faction faction(data + dataPos);
+            if (worldRef.factionExists(faction.getName()))
+                worldRef.updateFaction(faction);
+            else
+                worldRef.addFaction(faction);
+            dataPos += factionDataSize;
+        }
+    }
+}
 
 
 InGame::InGame()
@@ -59,8 +81,8 @@ InGame::~InGame()
 {
     delete _pCamController;
 
-    delete _visualWorld;
-    // NOTE: system deleting issue!
+    delete _world;
+    // NOTE: system deleting issue! UPDATE: this is very old comment, may not apply anymore -> INVESTIGATE FURTHER!
     //delete _pText_debug_delta;
 
     delete _terrainTexture0;
@@ -71,38 +93,18 @@ InGame::~InGame()
 }
 
 static std::string s_TEST_worldstate;
-static Text* s_TEST_text = nullptr;
 
 void InGame::init()
 {
-    // create default camera
-    activeCamera = create_camera({ 0,0,0 });
+    ((BaseScene*)this)->initBase();
+
     // create dir light
     uint32_t lightEntity = createEntity();
     vec3 lightDir(0.0f, -0.5f, -0.5f);
     lightDir.normalize();
     addComponent(lightEntity, new DirectionalLight({ 1,1,1 }, lightDir));
 
-    const float textSize = 16;
-    const float rowPadding = 5;
-
-    const float buttonSize = 24;
-
-    const float panelX = 128;
-    const float panelY = 128;
-
-    // For debugging
-    _pText_debug_delta = new Text(
-        "",
-        {
-            { ConstraintType::PIXEL_TOP, 5 },
-            { ConstraintType::PIXEL_LEFT, 5 }
-        }
-    );
-
     std::chrono::time_point<std::chrono::steady_clock> startTime = std::chrono::high_resolution_clock::now();
-
-    Client::get_instance()->setUserID("Persekorva666");
 
     // Load channel textures for terrain's tiles
     TextureSampler textureSampler =
@@ -131,8 +133,10 @@ void InGame::init()
         2
     };
 
-    Transform* camTransformComponent = (Transform*)((Scene*)this)->getComponent(activeCamera->getEntity(), ComponentType::PK_TRANSFORM);
-    _visualWorld = new world::VisualWorld((Scene&)*this, camTransformComponent, 15);
+    Transform* camTransformComponent = (Transform*)((Scene*)this)->getComponent(
+        activeCamera->getEntity(), ComponentType::PK_TRANSFORM
+    );
+    _world = new world::World((Scene&)*this, camTransformComponent, 15);
 
     float delta = (std::chrono::duration<float>(std::chrono::high_resolution_clock::now() - startTime)).count();
 
@@ -142,7 +146,7 @@ void InGame::init()
     _pCamTransform->setIdentity();
     mat4& camTransform = *_pCamTransform;
 
-    _pCamController = new RTSCamController(*activeCamera, this);
+    _pCamController = new RTSCamController(*activeCamera, (Scene*)this);
     _pCamController->setPivotPoint({125.0f, 0, 125.0f});
 
     // TESTING 3D sprites..
@@ -152,35 +156,29 @@ void InGame::init()
     _testSprite = new Sprite3DRenderable({ 0,0,0 }, { 2,2 }, testSpriteTexture);
     addComponent(spriteEntity, _testSprite);
 
-    // JUST FOR DEBUGGING
-    _inputField_position = new InputField(
-        " Enter message",
-        {
-            {ConstraintType::PIXEL_LEFT, 32},
-            {ConstraintType::PIXEL_BOTTOM, 32}
-        },
-        300,
-        new OnSubmit_position(_pCamController),
-        true
-    );
-}
+    Client* client = Client::get_instance();
+    client->addOnMessageEvent(MESSAGE_TYPE__GetAllFactions, new OnMessageGetAllFactions(*_world));
+    client->addOnMessageEvent(MESSAGE_TYPE__GetChangedFactions, new OnMessageGetChangedFactions(*_world));
 
+    // Fetch all game factions
+    // NOTE: if connection issues -> we might need to resend this message instead
+    // of relying on that we get answer with this single message?
+    Client::get_instance()->send(MESSAGE_TYPE__GetAllFactions, {});
+}
 
 void InGame::update()
 {
     vec3 camPivotPoint = _pCamController->getPivotPoint();
 
     // attempt to glue cam's height to terrain's height
-    camPivotPoint.y = _visualWorld->getTileVisualHeightAt(camPivotPoint.x, camPivotPoint.z);
+    camPivotPoint.y = _world->getTileVisualHeightAt(camPivotPoint.x, camPivotPoint.z);
     _pCamController->setPivotPoint(camPivotPoint);
 
-    _visualWorld->update(camPivotPoint.x, camPivotPoint.z);
-
-    _pText_debug_delta->accessRenderable()->accessStr() = "Delta: " + std::to_string(Timing::get_delta_time());
+    _world->update(camPivotPoint.x, camPivotPoint.z);
 
     // debug mouse picking testing..
     mat4 viewMatrix = *_pCamTransform;
     viewMatrix.inverse();
 
-    _testSprite->position = _visualWorld->getMousePickCoords(activeCamera->getProjMat3D(), viewMatrix);
+    _testSprite->position = _world->getMousePickCoords(activeCamera->getProjMat3D(), viewMatrix);
 }

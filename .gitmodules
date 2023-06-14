@@ -1,3 +1,6 @@
 [submodule "PortablePesukarhu"]
 	path = PortablePesukarhu
 	url = https://github.com/Mopp123/PortablePesukarhu.git
+[submodule "emsdk"]
+	path = emsdk
+	url = git@github.com:emscripten-core/emsdk.git

@@ -3,11 +3,14 @@
 #include <cstdint>
 #include <vector>
 #include <unordered_map>
+#include <chrono>
 
 #include "../../PortablePesukarhu/ppk.h"
 #include "../net/Client.h"
 #include "Object.h"
 #include "Tile.h"
+#include "Faction.h"
+
 
 namespace world
 {
@@ -15,7 +18,7 @@ namespace world
     {
         int32_t observeRadius = 5;
 
-        // Coordinates where we requested our latest 
+        // Coordinates where we requested our latest
         // "world state update" (not immediately received from server!)
         int32_t requestedMapX = 0;
         int32_t requestedMapY = 0;
@@ -26,7 +29,7 @@ namespace world
     };
 
 
-    // NOTE: Visual tile doesnt own any of the mem of these ptrs. 
+    // NOTE: Visual tile doesnt own any of the mem of these ptrs.
     // Its just collection of ptrs to elsewhere managed mem
     struct VisualTile
     {
@@ -37,10 +40,10 @@ namespace world
 
         VisualTile(
             pk::Scene& scene,
-            VisualWorld& worldRef,
-            uint32_t owningEntity, 
-            pk::TerrainTileRenderable* tile, 
-            pk::Sprite3DRenderable* effect, 
+            World& worldRef,
+            uint32_t owningEntity,
+            pk::TerrainTileRenderable* tile,
+            pk::Sprite3DRenderable* effect,
             pk::Sprite3DRenderable* object
         ) :
             entity(owningEntity),
@@ -60,26 +63,21 @@ namespace world
     };
 
 
-    // Visual representation of server's "world state" at currently observed coordinates
-    class VisualWorld
+    // Represents server's "world state"
+    // Makes world state to be rendered at observed coordinates
+    class World
     {
     private:
-        class OnMessage_worldState : public net::OnMessageEvent
+        class OnMessageWorldState : public net::OnMessageEvent
         {
         public:
-            VisualWorld& visualWorldRef;
-            
-            OnMessage_worldState(VisualWorld& visualWorld);
-            ~OnMessage_worldState();
-            virtual void onMessage(const PK_byte* data, size_t dataSize);
-        };
-        class OnMessage_objInfoLib : public net::OnMessageEvent
-        {
-        public:
-            VisualWorld& visualWorldRef;
-            
-            OnMessage_objInfoLib(VisualWorld& visualWorld);
-            ~OnMessage_objInfoLib();
+            World& visualWorldRef;
+
+            OnMessageWorldState(World& visualWorld) :
+                visualWorldRef(visualWorld)
+            {}
+            ~OnMessageWorldState() {}
+
             virtual void onMessage(const PK_byte* data, size_t dataSize);
         };
 
@@ -92,13 +90,13 @@ namespace world
             TileAnimation()
             {}
 
-            TileAnimation(pk::vec3 position, pk::Animation* animation) : 
+            TileAnimation(pk::vec3 position, pk::Animation* animation) :
                 pos(position)
             {
                 anim = animation;
             }
 
-            void reset() 
+            void reset()
             {
                 pos = pk::vec3(0, 0, 0);
                 anim->reset();
@@ -112,12 +110,9 @@ namespace world
             }
         };
 
-        friend class OnMessage_objInfoLib;
-
         pk::Scene& _sceneRef;
 
-        bool _worldInitialized = false;
-        // Tile data acquired from the server. 
+        // Tile data acquired from the server.
         //  First = the actual tile data
         //  second = just the "visual renderable"
         std::vector<std::pair<uint64_t, VisualTile>> _tileData;
@@ -125,41 +120,33 @@ namespace world
         std::vector<TileAnimation> _tileAnimStates; // *Previously "tileMovements"
 
         float _tileVisualScale = 2.0f;
-        
+
         float _worldX = 0.0f;
         float _worldZ = 0.0f;
         int _prevTileX = 0;
         int _prevTileY = 0;
         WorldObserver _observer;
 
-        float _maxUpdateCooldown = 0.01f;
-        float _updateCooldown = 0.0f;
-
         PK_byte* _pBlendmapData = nullptr;
         int _blendmapWidth = 0;
-        
-        // All usable sprite textures (owned by this object)
-        std::vector<pk::web::WebTexture*> _spriteTextures;
-        // This is the same as server-side (objects library) but 
-        // includes some additional visual info
-        std::vector<objects::ObjectInfo> _objectInfo;
 
         pk::Transform* _pCamTransform = nullptr;
-        // Facing direction of the camera, in form of TileStateDirection::north, etc..
+        // Facing direction of the camera. In form of TileStateDirection::north, etc..
         int _cameraDirection = 0;
 
+        std::unordered_map<std::string, Faction> _factions;
+
     public:
-        VisualWorld(pk::Scene& scene, pk::Transform* pCamTransform, int observeRadius);
-        ~VisualWorld();
+        World(pk::Scene& scene, pk::Transform* pCamTransform, int observeRadius);
+        ~World();
 
         void updateObservedArea(const uint64_t* mapState);
-
         void update(float worldX, float worldZ);
-        inline bool isInitialized() const { return _worldInitialized; }
-        inline std::vector<std::pair<uint64_t, VisualTile>>& getObservedTiles() 
-        { 
-            return _tileData; 
-        }
+
+        void addFaction(const Faction& faction);
+        void updateFaction(const Faction& faction);
+        Faction getFaction(const std::string& factionName) const;
+        bool factionExists(const std::string& factionName) const;
 
         float getTileVisualHeightAt(float worldX, float worldZ) const;
 
@@ -169,7 +156,7 @@ namespace world
         void updateSprites();
         // Shifts "movements"-table, if moved camera, to make it look smooth
         void shift(int32_t tileX, int32_t tileY);
-        
+
         pk::vec3 getMidpoint(pk::vec3 rayStartPos, pk::vec3 ray, int recCount) const;
 
         void updateBlendmapData(PK_ubyte tileType, int x, int y);

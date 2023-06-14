@@ -4,6 +4,7 @@
 #include <string>
 #include "../../PortablePesukarhu/ppk.h"
 
+
 enum PanelLayoutType{
     VERTICAL = 0,
     HORIZONTAL = 1
@@ -27,7 +28,8 @@ private:
     std::vector<pk::Component*> _allComponents;
 
 public:
-    Panel(
+    Panel() {}
+    void init(
         std::pair<pk::ui::ConstraintType, float> horizontalConstraint,
         std::pair<pk::ui::ConstraintType, float> verticalConstraint,
         pk::vec2 slotScale = pk::vec2(100,24),
@@ -36,9 +38,16 @@ public:
     );
     ~Panel();
 
-    void addText(std::string txt);
-    void addButton(std::string txt, pk::ui::OnClickEvent* onClick);
-    void addInputField(
+    std::pair<uint32_t, pk::TextRenderable*> addText(std::string txt);
+    uint32_t addButton(
+        std::string txt,
+        pk::ui::OnClickEvent* onClick,
+        bool selectable = false,
+        pk::Texture* texture = nullptr,
+        pk::vec4 textureCropping = pk::vec4(0, 0, 1, 1),
+        pk::vec3 color = { 0.1f, 0.1f,0.1f }
+    );
+    std::pair<uint32_t, pk::TextRenderable*> addInputField(
         std::string infoTxt,
         float width,
         pk::ui::InputFieldOnSubmitEvent* onSubmit,
