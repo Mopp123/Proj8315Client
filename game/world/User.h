@@ -2,13 +2,13 @@
 
 #include <cstring>
 // TODO: Put all user related definitions here from net common!
-#include "../net/NetCommon.h"
+#include "../../Proj8315Common/src/Common.h"
 
 
 class User
 {
 private:
-    char _name[USER_NAME_LEN];
+    char _name[USER_NAME_SIZE];
     bool _deployed = false;
 
 public:

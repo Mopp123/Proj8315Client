@@ -3,7 +3,7 @@
 #include "LoginMenu.h"
 #include "../world/Object.h"
 #include "../world/Faction.h"
-//#include "RegisterMenu.h"
+#include "../../Proj8315Common/src/messages/Message.h"
 
 
 using namespace pk;
@@ -22,20 +22,20 @@ void RegisterMenu::OnClickRegister::onClick(InputMouseButtonName button)
 {
     if (button == InputMouseButtonName::PK_INPUT_MOUSE_LEFT)
     {
-        if (inputUsernameRef.size() > USER_NAME_LEN)
+        if (inputUsernameRef.size() > USER_NAME_SIZE)
         {
             ((BaseScene&)sceneRef).setInfoText(
                 "Too long username.\nUsername has to be less than" +
-                std::to_string(USER_NAME_LEN) + " characters",
+                std::to_string(USER_NAME_SIZE) + " characters",
                 vec3(1.0f, 0, 0)
             );
             return;
         }
-        else if (inputPasswordRef.size() > USER_PASSWD_LEN || inputRePasswordRef.size() > USER_PASSWD_LEN)
+        else if (inputPasswordRef.size() > USER_PASSWD_SIZE || inputRePasswordRef.size() > USER_PASSWD_SIZE)
         {
             ((BaseScene&)sceneRef).setInfoText(
                 "Too long password.\nPassword has to be less than " +
-                std::to_string(USER_PASSWD_LEN) + " characters",
+                std::to_string(USER_PASSWD_SIZE) + " characters",
                 vec3(1.0f, 0, 0)
             );
             return;
@@ -44,26 +44,27 @@ void RegisterMenu::OnClickRegister::onClick(InputMouseButtonName button)
         Client::get_instance()->send(
             MESSAGE_TYPE__UserRegister,
             {
-                { (PK_byte*)inputUsernameRef.data(), inputUsernameRef.size(), USER_NAME_LEN },
-                { (PK_byte*)inputPasswordRef.data(), inputPasswordRef.size(), USER_PASSWD_LEN },
-                { (PK_byte*)inputRePasswordRef.data(), inputRePasswordRef.size(), USER_PASSWD_LEN }
+                { (GC_byte*)inputUsernameRef.data(), inputUsernameRef.size(), USER_NAME_SIZE },
+                { (GC_byte*)inputPasswordRef.data(), inputPasswordRef.size(), USER_PASSWD_SIZE },
+                { (GC_byte*)inputRePasswordRef.data(), inputRePasswordRef.size(), USER_PASSWD_SIZE }
             }
         );
     }
 }
 
 
-void RegisterMenu::OnMessageRegister::onMessage(const PK_byte* data, size_t dataSize)
+void RegisterMenu::OnMessageRegister::onMessage(const GC_byte* data, size_t dataSize)
 {
+    Debug::log("___TEST___RECV REGISTER RESPONSE!");
     Client* client = Client::get_instance();
     const size_t expectedSize = 1 + MESSAGE_INFO_MESSAGE_LEN;
     if (dataSize >= expectedSize)
     {
         bool success = *((bool*)data);
-        PK_byte errMsgData[MESSAGE_INFO_MESSAGE_LEN];
+        GC_byte errMsgData[MESSAGE_INFO_MESSAGE_LEN];
         memset(errMsgData, 0, MESSAGE_INFO_MESSAGE_LEN);
         memcpy(errMsgData, data + 1, dataSize - 1);
-        std::string errMsg(errMsgData);
+        std::string errMsg(errMsgData, MESSAGE_INFO_MESSAGE_LEN);
         // On successful register -> attempt login immediately
         if (success)
         {
@@ -74,20 +75,21 @@ void RegisterMenu::OnMessageRegister::onMessage(const PK_byte* data, size_t data
                 (int32_t)MESSAGE_TYPE__UserLogin,
                 {
                     {
-                        (PK_byte*)inputUsernameRef.data(),
+                        (GC_byte*)inputUsernameRef.data(),
                         inputUsernameRef.size(),
-                        USER_NAME_LEN
+                        USER_NAME_SIZE
                     },
                     {
-                        (PK_byte*)inputPasswordRef.data(),
+                        (GC_byte*)inputPasswordRef.data(),
                         inputPasswordRef.size(),
-                        USER_PASSWD_LEN
+                        USER_PASSWD_SIZE
                     }
                 }
             );
             }
         else
         {
+            Debug::log("___TEST___failed login: recv error: " + errMsg);
             ((BaseScene&)sceneRef).setInfoText(errMsg, vec3(1.0f, 0, 0));
         }
     }
@@ -95,7 +97,7 @@ void RegisterMenu::OnMessageRegister::onMessage(const PK_byte* data, size_t data
 
 
 // TODO: Put into some "common OnMessage events" since this is used in multiple places(Login scene, register scene)
-void RegisterMenu::OnMessageLoginRequest::onMessage(const PK_byte* data, size_t dataSize)
+void RegisterMenu::OnMessageLoginRequest::onMessage(const GC_byte* data, size_t dataSize)
 {
     Client* client = Client::get_instance();
     bool loginSuccess = *((bool*)data);
@@ -114,7 +116,7 @@ void RegisterMenu::OnMessageLoginRequest::onMessage(const PK_byte* data, size_t 
         }
         Debug::log("Login was success. Fetching server obj info lib...");
         ((BaseScene&)sceneRef).setInfoText("Login success. Fetching additional server data...", vec3(1.0f, 1.0f, 1.0f));
-        client->send((int32_t)MESSAGE_TYPE__GetObjInfoLib, {});
+        client->send((int32_t)MESSAGE_TYPE__ObjInfoLibRequest, {});
     }
     else
     {
@@ -137,7 +139,7 @@ void RegisterMenu::OnMessageLoginRequest::onMessage(const PK_byte* data, size_t 
 
 // After successful "login validation" -> we need to get Object Info lib
 // TODO: Put into some "common OnMessage events" since this is used in multiple places(Login scene, register scene)
-void RegisterMenu::OnMessagePostLogin::onMessage(const PK_byte* data, size_t dataSize)
+void RegisterMenu::OnMessagePostLogin::onMessage(const GC_byte* data, size_t dataSize)
 {
     world::objects::ObjectInfoLib::create(data, dataSize);
     Debug::log("Obj info lib created. Switching to main menu...");
@@ -224,7 +226,7 @@ void RegisterMenu::init()
         new OnMessageRegister(*this, usernameStr, passwdStr)
     );
     client->addOnMessageEvent(MESSAGE_TYPE__UserLogin, new OnMessageLoginRequest(*this));
-    client->addOnMessageEvent(MESSAGE_TYPE__GetObjInfoLib, new OnMessagePostLogin(*this));
+    client->addOnMessageEvent(MESSAGE_TYPE__ObjInfoLibRequest, new OnMessagePostLogin(*this));
 }
 
 void RegisterMenu::update()

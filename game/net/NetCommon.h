@@ -1,6 +1,6 @@
 #pragma once
 
-
+/*
 #define USER_ID_LEN 32
 #define MESSAGE_MAX_DATA_SIZE (100*100*8)
 #define MESSAGE_MIN_DATA_SIZE sizeof(int32_t)
@@ -26,4 +26,4 @@
 #define MESSAGE_TYPE__GetChangedFactions        0x10
 #define MESSAGE_TYPE__UpdateObserverProperties  0x11
 #define MESSAGE_TYPE__Deploy                    0x12
-
+*/

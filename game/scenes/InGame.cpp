@@ -1,7 +1,7 @@
 #include "InGame.h"
 
 #include "../net/Client.h"
-#include "../net/NetCommon.h"
+#include "../../Proj8315Common/src/messages/Message.h"
 
 #include "../world/Tile.h"
 

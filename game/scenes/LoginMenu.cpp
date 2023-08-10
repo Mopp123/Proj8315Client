@@ -6,6 +6,8 @@
 #include "MainMenu.h"
 #include "RegisterMenu.h"
 
+#include "../../Proj8315Common/src/messages/Message.h"
+
 
 using namespace pk;
 using namespace ui;
@@ -26,12 +28,12 @@ void LoginMenu::OnClickLogin::onClick(InputMouseButtonName button)
         const size_t usernameLen = usernameFieldRef.length();
         const size_t passwdLen = passwdFieldRef.length();
 
-        if (usernameLen <= 0 || usernameLen > USER_NAME_LEN)
+        if (usernameLen <= 0 || usernameLen > USER_NAME_SIZE)
         {
             Debug::log("Invalid username length", Debug::MessageType::PK_ERROR);
             return;
         }
-        if (passwdLen <= 0 || passwdLen > USER_NAME_LEN)
+        if (passwdLen <= 0 || passwdLen > USER_NAME_SIZE)
         {
             Debug::log("Invalid password length", Debug::MessageType::PK_ERROR);
             return;
@@ -43,14 +45,14 @@ void LoginMenu::OnClickLogin::onClick(InputMouseButtonName button)
             (int32_t)MESSAGE_TYPE__UserLogin,
             {
                 {
-                    (PK_byte*)usernameFieldRef.data(),
+                    (GC_byte*)usernameFieldRef.data(),
                     usernameLen,
-                    USER_NAME_LEN
+                    USER_NAME_SIZE
                 },
                 {
-                    (PK_byte*)passwdFieldRef.data(),
+                    (GC_byte*)passwdFieldRef.data(),
                     passwdLen,
-                    USER_PASSWD_LEN
+                    USER_PASSWD_SIZE
                 }
             }
         );
@@ -59,9 +61,12 @@ void LoginMenu::OnClickLogin::onClick(InputMouseButtonName button)
 
 
 // TODO: Put into some "common OnMessage events" since this is used in multiple places(Login scene, register scene)
-void LoginMenu::OnMessageLoginRequest::onMessage(const PK_byte* data, size_t dataSize)
+void LoginMenu::OnMessageLoginRequest::onMessage(const GC_byte* data, size_t dataSize)
 {
     Client* client = Client::get_instance();
+    // NEW
+
+    // OLD BELOW
     bool loginSuccess = *((bool*)data);
     bool hasFaction = *((bool*)data + 1);
     const size_t expectedSize = 2 + FACTION_NAME_SIZE;
@@ -79,7 +84,7 @@ void LoginMenu::OnMessageLoginRequest::onMessage(const PK_byte* data, size_t dat
         }
         Debug::log("Login was success. Fetching server obj info lib...");
         ((BaseScene&)sceneRef).setInfoText("Login success. Fetching additional server data...", vec3(1.0f, 1.0f, 1.0f));
-        client->send((int32_t)MESSAGE_TYPE__GetObjInfoLib, {});
+        client->send((int32_t)MESSAGE_TYPE__ObjInfoLibRequest, {});
     }
     else
     {
@@ -102,7 +107,7 @@ void LoginMenu::OnMessageLoginRequest::onMessage(const PK_byte* data, size_t dat
 
 // After successful "login validation" -> we need to get Object Info lib
 // TODO: Put into some "common OnMessage events" since this is used in multiple places(Login scene, register scene)
-void LoginMenu::OnMessagePostLogin::onMessage(const PK_byte* data, size_t dataSize)
+void LoginMenu::OnMessagePostLogin::onMessage(const GC_byte* data, size_t dataSize)
 {
     world::objects::ObjectInfoLib::create(data, dataSize);
     Debug::log("Obj info lib created. Switching to main menu...");
@@ -179,7 +184,7 @@ void LoginMenu::init()
 
     Client* client = Client::get_instance();
     client->addOnMessageEvent(MESSAGE_TYPE__UserLogin, (OnMessageEvent*)(new OnMessageLoginRequest(*this)));
-    client->addOnMessageEvent(MESSAGE_TYPE__GetObjInfoLib, (OnMessageEvent*)(new OnMessagePostLogin(*this)));
+    client->addOnMessageEvent(MESSAGE_TYPE__ObjInfoLibRequest, (OnMessageEvent*)(new OnMessagePostLogin(*this)));
 }
 
 void LoginMenu::update()

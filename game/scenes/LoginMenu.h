@@ -3,6 +3,7 @@
 #include "../../PortablePesukarhu/ppk.h"
 #include "BaseScene.h"
 #include "../net/Client.h"
+#include "../../Proj8315Common/src/Common.h"
 
 
 class LoginMenu : public BaseScene
@@ -18,10 +19,9 @@ private:
     class OnClickLogin : public pk::ui::OnClickEvent
     {
     public:
+        LoginMenu& sceneRef;
         std::string& usernameFieldRef;
         std::string& passwdFieldRef;
-
-        LoginMenu& sceneRef;
 
         OnClickLogin(LoginMenu& scene, std::string& usernameRef, std::string& passwdRef):
             sceneRef(scene),
@@ -42,7 +42,7 @@ private:
             sceneRef(scene)
         {}
 
-        virtual void onMessage(const PK_byte* data, size_t dataSize);
+        virtual void onMessage(const GC_byte* data, size_t dataSize);
     };
 
     // TODO: Put into some "common OnMessage events" since this is used in multiple places(Login scene, register scene)
@@ -55,7 +55,7 @@ private:
             sceneRef(sceneRef)
         {}
 
-        virtual void onMessage(const PK_byte* data, size_t dataSize);
+        virtual void onMessage(const GC_byte* data, size_t dataSize);
     };
 
 

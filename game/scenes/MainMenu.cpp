@@ -1,9 +1,9 @@
 #include "MainMenu.h"
 #include "../net/Client.h"
-#include "../net/NetCommon.h"
 #include "LoginMenu.h"
 #include "DeploymentMenu.h"
 #include "../world/Faction.h"
+#include "../../Proj8315Common/src/messages/Message.h"
 
 
 using namespace pk;
@@ -169,14 +169,14 @@ void MainMenu::init()
     showFactionMenu(client->user.hasFaction);
 
     client->addOnMessageEvent(
-        MESSAGE_TYPE__GetServerMessage,
+        MESSAGE_TYPE__ServerMessage,
         (OnMessageEvent*)(new OnMessageMOTD(_pMOTDTxt))
     );
     client->addOnMessageEvent(
         MESSAGE_TYPE__CreateFaction,
         (OnMessageEvent*)(new OnMessageCreateFaction(*this))
     );
-    client->send(MESSAGE_TYPE__GetServerMessage, {});
+    client->send(MESSAGE_TYPE__ServerMessage, {});
 }
 
 void MainMenu::update()

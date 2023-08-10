@@ -1,6 +1,7 @@
 #pragma once
 
 #include <emscripten/websocket.h>
+#include "../../../../Proj8315Common/src/Common.h"
 #include "../../Client.h"
 
 
@@ -18,28 +19,28 @@ namespace net
             WebClient(const std::string& hostname);
             ~WebClient();
 
-            virtual int send_raw(PK_byte* data, size_t dataSize) override;
+            virtual int send_raw(GC_byte* data, size_t dataSize) override;
             virtual int send(int32_t messageType, std::vector<MsgDataPart> data) override;
 
         private:
             friend EM_BOOL onopen(
-                int eventType, 
-                const EmscriptenWebSocketOpenEvent *websocketEvent, 
+                int eventType,
+                const EmscriptenWebSocketOpenEvent *websocketEvent,
                 void *userData
             );
             friend EM_BOOL onerror(
-                int eventType, 
-                const EmscriptenWebSocketErrorEvent *websocketEvent, 
+                int eventType,
+                const EmscriptenWebSocketErrorEvent *websocketEvent,
                 void *userData
             );
             friend EM_BOOL onclose(
-                int eventType, 
-                const EmscriptenWebSocketCloseEvent *websocketEvent, 
+                int eventType,
+                const EmscriptenWebSocketCloseEvent *websocketEvent,
                 void *userData
             );
             friend EM_BOOL onmessage(
-                int eventType, 
-                const EmscriptenWebSocketMessageEvent *websocketEvent, 
+                int eventType,
+                const EmscriptenWebSocketMessageEvent *websocketEvent,
                 void *userData
             );
         };

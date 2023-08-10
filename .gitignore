@@ -1,3 +1,7 @@
+.cache
+CMakeFiles/
+public-html/CMakeFiles/
+public-html/Makefile
 public-html/*.*
 public-html/assets/*.*
 !.gitkeep

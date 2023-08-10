@@ -2,7 +2,7 @@
 #include <string>
 
 #include "../../../../PortablePesukarhu/ppk.h"
-#include "../../NetCommon.h"
+#include "../../../../Proj8315Common/src/messages/Message.h"
 
 using namespace pk;
 
@@ -55,7 +55,7 @@ namespace net
             //std::string message((char*)websocketEvent->data, (size_t)websocketEvent->numBytes);
             //Debug::log("Message: " + message + " bytes: " + std::to_string(websocketEvent->numBytes));
 
-            PK_byte* messageData = (PK_byte*)websocketEvent->data;
+            GC_byte* messageData = (GC_byte*)websocketEvent->data;
             const size_t messageSize = (size_t)websocketEvent->numBytes;
 
             WebClient* client = (WebClient*)(Client::get_instance());
@@ -118,7 +118,7 @@ namespace net
                 Debug::log("Websockets were closed successfully");
         }
 
-        int WebClient::send_raw(PK_byte* data, size_t dataSize)
+        int WebClient::send_raw(GC_byte* data, size_t dataSize)
         {
             if (!_connected)
             {
@@ -148,7 +148,7 @@ namespace net
             // Initial size = sizeof(messageType)
             // *message type is always required!
             size_t bufSize = sizeof(int32_t);
-            std::vector<PK_byte> sendBuf(bufSize);
+            std::vector<GC_byte> sendBuf(bufSize);
             memcpy(sendBuf.data(), (void*)(&messageType), sizeof(int32_t));
             // Figure out the rest of the size from data
             for (const MsgDataPart& d : data)
@@ -160,7 +160,7 @@ namespace net
                 bufSize += fullSize;
             }
 
-            Debug::log("___TEST___sending with size: " + std::to_string(sendBuf.size()));
+            //Debug::log("___TEST___sending with size: " + std::to_string(sendBuf.size()));
             EMSCRIPTEN_RESULT result = emscripten_websocket_send_binary(
                 _connSD,
                 sendBuf.data(),

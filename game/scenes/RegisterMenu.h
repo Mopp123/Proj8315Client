@@ -2,7 +2,7 @@
 
 #include "../../PortablePesukarhu/ppk.h"
 #include "BaseScene.h"
-#include "../net/NetCommon.h"
+#include "../../Proj8315Common/src/Common.h"
 #include "../net/Client.h"
 #include "../ui/ui.h"
 
@@ -57,7 +57,7 @@ private:
             inputPasswordRef(inputPasswordRef)
         {}
 
-        virtual void onMessage(const PK_byte* data, size_t dataSize);
+        virtual void onMessage(const GC_byte* data, size_t dataSize);
     };
 
     // TODO: Put into some "common OnMessage events" since this is used in multiple places(Login scene, register scene)
@@ -70,7 +70,7 @@ private:
             sceneRef(scene)
         {}
 
-        virtual void onMessage(const PK_byte* data, size_t dataSize);
+        virtual void onMessage(const GC_byte* data, size_t dataSize);
     };
 
     // TODO: Put into some "common OnMessage events" since this is used in multiple places(Login scene, register scene)
@@ -83,7 +83,7 @@ private:
             sceneRef(sceneRef)
         {}
 
-        virtual void onMessage(const PK_byte* data, size_t dataSize);
+        virtual void onMessage(const GC_byte* data, size_t dataSize);
     };
 
 public:

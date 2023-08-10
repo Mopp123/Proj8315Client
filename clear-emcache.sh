@@ -8,3 +8,4 @@ cd $emsdk_dir
 source ./emsdk_env.sh
 
 em++ --clear-cache
+em++ --clear-ports

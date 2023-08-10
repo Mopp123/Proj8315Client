@@ -6,6 +6,7 @@
 #include <utility>
 
 #include "../../PortablePesukarhu/ppk.h"
+#include "../../Proj8315Common/src/Common.h"
 
 
 namespace net
@@ -31,7 +32,7 @@ namespace net
     public:
         OnMessageEvent() {}
         virtual ~OnMessageEvent() {}
-        virtual void onMessage(const PK_byte* data, size_t dataSize) = 0;
+        virtual void onMessage(const GC_byte* data, size_t dataSize) = 0;
     };
 
 
@@ -57,7 +58,7 @@ namespace net
         // 	0 = fail
         // 	1 = success
         virtual int send_raw(
-            PK_byte* data,
+            GC_byte* data,
             size_t dataSize
         )
         {

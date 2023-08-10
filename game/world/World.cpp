@@ -6,7 +6,8 @@
 #include "Object.h"
 #include "World.h"
 #include "Tile.h"
-#include "../net/NetCommon.h"
+#include "../../Proj8315Common/src/Common.h"
+#include "../../Proj8315Common/src/messages/Message.h"
 
 
 using namespace pk;
@@ -131,7 +132,7 @@ namespace world
 
         // Add OnMessageEvents
         // to update world state
-        Client::get_instance()->addOnMessageEvent(MESSAGE_TYPE__GetWorldState, new OnMessageWorldState(*this));
+        Client::get_instance()->addOnMessageEvent(MESSAGE_TYPE__WorldState, new OnMessageWorldState(*this));
     }
 
     World::~World()
