@@ -2,6 +2,8 @@
 
 #include "../net/Client.h"
 #include "../../Proj8315Common/src/messages/Message.h"
+#include "../../Proj8315Common/src/messages/WorldMessages.h"
+#include "../../Proj8315Common/src/Faction.h"
 
 #include "../world/Tile.h"
 
@@ -12,13 +14,18 @@
 
 using namespace pk;
 using namespace pk::web;
-
 using namespace ui;
 using namespace net;
+using namespace gamecommon;
 
 
 void InGame::OnMessageGetAllFactions::onMessage(const PK_byte* data, size_t dataSize)
 {
+    FactionsMsg factionsMsg(data, dataSize);
+    for (const Faction& faction : factionsMsg.getFactions())
+        worldRef.addFaction(faction);
+
+    /*
     if (dataSize >= Faction::get_netw_size())
     {
         const size_t factionDataSize = Faction::get_netw_size();
@@ -40,12 +47,17 @@ void InGame::OnMessageGetAllFactions::onMessage(const PK_byte* data, size_t data
             dataPos += factionDataSize;
         }
     }
+    */
 }
 
 
 void InGame::OnMessageGetChangedFactions::onMessage(const PK_byte* data, size_t dataSize)
 {
-    Debug::log("___TEST___RECEIVED CHANGED FACTIONS!");
+    Debug::log(
+        "___TEST___InGame::OnMessageGetChangedFactions::onMessage NOT YET IMPLEMENTED!",
+        Debug::MessageType::PK_WARNING
+    );
+    /*
     if (dataSize >= Faction::get_netw_size())
     {
         const size_t factionDataSize = Faction::get_netw_size();
@@ -71,6 +83,7 @@ void InGame::OnMessageGetChangedFactions::onMessage(const PK_byte* data, size_t 
             dataPos += factionDataSize;
         }
     }
+    */
 }
 
 

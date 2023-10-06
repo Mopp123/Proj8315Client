@@ -1,4 +1,4 @@
-#include "Object.h"
+#include "Objects.h"
 #include <unordered_map>
 #include "World.h"
 #include <string>
@@ -6,6 +6,7 @@
 
 using namespace pk;
 using namespace pk::web;
+using namespace gamecommon;
 
 
 namespace world
@@ -13,16 +14,7 @@ namespace world
     namespace objects
     {
 
-        ObjectInfo::TexturePortraitCropping ObjectInfo::s_defaultPortraitCropping;
-
-        size_t get_netw_objinfo_size()
-        {
-            size_t combinedStrLen = (OBJECT_DATA_STRLEN_NAME + OBJECT_DATA_STRLEN_DESCRIPTION);
-            for (int i = 0; i < TILE_STATE_MAX_action + 1; ++i)
-                combinedStrLen += OBJECT_DATA_STRLEN_ACTION_NAME;
-            return combinedStrLen + 1;
-        }
-
+        VisualObjectInfo::TexturePortraitCropping VisualObjectInfo::s_defaultPortraitCropping;
 
         // Returns "display direction" of a sprite depending ong the camera's direction
         static int get_display_dir(int objDir, int camDir)
@@ -88,6 +80,7 @@ namespace world
             int objDir,
             int camDir,
             const ObjectInfo& staticObjInfo,
+            const VisualObjectInfo& visualObjInfo,
             float worldX,
             float worldZ,
             pk::Animation* animation,
@@ -95,7 +88,7 @@ namespace world
         )
         {
             _pSprite->setActive(true);
-            _pSprite->texture = (Texture*)staticObjInfo.pTexture;
+            _pSprite->texture = (Texture*)visualObjInfo.pTexture;
 
             const float currentTileHeight = _worldRef.getTileVisualHeightAt(
                 worldX,
@@ -120,7 +113,7 @@ namespace world
 
             // NOTE: JUST TESTING ATM!
             // TODO: ..make it properly
-            if (staticObjInfo.rotateableSprite)
+            if (visualObjInfo.rotateableSprite)
             {
                 int toDisplayDir = get_display_dir(objDir, camDir);
                 vec2 texOffset = _pSprite->textureOffset;
@@ -230,17 +223,30 @@ namespace world
         bool ObjectInfoLib::s_initialized = false;
         std::vector<WebTexture*> ObjectInfoLib::s_pTextures;
         std::vector<ObjectInfo> ObjectInfoLib::s_objects;
+        std::vector<VisualObjectInfo> ObjectInfoLib::s_objectVisuals;
 
         ObjectInfo* ObjectInfoLib::get(int index)
         {
             if (index < 0 || index >= s_objects.size())
             {
                 Debug::log(
-                    "Attempted to access invalid index of Object Info lib. Index: " + std::to_string(index) + " Info lib size was: " + std::to_string(s_objects.size()),
+                    "Attempted to access invalid index of Object Info lib (Object properties). Index: " + std::to_string(index) + " Info lib size was: " + std::to_string(s_objects.size()),
                     Debug::MessageType::PK_ERROR);
                 return nullptr;
             }
             return &s_objects[index];
+        }
+
+        VisualObjectInfo* ObjectInfoLib::getVisual(int index)
+        {
+            if (index < 0 || index >= s_objectVisuals.size())
+            {
+                Debug::log(
+                    "Attempted to access invalid index of Object Info lib (Object visuals). Index: " + std::to_string(index) + " Info lib size was: " + std::to_string(s_objects.size()),
+                    Debug::MessageType::PK_ERROR);
+                return nullptr;
+            }
+            return &s_objectVisuals[index];
         }
 
         size_t ObjectInfoLib::get_size()
@@ -287,8 +293,8 @@ namespace world
                 // obj stats..
                 PK_ubyte speed = 0;
                 memcpy(&speed, data + currentDataPos + currentPtr, 1);
-                ObjectInfo objInfo(name_str, description_str, actions, speed);
-
+                ObjectInfo objInfo(name_str, description_str, actions, speed, 0); // NOTE: Client doesn't use begin state -> can be set to 0
+                VisualObjectInfo visualObjInfo;
                 // TODO: Make below somehow more less dumb..
                 // Set these objects' visual properties
                 // *use 'i' since index of that list is equal to the object's type id
@@ -306,19 +312,20 @@ namespace world
                 switch (i)
                 {
                     case 1:
-                        objInfo.pTexture = s_pTextures[0];
+                        visualObjInfo.pTexture = s_pTextures[0];
                         break;
                     case 2:
-                        objInfo.rotateableSprite = true;
-                        objInfo.pTexture = s_pTextures[1];
+                        visualObjInfo.rotateableSprite = true;
+                        visualObjInfo.pTexture = s_pTextures[1];
                         break;
                     case 3:
-                        objInfo.pTexture = s_pTextures[2];
+                        visualObjInfo.pTexture = s_pTextures[2];
                         break;
                     default:
                         break;
                 }
                 s_objects.push_back(objInfo);
+                s_objectVisuals.push_back(visualObjInfo);
                 currentDataPos += currentPtr + 1; // +1 since the one byte stat
             }
             s_initialized = true;

@@ -1,13 +1,15 @@
 #include "DeploymentMenu.h"
 #include "MainMenu.h"
-#include "../world/Object.h"
+#include "../world/Objects.h"
 #include "InGame.h"
+#include "../../Proj8315Common/src/Object.h"
 
 
 using namespace pk;
 using namespace web;
 using namespace ui;
 using namespace net;
+using namespace gamecommon;
 
 
 int CurrentRosterPanel::s_slotCount = 8;
@@ -81,7 +83,8 @@ public:
         if (button == InputMouseButtonName::PK_INPUT_MOUSE_LEFT)
         {
             PK_ubyte objType = infoPanelRef.getSelected();
-            world::objects::ObjectInfo* obj = world::objects::ObjectInfoLib::get(objType);
+            ObjectInfo* obj = world::objects::ObjectInfoLib::get(objType);
+            world::objects::VisualObjectInfo* visualObj = world::objects::ObjectInfoLib::getVisual(objType);
             if (!obj)
             {
                 Debug::log(
@@ -106,7 +109,7 @@ public:
                 }
                 slot->objType = objType;
                 slot->objCount++;
-                slot->pImgRenderable->texture = (Texture*)obj->pTexture;
+                slot->pImgRenderable->texture = (Texture*)visualObj->pTexture;
                 slot->pTxtRenderable->accessStr() = std::to_string(slot->objCount);
                 slot->setActive(true);
             }
@@ -189,7 +192,10 @@ void CurrentRosterPanel::init(
 void CurrentRosterPanel::initSlotButtons(SelectedObjPanel& selectedObjPanelRef)
 {
     Scene* scene = Application::get()->accessCurrentScene();
-    world::objects::ObjectInfo::TexturePortraitCropping portraitCropping = world::objects::ObjectInfo::s_defaultPortraitCropping;
+
+    // world::objects::VisualObject::TexturePortraitCropping portraitCropping = world::objects::VisualObject::s_defaultPortraitCropping;
+
+    world::objects::VisualObjectInfo::TexturePortraitCropping portraitCropping = world::objects::VisualObjectInfo::s_defaultPortraitCropping;
     for (int i = 0; i < s_slotCount; ++i)
     {
         uint32_t entity = _panel.addButton(
@@ -209,7 +215,7 @@ void CurrentRosterPanel::initSlotButtons(SelectedObjPanel& selectedObjPanelRef)
 
 RosterObject* CurrentRosterPanel::getAvailableSlot(PK_ubyte objType)
 {
-    world::objects::ObjectInfo* obj = world::objects::ObjectInfoLib::get(objType);
+    ObjectInfo* obj = world::objects::ObjectInfoLib::get(objType);
     if (obj)
     {
         RosterObject* slot = nullptr;
@@ -289,7 +295,7 @@ void SelectedObjPanel::setSelected(PK_ubyte objType)
 {
     if (objType != 0)
     {
-        world::objects::ObjectInfo* obj = world::objects::ObjectInfoLib::get(objType);
+        ObjectInfo* obj = world::objects::ObjectInfoLib::get(objType);
         if (obj)
         {
             // Initially show buttons but after that -> unnecessary to set visible again..
@@ -332,15 +338,25 @@ void RosterSelectionPanel::init(
     );
 }
 
+// TODO: Better error handling if no objType is found!
 void RosterSelectionPanel::addSlot(PK_ubyte objType)
 {
-    world::objects::ObjectInfo* obj = world::objects::ObjectInfoLib::get(objType);
+    ObjectInfo* obj = world::objects::ObjectInfoLib::get(objType);
+    if (!obj)
+    {
+        Debug::log("@RosterSelectionPanel::addSlot(PK_ubyte objType) object not found", Debug::MessageType::PK_FATAL_ERROR);
+        return;
+    }
+    world::objects::VisualObjectInfo* visualObj = world::objects::ObjectInfoLib::getVisual(objType);
     WebTexture* texture = nullptr;
+    if (!visualObj)
+    {
+        Debug::log("@RosterSelectionPanel::addSlot(PK_ubyte objType) visual object not found", Debug::MessageType::PK_FATAL_ERROR);
+        return;
+    }
+    texture = visualObj->pTexture;
 
-    if (obj)
-        texture = obj->pTexture;
-
-    const world::objects::ObjectInfo::TexturePortraitCropping& portraitCropping = obj->portraitCropping;
+    const world::objects::VisualObjectInfo::TexturePortraitCropping& portraitCropping = visualObj->portraitCropping;
     _panel.addButton(
         std::to_string((int)objType),
         new OnClickSelectObj(*_pInfoPanel, objType),

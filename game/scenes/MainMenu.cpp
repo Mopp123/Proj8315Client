@@ -2,7 +2,7 @@
 #include "../net/Client.h"
 #include "LoginMenu.h"
 #include "DeploymentMenu.h"
-#include "../world/Faction.h"
+#include "../../Proj8315Common/src/Faction.h"
 #include "../../Proj8315Common/src/messages/Message.h"
 
 
@@ -10,8 +10,7 @@ using namespace pk;
 using namespace web;
 using namespace ui;
 using namespace net;
-
-
+using namespace gamecommon;
 
 
 void MainMenu::OnClickCreateFaction::onClick(InputMouseButtonName button)
@@ -67,6 +66,7 @@ void MainMenu::OnMessageMOTD::onMessage(const PK_byte* data, size_t dataSize)
 }
 
 
+// TODO: Create Faction response message
 void MainMenu::OnMessageCreateFaction::onMessage(const PK_byte* data, size_t dataSize)
 {
     Debug::log("___TEST___onmessage create faction");
@@ -76,7 +76,7 @@ void MainMenu::OnMessageCreateFaction::onMessage(const PK_byte* data, size_t dat
     {
         if (dataSize > 1)
         {
-            Faction faction(data + 1);
+            Faction faction(data + 1, FACTION_NAME_SIZE);
             client->user.faction = faction.getName();
             client->user.hasFaction = true;
             Debug::log("Faction creation was successful");

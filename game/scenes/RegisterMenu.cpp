@@ -1,14 +1,16 @@
 #include "RegisterMenu.h"
 #include "MainMenu.h"
 #include "LoginMenu.h"
-#include "../world/Object.h"
-#include "../world/Faction.h"
+#include "../world/Objects.h"
+#include "../../Proj8315Common/src/Faction.h"
 #include "../../Proj8315Common/src/messages/Message.h"
+#include "../../Proj8315Common/src/messages/GeneralMessages.h"
 
 
 using namespace pk;
 using namespace ui;
 using namespace net;
+using namespace gamecommon;
 
 
 void RegisterMenu::OnClickCancel::onClick(InputMouseButtonName button)
@@ -99,40 +101,25 @@ void RegisterMenu::OnMessageRegister::onMessage(const GC_byte* data, size_t data
 // TODO: Put into some "common OnMessage events" since this is used in multiple places(Login scene, register scene)
 void RegisterMenu::OnMessageLoginRequest::onMessage(const GC_byte* data, size_t dataSize)
 {
-    Client* client = Client::get_instance();
-    bool loginSuccess = *((bool*)data);
-    bool hasFaction = *((bool*)data + 1);
-    if (loginSuccess)
+    LoginResponse loginResponse(data, dataSize);
+    if (loginResponse.getSuccess())
     {
-        if (dataSize > 2)
+        Client* client = Client::get_instance();
+        client->user.name = sceneRef.username;
+        Faction userFaction = loginResponse.getFaction();
+        if (userFaction != NULL_FACTION)
         {
-            // TODO: Make it so that on login response server sends username/key of the
-            // successfully logged in user gets put as client's username/key
-            client->user.name = sceneRef.username;
-
-            Faction faction(data + 2);
-            client->user.faction = faction.getName();
-            client->user.hasFaction = hasFaction;
+            client->user.faction = userFaction.getName();
+            client->user.hasFaction = true;
         }
+
         Debug::log("Login was success. Fetching server obj info lib...");
         ((BaseScene&)sceneRef).setInfoText("Login success. Fetching additional server data...", vec3(1.0f, 1.0f, 1.0f));
         client->send((int32_t)MESSAGE_TYPE__ObjInfoLibRequest, {});
     }
     else
     {
-        const size_t errMessagePos = 2 + Faction::get_netw_size();
-        const size_t errMessageSize = dataSize - errMessagePos;
-        if (dataSize > errMessagePos)
-        {
-            char infoMessage[MESSAGE_INFO_MESSAGE_LEN];
-            memset(infoMessage, 0, MESSAGE_INFO_MESSAGE_LEN);
-            memcpy(infoMessage, data + errMessagePos, errMessageSize);
-            ((BaseScene&)sceneRef).setInfoText(std::string(infoMessage), vec3(1.0f, 0, 0));
-        }
-        else
-        {
-            Debug::log("Failed to login but server didn't provide error/info message", Debug::MessageType::PK_WARNING);
-        }
+        ((BaseScene&)sceneRef).setInfoText(loginResponse.getError(), vec3(1.0f, 0, 0));
     }
 }
 

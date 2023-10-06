@@ -7,9 +7,9 @@
 
 #include "../../PortablePesukarhu/ppk.h"
 #include "../net/Client.h"
-#include "Object.h"
+#include "Objects.h"
 #include "Tile.h"
-#include "Faction.h"
+#include "../../Proj8315Common/src/Faction.h"
 
 
 namespace world
@@ -134,7 +134,7 @@ namespace world
         // Facing direction of the camera. In form of TileStateDirection::north, etc..
         int _cameraDirection = 0;
 
-        std::unordered_map<std::string, Faction> _factions;
+        std::unordered_map<std::string, gamecommon::Faction> _factions;
 
     public:
         World(pk::Scene& scene, pk::Transform* pCamTransform, int observeRadius);
@@ -143,9 +143,9 @@ namespace world
         void updateObservedArea(const uint64_t* mapState);
         void update(float worldX, float worldZ);
 
-        void addFaction(const Faction& faction);
-        void updateFaction(const Faction& faction);
-        Faction getFaction(const std::string& factionName) const;
+        void addFaction(const gamecommon::Faction& faction);
+        void updateFaction(const gamecommon::Faction& faction);
+        gamecommon::Faction getFaction(const std::string& factionName) const;
         bool factionExists(const std::string& factionName) const;
 
         float getTileVisualHeightAt(float worldX, float worldZ) const;

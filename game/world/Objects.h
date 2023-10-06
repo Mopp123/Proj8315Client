@@ -5,6 +5,7 @@
 
 #include "../../PortablePesukarhu/ppk.h"
 #include "Tile.h"
+#include "../../Proj8315Common/src/Object.h"
 
 
 #define OBJECT_DATA_STRLEN_NAME 32
@@ -21,22 +22,15 @@ namespace world
 
     namespace objects
     {
-        struct ObjectInfo
+        // NEW
+        class VisualObjectInfo
         {
-            // misc. stuff
-            char name[OBJECT_DATA_STRLEN_NAME];
-            char description[OBJECT_DATA_STRLEN_DESCRIPTION];
-
-            char actionSlot[TILE_STATE_MAX_action + 1][OBJECT_DATA_STRLEN_ACTION_NAME];
-
-            // stats
-            PK_ubyte speed;
-
-            // Client exclusive properties:
+        public:
             pk::web::WebTexture* pTexture = nullptr; // *NOTE! ObjectInfo doesn't own its' texture
             // How to crop texture to display portrait in ui
-            typedef struct TexturePortraitCropping
+            class TexturePortraitCropping
             {
+            public:
                 // How many individual images in sprite sheet
                 float rowCount = 8.0f;
                 pk::vec2 pos;
@@ -51,68 +45,21 @@ namespace world
                     pos = pk::vec2(cropBegin.x / rowCount, cropBegin.y / rowCount);
                     scale = pk::vec2(cropScale / (rowCount * cropScale), cropScale / (rowCount * cropScale));
                 }
-
-            } TexturePortraitCropping;
+            };
 
             TexturePortraitCropping portraitCropping;
-
             bool rotateableSprite = false;
 
             static TexturePortraitCropping s_defaultPortraitCropping;
 
-            ObjectInfo(
-                    std::string objName,
-                    std::string objDescription,
-                    std::vector<std::string> actionSlots,
-                    PK_ubyte speedVal
-                    ):
-                speed(speedVal)
-            {
-
-                memset(name, 0, sizeof(char) * OBJECT_DATA_STRLEN_NAME);
-                memset(description, 0, sizeof(char) * OBJECT_DATA_STRLEN_DESCRIPTION);
-
-                size_t nameLen = objName.size();
-                size_t descriptionLen = objDescription.size();
-
-                if (nameLen > OBJECT_DATA_STRLEN_NAME || nameLen == 0)
-                    nameLen = OBJECT_DATA_STRLEN_NAME;
-                if (descriptionLen > OBJECT_DATA_STRLEN_DESCRIPTION || nameLen == 0)
-                    descriptionLen = OBJECT_DATA_STRLEN_DESCRIPTION;
-
-                memcpy(name, objName.c_str(), sizeof(char) * nameLen);
-                memcpy(description, objDescription.c_str(), sizeof(char) * descriptionLen);
-
-                for (size_t i = 0; i < TILE_STATE_MAX_action + 1; ++i)
-                {
-                    memset(actionSlot[i], 0, sizeof(char) * OBJECT_DATA_STRLEN_ACTION_NAME);
-                    if (i < actionSlots.size())
-                    {
-                        const std::string& slotName = actionSlots[i];
-                        size_t slotLen = slotName.size();
-                        if (slotLen > OBJECT_DATA_STRLEN_ACTION_NAME)
-                            slotLen = OBJECT_DATA_STRLEN_ACTION_NAME;
-
-                        memcpy(actionSlot[i], slotName.c_str(), sizeof(char) * slotLen);
-                    }
-                }
-            }
-
-            ObjectInfo(const ObjectInfo& other):
-                speed(other.speed),
+            VisualObjectInfo() {}
+            VisualObjectInfo(const VisualObjectInfo& other):
                 pTexture(other.pTexture),
+                portraitCropping(other.portraitCropping),
                 rotateableSprite(other.rotateableSprite)
             {
-                memcpy(this->name, other.name, OBJECT_DATA_STRLEN_NAME);
-                memcpy(this->description, other.description, OBJECT_DATA_STRLEN_DESCRIPTION);
-                for (int i = 0; i < TILE_STATE_MAX_action + 1; ++i)
-                    memcpy(actionSlot[i], other.actionSlot[i], OBJECT_DATA_STRLEN_ACTION_NAME);
             }
         };
-
-
-        // Returns the size of data moving accross netw (excludes server and client specific data)
-        size_t get_netw_objinfo_size();
 
 
         // NOTE: Visual object doesnt own any of mem of these ptrs.
@@ -141,7 +88,8 @@ namespace world
                 PK_ubyte tileAction,
                 int objDir,
                 int camDir,
-                const ObjectInfo& staticObjInfo,
+                const gamecommon::ObjectInfo& staticObjInfo,
+                const VisualObjectInfo& visualObjInfo,
                 float worldX,
                 float worldZ,
                 pk::Animation* animation,
@@ -160,10 +108,14 @@ namespace world
         private:
             static bool s_initialized;
             static std::vector<pk::web::WebTexture*> s_pTextures;
-            static std::vector<ObjectInfo> s_objects;
+            // TODO: Unify object(properties) and visuals somehow together
+            // *to prevent searching both separately..
+            static std::vector<gamecommon::ObjectInfo> s_objects;
+            static std::vector<VisualObjectInfo> s_objectVisuals;
 
         public:
-            static ObjectInfo* get(int index);
+            static gamecommon::ObjectInfo* get(int index);
+            static VisualObjectInfo* getVisual(int index);
             static size_t get_size();
             static void create(const PK_byte* data, size_t dataSize);
             static void destroy();

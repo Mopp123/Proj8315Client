@@ -3,7 +3,7 @@
 #include <cstring>
 #include <string>
 
-#include "Object.h"
+#include "Objects.h"
 #include "World.h"
 #include "Tile.h"
 #include "../../Proj8315Common/src/Common.h"
@@ -12,6 +12,7 @@
 
 using namespace pk;
 using namespace pk::web;
+using namespace gamecommon;
 
 using namespace net;
 
@@ -265,6 +266,7 @@ namespace world
                             objDir,
                             _cameraDirection,
                             *objects::ObjectInfoLib::get(tileObject),
+                            *objects::ObjectInfoLib::getVisual(tileObject),
                             spriteWorldX,
                             spriteWorldZ,
                             _tileAnimStates[tileIndex].anim,
