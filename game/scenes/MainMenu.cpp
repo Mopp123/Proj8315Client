@@ -56,6 +56,7 @@ void MainMenu::OnClickLogout::onClick(InputMouseButtonName button)
 
 void MainMenu::OnMessageMOTD::onMessage(const PK_byte* data, size_t dataSize)
 {
+    Debug::log("___TEST___onmessage MOTD! (WARNING: NOT WORKING PROPERLY ATM!)");
     size_t msgSize = dataSize;
     if (msgSize > 256)
         msgSize = 256;

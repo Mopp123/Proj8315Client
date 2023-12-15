@@ -70,7 +70,7 @@ namespace net
 
                 auto event = client->_onMessageEvents.find(messageType);
                 if (event != client->_onMessageEvents.end())
-                    (*event).second->onMessage(messageData + sizeof(int32_t), messageSize - sizeof(int32_t));
+                    (*event).second->onMessage(messageData, messageSize);
             }
             return EM_TRUE;
         }

@@ -62,11 +62,14 @@ void RegisterMenu::OnMessageRegister::onMessage(const GC_byte* data, size_t data
     const size_t expectedSize = 1 + MESSAGE_INFO_MESSAGE_LEN;
     if (dataSize >= expectedSize)
     {
-        bool success = *((bool*)data);
-        GC_byte errMsgData[MESSAGE_INFO_MESSAGE_LEN];
-        memset(errMsgData, 0, MESSAGE_INFO_MESSAGE_LEN);
-        memcpy(errMsgData, data + 1, dataSize - 1);
-        std::string errMsg(errMsgData, MESSAGE_INFO_MESSAGE_LEN);
+        bool success = *((bool*)data + sizeof(uint32_t));
+        size_t errMsgSize = dataSize - 1 - sizeof(uint32_t);
+        GC_byte errMsgData[errMsgSize];
+        memset(errMsgData, 0, errMsgSize);
+        memcpy(errMsgData, data + sizeof(uint32_t) + 1, errMsgSize);
+        char leading = errMsgData[0];
+        Debug::log("___TEST___leading char = " + std::to_string(leading));
+        std::string errMsg(errMsgData, errMsgSize);
         // On successful register -> attempt login immediately
         if (success)
         {
