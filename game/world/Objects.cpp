@@ -265,12 +265,15 @@ namespace world
                 return;
             }
             const size_t objCount = dataSize / get_netw_objinfo_size();
-            int currentDataPos = 0;
+            Debug::log("___TEST___Obj info lib size = " + std::to_string(objCount));
+            int currentDataPos = sizeof(int32_t);
             for (size_t i = 0; i < objCount; ++i)
             {
                 PK_byte name[OBJECT_DATA_STRLEN_NAME];
                 memcpy(name, data + currentDataPos, OBJECT_DATA_STRLEN_NAME);
                 std::string name_str(name, OBJECT_DATA_STRLEN_NAME);
+
+                Debug::log("___TEST___CREATING OBJECT INFO FOR: " + name_str);
 
                 PK_byte description[OBJECT_DATA_STRLEN_DESCRIPTION];
                 memcpy(
