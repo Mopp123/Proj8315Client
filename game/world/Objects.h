@@ -8,14 +8,6 @@
 #include "../../Proj8315Common/src/Object.h"
 
 
-#define OBJECT_DATA_STRLEN_NAME 32
-#define OBJECT_DATA_STRLEN_DESCRIPTION 32
-#define OBJECT_DATA_STRLEN_ACTION_NAME 16
-
-#define OBJECT_DATA_COUNT_STATS 1
-#define OBJECT_DATA_COUNT_TOTAL ((1 + 1) + (TILE_STATE_MAX_action + 1) + OBJECT_DATA_COUNT_STATS)
-
-
 namespace world
 {
     class World;
@@ -117,7 +109,7 @@ namespace world
             static gamecommon::ObjectInfo* get(int index);
             static VisualObjectInfo* getVisual(int index);
             static size_t get_size();
-            static void create(const PK_byte* data, size_t dataSize);
+            static void create(const PK_byte* pData, size_t dataSize);
             static void destroy();
         };
     }

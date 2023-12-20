@@ -64,9 +64,9 @@ void LoginMenu::OnClickLogin::onClick(InputMouseButtonName button)
 
 
 // TODO: Put into some "common OnMessage events" since this is used in multiple places(Login scene, register scene)
-void LoginMenu::OnMessageLoginRequest::onMessage(const GC_byte* data, size_t dataSize)
+void LoginMenu::OnMessageLoginRequest::onMessage(const GC_byte* pData, size_t dataSize)
 {
-    LoginResponse loginResponse(data, dataSize);
+    LoginResponse loginResponse(pData, dataSize);
     if (loginResponse.getSuccess())
     {
         Client* client = Client::get_instance();
@@ -91,9 +91,9 @@ void LoginMenu::OnMessageLoginRequest::onMessage(const GC_byte* data, size_t dat
 
 // After successful "login validation" -> we need to get Object Info lib
 // TODO: Put into some "common OnMessage events" since this is used in multiple places(Login scene, register scene)
-void LoginMenu::OnMessagePostLogin::onMessage(const GC_byte* data, size_t dataSize)
+void LoginMenu::OnMessagePostLogin::onMessage(const GC_byte* pData, size_t dataSize)
 {
-    world::objects::ObjectInfoLib::create(data, dataSize);
+    world::objects::ObjectInfoLib::create(pData, dataSize);
     Debug::log("Obj info lib created. Switching to main menu...");
     ((BaseScene&)sceneRef).setInfoText("Server data acquired", vec3(1.0f, 1.0f, 1.0f));
     Application::get()->switchScene((Scene*)(new MainMenu));

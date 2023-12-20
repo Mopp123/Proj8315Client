@@ -42,7 +42,7 @@ private:
             sceneRef(scene)
         {}
 
-        virtual void onMessage(const GC_byte* data, size_t dataSize);
+        virtual void onMessage(const GC_byte* pData, size_t dataSize);
     };
 
     // TODO: Put into some "common OnMessage events" since this is used in multiple places(Login scene, register scene)
@@ -55,7 +55,7 @@ private:
             sceneRef(sceneRef)
         {}
 
-        virtual void onMessage(const GC_byte* data, size_t dataSize);
+        virtual void onMessage(const GC_byte* pData, size_t dataSize);
     };
 
 

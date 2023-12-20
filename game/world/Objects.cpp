@@ -2,6 +2,7 @@
 #include <unordered_map>
 #include "World.h"
 #include <string>
+#include "../../Proj8315Common/src/messages/ObjMessages.h"
 
 
 using namespace pk;
@@ -254,7 +255,7 @@ namespace world
             return s_objects.size();
         }
 
-        void ObjectInfoLib::create(const PK_byte* data, size_t dataSize)
+        void ObjectInfoLib::create(const PK_byte* pData, size_t dataSize)
         {
             if (s_initialized)
             {
@@ -264,39 +265,12 @@ namespace world
                 );
                 return;
             }
-            const size_t objCount = dataSize / get_netw_objinfo_size();
-            Debug::log("___TEST___Obj info lib size = " + std::to_string(objCount));
-            int currentDataPos = sizeof(int32_t);
-            for (size_t i = 0; i < objCount; ++i)
+
+            ObjInfoLibMsg objInfoMsg(pData, dataSize);
+            s_objects = objInfoMsg.getObjects();
+
+            for (int i = 0; i < s_objects.size(); ++i)
             {
-                PK_byte name[OBJECT_DATA_STRLEN_NAME];
-                memcpy(name, data + currentDataPos, OBJECT_DATA_STRLEN_NAME);
-                std::string name_str(name, OBJECT_DATA_STRLEN_NAME);
-
-                Debug::log("___TEST___CREATING OBJECT INFO FOR: " + name_str);
-
-                PK_byte description[OBJECT_DATA_STRLEN_DESCRIPTION];
-                memcpy(
-                    description,
-                    data + currentDataPos + OBJECT_DATA_STRLEN_NAME,
-                    OBJECT_DATA_STRLEN_DESCRIPTION
-                );
-                std::string description_str(description, OBJECT_DATA_STRLEN_DESCRIPTION);
-
-                std::vector<std::string> actions;
-                int currentPtr = OBJECT_DATA_STRLEN_NAME + OBJECT_DATA_STRLEN_DESCRIPTION;
-                for (int j = 0; j < TILE_STATE_MAX_action + 1; ++j)
-                {
-                    PK_byte action[OBJECT_DATA_STRLEN_ACTION_NAME];
-                    memcpy(action, data + currentDataPos + currentPtr, OBJECT_DATA_STRLEN_ACTION_NAME);
-                    std::string action_str(action, OBJECT_DATA_STRLEN_ACTION_NAME);
-                    actions.push_back(action_str);
-                    currentPtr += OBJECT_DATA_STRLEN_ACTION_NAME;
-                }
-                // obj stats..
-                PK_ubyte speed = 0;
-                memcpy(&speed, data + currentDataPos + currentPtr, 1);
-                ObjectInfo objInfo(name_str, description_str, actions, speed, 0); // NOTE: Client doesn't use begin state -> can be set to 0
                 VisualObjectInfo visualObjInfo;
                 // TODO: Make below somehow more less dumb..
                 // Set these objects' visual properties
@@ -327,11 +301,8 @@ namespace world
                     default:
                         break;
                 }
-                s_objects.push_back(objInfo);
                 s_objectVisuals.push_back(visualObjInfo);
-                currentDataPos += currentPtr + 1; // +1 since the one byte stat
             }
-            s_initialized = true;
         }
 
         void ObjectInfoLib::destroy()
