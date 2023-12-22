@@ -51,12 +51,12 @@ private:
         virtual void onMessage(const PK_byte* data, size_t dataSize);
     };
 
-    class OnMessageCreateFaction : public net::OnMessageEvent
+    class OnMessageCreateFactionResponse : public net::OnMessageEvent
     {
     public:
         MainMenu& sceneRef;
 
-        OnMessageCreateFaction(MainMenu& sceneRef) :
+        OnMessageCreateFactionResponse(MainMenu& sceneRef) :
             sceneRef(sceneRef)
         {}
 

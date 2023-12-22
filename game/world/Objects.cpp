@@ -266,7 +266,7 @@ namespace world
                 return;
             }
 
-            ObjInfoLibMsg objInfoMsg(pData, dataSize);
+            ObjInfoLibResponse objInfoMsg(pData, dataSize);
             s_objects = objInfoMsg.getObjects();
 
             for (int i = 0; i < s_objects.size(); ++i)

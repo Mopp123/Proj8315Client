@@ -19,17 +19,17 @@ private:
         std::string& inputPasswordRef;
         std::string& inputRePasswordRef;
 
-    OnClickRegister(
-        RegisterMenu& sceneRef,
-        std::string& inputUsernameRef,
-        std::string& inputPasswordRef,
-        std::string& inputRePasswordRef
-    ) :
-        sceneRef(sceneRef),
-        inputUsernameRef(inputUsernameRef),
-        inputPasswordRef(inputPasswordRef),
-        inputRePasswordRef(inputRePasswordRef)
-    {}
+        OnClickRegister(
+            RegisterMenu& sceneRef,
+            std::string& inputUsernameRef,
+            std::string& inputPasswordRef,
+            std::string& inputRePasswordRef
+        ) :
+            sceneRef(sceneRef),
+            inputUsernameRef(inputUsernameRef),
+            inputPasswordRef(inputPasswordRef),
+            inputRePasswordRef(inputRePasswordRef)
+        {}
         virtual void onClick(pk::InputMouseButtonName button);
     };
 
@@ -61,12 +61,12 @@ private:
     };
 
     // TODO: Put into some "common OnMessage events" since this is used in multiple places(Login scene, register scene)
-    class OnMessageLoginRequest : public net::OnMessageEvent
+    class OnMessageLoginResponse : public net::OnMessageEvent
     {
     public:
         RegisterMenu& sceneRef;
 
-        OnMessageLoginRequest(RegisterMenu& scene) :
+        OnMessageLoginResponse(RegisterMenu& scene) :
             sceneRef(scene)
         {}
 

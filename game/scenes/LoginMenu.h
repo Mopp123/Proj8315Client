@@ -33,12 +33,12 @@ private:
 
     // On message events
     // TODO: Put into some "common OnMessage events" since this is used in multiple places(Login scene, register scene)
-    class OnMessageLoginRequest : public net::OnMessageEvent
+    class OnMessageLoginResponse : public net::OnMessageEvent
     {
     public:
         LoginMenu& sceneRef;
 
-        OnMessageLoginRequest(LoginMenu& scene) :
+        OnMessageLoginResponse(LoginMenu& scene) :
             sceneRef(scene)
         {}
 

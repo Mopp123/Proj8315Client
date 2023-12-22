@@ -4,6 +4,7 @@
 #include "DeploymentMenu.h"
 #include "../../Proj8315Common/src/Faction.h"
 #include "../../Proj8315Common/src/messages/Message.h"
+#include "../../Proj8315Common/src/messages/WorldMessages.h"
 
 
 using namespace pk;
@@ -19,15 +20,13 @@ void MainMenu::OnClickCreateFaction::onClick(InputMouseButtonName button)
     {
         Debug::log("___TEST___sending create faction");
         std::string requestedFactionName = pCreateFactionInputFieldTxt->getStr();
-        Faction newFaction(requestedFactionName.data(), requestedFactionName.size());
-        const size_t factionNetwSize = Faction::get_netw_size();
         Client::get_instance()->send(
-            (uint32_t)MESSAGE_TYPE__CreateFaction,
+            (uint32_t)MESSAGE_TYPE__CreateFactionRequest,
             {
                 {
-                    (PK_byte*)newFaction.getNetwData(),
-                    factionNetwSize,
-                    factionNetwSize
+                    (PK_byte*)requestedFactionName.data(),
+                    requestedFactionName.size(),
+                    MESSAGE_REQUIRED_SIZE__CreateFactionRequest
                 }
             }
         );
@@ -57,18 +56,18 @@ void MainMenu::OnClickLogout::onClick(InputMouseButtonName button)
 void MainMenu::OnMessageMOTD::onMessage(const PK_byte* data, size_t dataSize)
 {
     Debug::log("___TEST___onmessage MOTD! (WARNING: NOT WORKING PROPERLY ATM!)");
-    size_t msgSize = dataSize;
-    if (msgSize > 256)
-        msgSize = 256;
-    PK_byte* buf = new PK_byte[msgSize];
-    memcpy(buf, data, msgSize);
-    pMOTDTxt->accessStr() = std::string(buf, msgSize);
-    delete[] buf;
+    // size_t msgSize = dataSize;
+    // if (msgSize > 256)
+    //     msgSize = 256;
+    // PK_byte* buf = new PK_byte[msgSize];
+    // memcpy(buf, data, msgSize);
+    // pMOTDTxt->accessStr() = std::string(buf, msgSize);
+    // delete[] buf;
 }
 
 
 // TODO: Create Faction response message
-void MainMenu::OnMessageCreateFaction::onMessage(const PK_byte* data, size_t dataSize)
+void MainMenu::OnMessageCreateFactionResponse::onMessage(const PK_byte* data, size_t dataSize)
 {
     Debug::log("___TEST___onmessage create faction");
     Client* client = Client::get_instance();
@@ -174,8 +173,8 @@ void MainMenu::init()
         (OnMessageEvent*)(new OnMessageMOTD(_pMOTDTxt))
     );
     client->addOnMessageEvent(
-        MESSAGE_TYPE__CreateFaction,
-        (OnMessageEvent*)(new OnMessageCreateFaction(*this))
+        MESSAGE_TYPE__CreateFactionResponse,
+        (OnMessageEvent*)(new OnMessageCreateFactionResponse(*this))
     );
     client->send(MESSAGE_TYPE__ServerMessage, {});
 }

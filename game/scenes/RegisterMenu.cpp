@@ -44,7 +44,7 @@ void RegisterMenu::OnClickRegister::onClick(InputMouseButtonName button)
         }
         sceneRef.username = inputUsernameRef;
         Client::get_instance()->send(
-            MESSAGE_TYPE__UserRegister,
+            MESSAGE_TYPE__UserRegisterRequest,
             {
                 { (GC_byte*)inputUsernameRef.data(), inputUsernameRef.size(), USER_NAME_SIZE },
                 { (GC_byte*)inputPasswordRef.data(), inputPasswordRef.size(), USER_PASSWD_SIZE },
@@ -77,7 +77,7 @@ void RegisterMenu::OnMessageRegister::onMessage(const GC_byte* data, size_t data
 
             ((BaseScene&)sceneRef).setInfoText("Registering was successful. Logging in...", vec3(0, 1.0f, 0));
             client->send(
-                (int32_t)MESSAGE_TYPE__UserLogin,
+                (int32_t)MESSAGE_TYPE__LoginRequest,
                 {
                     {
                         (GC_byte*)inputUsernameRef.data(),
@@ -102,13 +102,14 @@ void RegisterMenu::OnMessageRegister::onMessage(const GC_byte* data, size_t data
 
 
 // TODO: Put into some "common OnMessage events" since this is used in multiple places(Login scene, register scene)
-void RegisterMenu::OnMessageLoginRequest::onMessage(const GC_byte* data, size_t dataSize)
+void RegisterMenu::OnMessageLoginResponse::onMessage(const GC_byte* data, size_t dataSize)
 {
     LoginResponse loginResponse(data, dataSize);
     if (loginResponse.getSuccess())
     {
         Client* client = Client::get_instance();
         client->user.name = sceneRef.username;
+        // NOTE: User should never have existing faction when logging in first time after registration!!!
         Faction userFaction = loginResponse.getFaction();
         if (userFaction != NULL_FACTION)
         {
@@ -212,11 +213,11 @@ void RegisterMenu::init()
 
     Client* client = Client::get_instance();
     client->addOnMessageEvent(
-        MESSAGE_TYPE__UserRegister,
+        MESSAGE_TYPE__UserRegisterResponse,
         new OnMessageRegister(*this, usernameStr, passwdStr)
     );
-    client->addOnMessageEvent(MESSAGE_TYPE__UserLogin, new OnMessageLoginRequest(*this));
-    client->addOnMessageEvent(MESSAGE_TYPE__ObjInfoLibRequest, new OnMessagePostLogin(*this));
+    client->addOnMessageEvent(MESSAGE_TYPE__LoginResponse, new OnMessageLoginResponse(*this));
+    client->addOnMessageEvent(MESSAGE_TYPE__ObjInfoLibResponse, new OnMessagePostLogin(*this));
 }
 
 void RegisterMenu::update()

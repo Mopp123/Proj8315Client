@@ -45,7 +45,7 @@ void LoginMenu::OnClickLogin::onClick(InputMouseButtonName button)
         sceneRef.username = usernameFieldRef;
         Client* client = Client::get_instance();
         client->send(
-            (int32_t)MESSAGE_TYPE__UserLogin,
+            (int32_t)MESSAGE_TYPE__LoginRequest,
             {
                 {
                     (GC_byte*)usernameFieldRef.data(),
@@ -64,7 +64,7 @@ void LoginMenu::OnClickLogin::onClick(InputMouseButtonName button)
 
 
 // TODO: Put into some "common OnMessage events" since this is used in multiple places(Login scene, register scene)
-void LoginMenu::OnMessageLoginRequest::onMessage(const GC_byte* pData, size_t dataSize)
+void LoginMenu::OnMessageLoginResponse::onMessage(const GC_byte* pData, size_t dataSize)
 {
     LoginResponse loginResponse(pData, dataSize);
     if (loginResponse.getSuccess())
@@ -75,7 +75,12 @@ void LoginMenu::OnMessageLoginRequest::onMessage(const GC_byte* pData, size_t da
         if (userFaction != NULL_FACTION)
         {
             client->user.faction = userFaction.getName();
+            Debug::log("___TEST___USER LOGGED IN WITH FACTION = " + client->user.faction);
             client->user.hasFaction = true;
+        }
+        else
+        {
+            Debug::log("___TEST___USER LOGGED IN WITHOUT EXISTING FACTION!");
         }
 
         Debug::log("Login was success. Fetching server obj info lib...");
@@ -167,8 +172,8 @@ void LoginMenu::init()
     _pInfoTxt->setActive(false);
 
     Client* client = Client::get_instance();
-    client->addOnMessageEvent(MESSAGE_TYPE__UserLogin, (OnMessageEvent*)(new OnMessageLoginRequest(*this)));
-    client->addOnMessageEvent(MESSAGE_TYPE__ObjInfoLibRequest, (OnMessageEvent*)(new OnMessagePostLogin(*this)));
+    client->addOnMessageEvent(MESSAGE_TYPE__LoginResponse, (OnMessageEvent*)(new OnMessageLoginResponse(*this)));
+    client->addOnMessageEvent(MESSAGE_TYPE__ObjInfoLibResponse, (OnMessageEvent*)(new OnMessagePostLogin(*this)));
 }
 
 void LoginMenu::update()

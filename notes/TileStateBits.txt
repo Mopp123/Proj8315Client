@@ -25,9 +25,9 @@ bit positions
 9 = fire(burning effect)
 10 = toxic
 
-"Thing category" (If any of these is set, this tile is "impassable") 
+"Thing category" (If any of these is set, this tile is "impassable")
 --------------------------------------------------------------------
-(these are bit flags. For example some cyborg dude has "living", "natural" and "artificial" set, while a rock has only "natural". 
+(these are bit flags. For example some cyborg dude has "living", "natural" and "artificial" set, while a rock has only "natural".
 Some factory processed things(made from natural resources) has "natural" and "artificial". This also allows us to have "supernatural wizard-human-cyborgs" and shit.. xDd)
 
 11 = Living thing? (humanoid, animal, etc?)
@@ -65,3 +65,17 @@ Custom variable (can be used for anything. For example this could be health for 
 29 = ^
 30 = ^
 31 = ^
+
+Faction index (NOTE: Not to be confused with faction's uuid in database)
+-------------
+32 = var (unsigned 10 bit unsigned integer, val range 0 to 1023)
+33 = ^
+34 = ^
+35 = ^
+36 = ^
+37 = ^
+38 = ^
+39 = ^
+40 = ^
+41 = ^
+
