@@ -26,7 +26,7 @@ void MainMenu::OnClickCreateFaction::onClick(InputMouseButtonName button)
                 {
                     (PK_byte*)requestedFactionName.data(),
                     requestedFactionName.size(),
-                    MESSAGE_REQUIRED_SIZE__CreateFactionRequest
+                    FACTION_NAME_SIZE
                 }
             }
         );
@@ -69,14 +69,18 @@ void MainMenu::OnMessageMOTD::onMessage(const PK_byte* data, size_t dataSize)
 // TODO: Create Faction response message
 void MainMenu::OnMessageCreateFactionResponse::onMessage(const PK_byte* data, size_t dataSize)
 {
-    Debug::log("___TEST___onmessage create faction");
+    std::string raw(data, dataSize);
+    //Debug::log("___TEST___onmessage create faction: " + raw);
     Client* client = Client::get_instance();
-    bool success = *((bool*)data);
-    if (success)
+    CreateFactionResponse response(data, dataSize);
+    if (response.getStatus())
     {
-        if (dataSize > 1)
+        Debug::log("___TEST___onmessage create faction: SUCCESS!");
+        // TODO: Make user's faction be the actual object and not just name
+        Faction faction = response.getFaction();
+        Debug::log("    FactionID = " + std::string(faction.getID()) + " Faction name = " + faction.getName());
+        if (faction != NULL_FACTION)
         {
-            Faction faction(data + 1, FACTION_NAME_SIZE);
             client->user.faction = faction.getName();
             client->user.hasFaction = true;
             Debug::log("Faction creation was successful");
@@ -86,19 +90,8 @@ void MainMenu::OnMessageCreateFactionResponse::onMessage(const PK_byte* data, si
     }
     else
     {
-        const size_t errMessagePos = 1 + Faction::get_netw_size();
-        const size_t errMessageSize = dataSize - errMessagePos;
-        if (dataSize > errMessagePos)
-        {
-            char infoMessage[MESSAGE_INFO_MESSAGE_LEN];
-            memset(infoMessage, 0, MESSAGE_INFO_MESSAGE_LEN);
-            memcpy(infoMessage, data + errMessagePos, errMessageSize);
-            ((BaseScene&)sceneRef).setInfoText(std::string(infoMessage));
-        }
-        else
-        {
-            Debug::log("Failed to create faction but server didn't provide error/info message", Debug::MessageType::PK_WARNING);
-        }
+        std::string errorMessage = response.getErrorMessage();
+        ((BaseScene&)sceneRef).setInfoText(errorMessage);
     }
 }
 
