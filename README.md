@@ -1,3 +1,5 @@
+CURRENTLY COMPLETELY FUCKED SINCE REWORK IN PROGRESS TO USE UPDATED ENGINE
+
 # Proj8315
 Little web based scifi strategy/management game proj
 
