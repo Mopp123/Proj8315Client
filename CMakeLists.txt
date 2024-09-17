@@ -21,43 +21,52 @@ add_compile_definitions(PK_PLATFORM_WEB=1)
 
 include_directories (
     "${PROJECT_SOURCE_DIR}/src"
-    #"${PROJECT_SOURCE_DIR}/PortablePesukarhu"
+    "${PROJECT_SOURCE_DIR}/PortablePesukarhu"
+    "${PROJECT_SOURCE_DIR}/Proj8315Common/src"
 )
 
 file (
     GLOB source_files
-    #"${PROJECT_SOURCE_DIR}/PortablePesukarhu/core/*.cpp"
-    #"${PROJECT_SOURCE_DIR}/PortablePesukarhu/core/input/*.cpp"
-    #"${PROJECT_SOURCE_DIR}/PortablePesukarhu/core/input/platform/web/*.cpp"
-    #"${PROJECT_SOURCE_DIR}/PortablePesukarhu/core/platform/web/*.cpp"
+    # Engine files ---
+    "${PROJECT_SOURCE_DIR}/PortablePesukarhu/core/*.cpp"
+    "${PROJECT_SOURCE_DIR}/PortablePesukarhu/core/input/*.cpp"
+    "${PROJECT_SOURCE_DIR}/PortablePesukarhu/core/input/platform/web/*.cpp"
+    "${PROJECT_SOURCE_DIR}/PortablePesukarhu/core/platform/web/*.cpp"
 
-    #"${PROJECT_SOURCE_DIR}/PortablePesukarhu/ecs/components/*.cpp"
-    #"${PROJECT_SOURCE_DIR}/PortablePesukarhu/ecs/components/renderable/*.cpp"
-    #"${PROJECT_SOURCE_DIR}/PortablePesukarhu/ecs/systems/*.cpp"
-    #"${PROJECT_SOURCE_DIR}/PortablePesukarhu/ecs/systems/ui/*.cpp"
-    #"${PROJECT_SOURCE_DIR}/PortablePesukarhu/ecs/factories/ui/*.cpp"
+    "${PROJECT_SOURCE_DIR}/PortablePesukarhu/ecs/components/*.cpp"
+    "${PROJECT_SOURCE_DIR}/PortablePesukarhu/ecs/components/renderable/*.cpp"
+    "${PROJECT_SOURCE_DIR}/PortablePesukarhu/ecs/systems/*.cpp"
+    "${PROJECT_SOURCE_DIR}/PortablePesukarhu/ecs/systems/ui/*.cpp"
+    "${PROJECT_SOURCE_DIR}/PortablePesukarhu/ecs/factories/ui/*.cpp"
 
-    #"${PROJECT_SOURCE_DIR}/PortablePesukarhu/graphics/*.cpp"
-    #"${PROJECT_SOURCE_DIR}/PortablePesukarhu/graphics/shaders/*.cpp"
-    #"${PROJECT_SOURCE_DIR}/PortablePesukarhu/graphics/renderers/*.cpp"
-    #"${PROJECT_SOURCE_DIR}/PortablePesukarhu/graphics/platform/web/*.cpp"
-    #"${PROJECT_SOURCE_DIR}/PortablePesukarhu/graphics/platform/web/shaders/*.cpp"
-    #"${PROJECT_SOURCE_DIR}/PortablePesukarhu/graphics/platform/opengl/*.cpp"
-    #"${PROJECT_SOURCE_DIR}/PortablePesukarhu/graphics/platform/opengl/shaders/*.cpp"
+    "${PROJECT_SOURCE_DIR}/PortablePesukarhu/graphics/*.cpp"
+    "${PROJECT_SOURCE_DIR}/PortablePesukarhu/graphics/shaders/*.cpp"
+    "${PROJECT_SOURCE_DIR}/PortablePesukarhu/graphics/renderers/*.cpp"
+    "${PROJECT_SOURCE_DIR}/PortablePesukarhu/graphics/platform/web/*.cpp"
+    "${PROJECT_SOURCE_DIR}/PortablePesukarhu/graphics/platform/web/shaders/*.cpp"
+    "${PROJECT_SOURCE_DIR}/PortablePesukarhu/graphics/platform/opengl/*.cpp"
+    "${PROJECT_SOURCE_DIR}/PortablePesukarhu/graphics/platform/opengl/shaders/*.cpp"
 
-    #"${PROJECT_SOURCE_DIR}/PortablePesukarhu/resources/*.cpp"
-    #"${PROJECT_SOURCE_DIR}/PortablePesukarhu/resources/platform/opengl/*.cpp"
+    "${PROJECT_SOURCE_DIR}/PortablePesukarhu/resources/*.cpp"
+    "${PROJECT_SOURCE_DIR}/PortablePesukarhu/resources/platform/opengl/*.cpp"
 
-    #"${PROJECT_SOURCE_DIR}/PortablePesukarhu/utils/*.cpp"
+    "${PROJECT_SOURCE_DIR}/PortablePesukarhu/utils/*.cpp"
 
+    # Game Common files ---
+    "${PROJECT_SOURCE_DIR}/Proj8315Common/src/*.cpp"
+    "${PROJECT_SOURCE_DIR}/Proj8315Common/src/messages/*.cpp"
+
+    # Game client files ---
     "${PROJECT_SOURCE_DIR}/src/*.cpp"
+    "${PROJECT_SOURCE_DIR}/src/net/*.cpp"
+    "${PROJECT_SOURCE_DIR}/src/net/platform/web/*.cpp"
     #"${PROJECT_SOURCE_DIR}/src/scenes/*.cpp"
 )
 
 add_executable(${proj_name} ${source_files})
 
 set(html_shell_location "${PROJECT_SOURCE_DIR}/shell.html")
-set(html_out "proj8315-client.html")
+set(html_out "proj8315-client.html") # NOTE: This gets converted to camel case for some reason...
 set(assets_dir "${PROJECT_SOURCE_DIR}/assets")
 
 if (${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")

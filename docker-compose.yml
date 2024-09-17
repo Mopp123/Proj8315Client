@@ -5,7 +5,7 @@ services:
 
   proj8315-client-site:
     container_name: proj8315-web-client
-    command: bash start-prod.sh
+    command: bash start-container.sh
     image: proj8315-client
     volumes:
       - ./site:/usr/src/app

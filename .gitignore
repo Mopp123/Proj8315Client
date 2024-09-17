@@ -2,3 +2,7 @@
 *.swp
 build/
 assets/
+site/*.wasm
+site/*.data
+site/*.html
+site/*.js
