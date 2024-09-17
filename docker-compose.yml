@@ -1,0 +1,13 @@
+
+version: "3.7"
+
+services:
+
+  proj8315-client-site:
+    container_name: proj8315-web-client
+    command: bash start-prod.sh
+    image: proj8315-client
+    volumes:
+      - ./site:/usr/src/app
+    ports:
+      - 80:80

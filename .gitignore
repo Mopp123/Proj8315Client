@@ -1,9 +1,4 @@
 .cache
-CMakeFiles/
-public-html/CMakeFiles/
-public-html/Makefile
-public-html/*.*
-public-html/assets/*.*
-!.gitkeep
-compile_commands.json
 *.swp
+build/
+assets/
