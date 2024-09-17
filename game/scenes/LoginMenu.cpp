@@ -89,6 +89,10 @@ void LoginMenu::OnMessageLoginResponse::onMessage(const GC_byte* pData, size_t d
     }
     else
     {
+        std::string err = loginResponse.getError();
+        Debug::log("___TEST___login failure! err: " + err + " err size: " + std::to_string(err.size()) + " err len = " + std::to_string(err.length()));
+        std::string raw(pData, dataSize);
+        Debug::log("___TEST___raw data = " + raw);
         ((BaseScene&)sceneRef).setInfoText(loginResponse.getError(), vec3(1.0f, 0, 0));
     }
 }

@@ -26,8 +26,8 @@ public:
         SelectedObjPanel& infoPanelRef,
         PK_ubyte objType
     ) :
-        infoPanelRef(infoPanelRef),
-        objType(objType)
+        objType(objType),
+        infoPanelRef(infoPanelRef)
     {}
 
     virtual void onClick(InputMouseButtonName button)
@@ -224,20 +224,14 @@ RosterObject* CurrentRosterPanel::getAvailableSlot(PK_ubyte objType)
         {
             RosterObject* objSlot = &rosterObjects[i];
             if (objSlot->objType == objType)
-            {
-                Debug::log("___TEST___FOUND EXISTING SLOT!");
                 return objSlot;
-            }
         }
         // if not search for empty slot
         for (int i = 0; i < rosterObjects.size(); ++i)
         {
             RosterObject* objSlot = &rosterObjects[i];
             if (objSlot->objType == 0)
-            {
-                Debug::log("___TEST___FOUND NEW EMPTY SLOT!");
                 return objSlot;
-            }
         }
     }
     return nullptr;

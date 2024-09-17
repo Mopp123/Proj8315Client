@@ -76,5 +76,5 @@ public:
     virtual void init();
     virtual void update();
 
-    void showFactionMenu(bool arg);
+    void showFactionMenu(bool arg, const std::string& factionName);
 };

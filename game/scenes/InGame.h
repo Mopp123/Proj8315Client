@@ -11,24 +11,28 @@ class InGame : public BaseScene
 {
 private:
     // On message events
-    class OnMessageGetAllFactions : public net::OnMessageEvent
+    class OnMessageFactionList : public net::OnMessageEvent
     {
     public:
+        InGame* pInGameScene = nullptr;
         world::World& worldRef;
 
-        OnMessageGetAllFactions(world::World& worldRef) :
+        OnMessageFactionList(InGame* pInGameScene, world::World& worldRef) :
+            pInGameScene(pInGameScene),
             worldRef(worldRef)
         {}
 
         virtual void onMessage(const PK_byte* data, size_t dataSize);
     };
 
-    class OnMessageGetChangedFactions : public net::OnMessageEvent
+    class OnMessageUpdatedFactionList : public net::OnMessageEvent
     {
     public:
+        InGame* pInGameScene = nullptr;
         world::World& worldRef;
 
-        OnMessageGetChangedFactions(world::World& worldRef) :
+        OnMessageUpdatedFactionList(InGame* pInGameScene, world::World& worldRef) :
+            pInGameScene(pInGameScene),
             worldRef(worldRef)
         {}
 
@@ -47,6 +51,9 @@ private:
     pk::web::WebTexture* _terrainTexture2 = nullptr;
     pk::web::WebTexture* _terrainTexture3 = nullptr;
     pk::web::WebTexture* _terrainTexture4 = nullptr;
+
+public:
+    bool factionListInitialized = false;
 
 public:
     InGame();

@@ -19,15 +19,12 @@ using namespace net;
 
 int main(int argc, const char** argv)
 {
-    std::cout << "___TESTINGTESTING___PROJ RESTRUCTURE123\n";
-
-    std::unordered_set<int> test;
-
-    for (auto w : test)
-    {
-    }
-
-    bool initSuccess = true;
+    // NOTE: Don't remember what below was for...
+    // std::unordered_set<int> test;
+    // for (auto w : test)
+    // {
+    // }
+    // bool initSuccess = true;
 
     WebWindow window;
     WebContext graphicsContext;

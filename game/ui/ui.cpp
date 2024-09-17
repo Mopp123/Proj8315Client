@@ -45,6 +45,11 @@ std::pair<uint32_t, TextRenderable*> Panel::addText(std::string txt)
 {
     float charSize = (32.0f * 0.5f) * 0.5f;
     vec2 toAdd = calcNewSlotPos();
+
+    // TODO: Do the same displacement for vertical!
+    if (_horizontalConstraint.first == ConstraintType::PIXEL_RIGHT)
+        toAdd.x += _slotScale.x;
+
     std::pair<uint32_t, TextRenderable*> txtObj = create_text(
         txt,
         _horizontalConstraint.first,

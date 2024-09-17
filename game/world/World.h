@@ -143,8 +143,12 @@ namespace world
         void updateObservedArea(const uint64_t* mapState);
         void update(float worldX, float worldZ);
 
+        // Adds faction if doesn't exist yet
         void addFaction(const gamecommon::Faction& faction);
+        // Updates faction if already exists
         void updateFaction(const gamecommon::Faction& faction);
+        // Updates faction if exists or adds a new faction if doesn't exist
+        void updateFactionList(const std::string& factionName, const gamecommon::Faction& faction);
         gamecommon::Faction getFaction(const std::string& factionName) const;
         bool factionExists(const std::string& factionName) const;
 

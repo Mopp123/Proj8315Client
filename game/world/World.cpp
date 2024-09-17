@@ -23,10 +23,10 @@ namespace world
     {
         WorldObserver& observerRef = visualWorldRef._observer;
         const int dataWidth = (observerRef.observeRadius * 2) + 1;
-        const size_t expectedDataSize = (dataWidth * dataWidth) * sizeof(uint64_t);
+        const size_t expectedDataSize = MESSAGE_ENTRY_SIZE__header + (dataWidth * dataWidth) * sizeof(uint64_t);
         if (dataSize >= expectedDataSize)
         {
-            const uint64_t* dataBuf = (const uint64_t*)data;
+            const uint64_t* dataBuf = (const uint64_t*)(data + MESSAGE_ENTRY_SIZE__header);
             visualWorldRef.updateObservedArea(dataBuf);
 
             observerRef.lastReceivedMapX = visualWorldRef._observer.requestedMapX;
@@ -448,6 +448,12 @@ namespace world
                 Debug::MessageType::PK_ERROR
             );
         }
+    }
+
+    void World::updateFactionList(const std::string& factionName, const Faction& faction)
+    {
+        _factions[factionName] = faction;
+        Debug::log("___TEST___UPDATED FACTION: " + factionName + " faction count = " + std::to_string(_factions.size()));
     }
 
     Faction World::getFaction(const std::string& factionName) const

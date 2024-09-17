@@ -19,71 +19,29 @@ using namespace net;
 using namespace gamecommon;
 
 
-void InGame::OnMessageGetAllFactions::onMessage(const PK_byte* data, size_t dataSize)
+void InGame::OnMessageFactionList::onMessage(const PK_byte* data, size_t dataSize)
 {
-    FactionsMsg factionsMsg(data, dataSize);
-    for (const Faction& faction : factionsMsg.getFactions())
+    FactionListResponse response(data, dataSize);
+    for (const Faction& faction : response.getFactions())
         worldRef.addFaction(faction);
-
-    /*
-    if (dataSize >= Faction::get_netw_size())
-    {
-        const size_t factionDataSize = Faction::get_netw_size();
-        const int receivedFactionsCount = dataSize / (int)factionDataSize;
-        int dataPos = 0;
-        for (int i = 0; i < receivedFactionsCount; ++i)
-        {
-            if (dataPos + factionDataSize > dataSize)
-            {
-                Debug::log(
-                    "@OnMessageGetAllFactions received message's dataSize wasn't multiple of "
-                    "Faction class' netw size. Single faction's netw size: " +
-                    std::to_string(factionDataSize) + " received size: " + std::to_string(dataSize) +
-                    " determined received faction count: " + std::to_string(receivedFactionsCount)
-                );
-                break;
-            }
-            worldRef.addFaction(Faction(data + dataPos));
-            dataPos += factionDataSize;
-        }
-    }
-    */
+    pInGameScene->factionListInitialized = true;
 }
 
 
-void InGame::OnMessageGetChangedFactions::onMessage(const PK_byte* data, size_t dataSize)
+void InGame::OnMessageUpdatedFactionList::onMessage(const PK_byte* data, size_t dataSize)
 {
-    Debug::log(
-        "___TEST___InGame::OnMessageGetChangedFactions::onMessage NOT YET IMPLEMENTED!",
-        Debug::MessageType::PK_WARNING
-    );
-    /*
-    if (dataSize >= Faction::get_netw_size())
+    // Prevent conflict if receiving updated factions before "initial" factions list
+    if (!pInGameScene->factionListInitialized)
+        return;
+    // Debug::log(
+    //     "___TEST___InGame::OnMessageGetChangedFactions::onMessage NOT YET IMPLEMENTED!",
+    //     Debug::MessageType::PK_WARNING
+    // );
+    UpdatedFactionsMsg msg(data, dataSize);
+    for (const Faction& faction : msg.getFactions())
     {
-        const size_t factionDataSize = Faction::get_netw_size();
-        const int receivedFactionsCount = dataSize / (int)factionDataSize;
-        int dataPos = 0;
-        for (int i = 0; i < receivedFactionsCount; ++i)
-        {
-            if (dataPos + factionDataSize > dataSize)
-            {
-                Debug::log(
-                    "@OnMessageGetChangedFactions received message's dataSize wasn't multiple of "
-                    "Faction class' netw size. Single faction's netw size: " +
-                    std::to_string(factionDataSize) + " received size: " + std::to_string(dataSize) +
-                    " determined received faction count: " + std::to_string(receivedFactionsCount)
-                );
-                break;
-            }
-            Faction faction(data + dataPos);
-            if (worldRef.factionExists(faction.getName()))
-                worldRef.updateFaction(faction);
-            else
-                worldRef.addFaction(faction);
-            dataPos += factionDataSize;
-        }
+        worldRef.updateFactionList(faction.getName(), faction);
     }
-    */
 }
 
 
@@ -110,6 +68,7 @@ static std::string s_TEST_worldstate;
 void InGame::init()
 {
     ((BaseScene*)this)->initBase();
+     _debugPanel.setActive(true);
 
     // create dir light
     uint32_t lightEntity = createEntity();
@@ -170,17 +129,18 @@ void InGame::init()
     addComponent(spriteEntity, _testSprite);
 
     Client* client = Client::get_instance();
-    client->addOnMessageEvent(MESSAGE_TYPE__GetAllFactions, new OnMessageGetAllFactions(*_world));
-    client->addOnMessageEvent(MESSAGE_TYPE__GetChangedFactions, new OnMessageGetChangedFactions(*_world));
+    // TODO: Fix below!
+    client->addOnMessageEvent(MESSAGE_TYPE__FactionListResponse, new OnMessageFactionList(this, *_world));
+    client->addOnMessageEvent(MESSAGE_TYPE__UpdatedFactions, new OnMessageUpdatedFactionList(this, *_world));
 
-    // Fetch all game factions
-    // NOTE: if connection issues -> we might need to resend this message instead
-    // of relying on that we get answer with this single message?
-    Client::get_instance()->send(MESSAGE_TYPE__GetAllFactions, {});
+    // Fetch all existing game factions
+     Client::get_instance()->send(MESSAGE_TYPE__FactionListRequest, {});
 }
 
 void InGame::update()
 {
+    updateDebugPanel();
+
     vec3 camPivotPoint = _pCamController->getPivotPoint();
 
     // attempt to glue cam's height to terrain's height

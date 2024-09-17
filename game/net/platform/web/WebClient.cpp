@@ -65,8 +65,8 @@ namespace net
                 int32_t messageType = -1;
                 memcpy(&messageType, (const void*)messageData, sizeof(int32_t));
 
-                //if (messageType != MESSAGE_TYPE__GetWorldState)
-                //    Debug::log("___TEST___onmessage: " + std::to_string(messageType));
+                // if (messageType != MESSAGE_TYPE__WorldState)
+                //     Debug::log("___TEST___onmessage: " + std::to_string(messageType));
 
                 auto event = client->_onMessageEvents.find(messageType);
                 if (event != client->_onMessageEvents.end())

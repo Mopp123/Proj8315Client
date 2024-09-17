@@ -11,7 +11,7 @@ namespace net
             _onMessageEvents.insert({ messageType, event });
         else
             pk::Debug::log(
-                "Attempted to add OnMessageEvent but event with same type already exists",
+                "Attempted to add OnMessageEvent but event with same type (" + std::to_string(messageType) + ") already exists",
                 pk::Debug::MessageType::PK_ERROR
             );
     }
@@ -28,8 +28,13 @@ namespace net
     Client* Client::get_instance()
     {
         if (!s_pInstance)
+        {
             pk::Debug::log("Attempted to access client instance, but the client didn't exist");
+            return nullptr;
+        }
         else
+        {
             return s_pInstance;
+        }
     }
 }

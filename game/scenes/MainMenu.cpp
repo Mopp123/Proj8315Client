@@ -84,7 +84,7 @@ void MainMenu::OnMessageCreateFactionResponse::onMessage(const PK_byte* data, si
             client->user.faction = faction.getName();
             client->user.hasFaction = true;
             Debug::log("Faction creation was successful");
-            sceneRef.showFactionMenu(true);
+            sceneRef.showFactionMenu(true, faction.getName());
             ((BaseScene&)sceneRef).setInfoText("");
         }
     }
@@ -152,14 +152,13 @@ void MainMenu::init()
     ).second;
 
     _pFactionInfoTxt = create_text(
-        "TestFactionNameHere123",
+        "No faction exists for user",
         ConstraintType::PIXEL_CENTER_HORIZONTAL, 120,
         ConstraintType::PIXEL_CENTER_VERTICAL, 180
     ).second;
 
     Client* client = Client::get_instance();
-
-    showFactionMenu(client->user.hasFaction);
+    showFactionMenu(client->user.hasFaction, client->user.faction);
 
     client->addOnMessageEvent(
         MESSAGE_TYPE__ServerMessage,
@@ -175,11 +174,11 @@ void MainMenu::init()
 void MainMenu::update()
 {}
 
-void MainMenu::showFactionMenu(bool arg)
+void MainMenu::showFactionMenu(bool arg, const std::string& factionName)
 {
     _createFactionPanel.setActive(!arg);
     _mainFuncPanel.setActive(arg);
-
+    _pFactionInfoTxt->accessStr() = factionName;
     _pFactionInfoTxt->setActive(arg);
 }
 
