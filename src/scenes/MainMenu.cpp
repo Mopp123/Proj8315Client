@@ -38,7 +38,6 @@ void MainMenu::init()
         *_pDefaultFont
     );
 
-    // For some reason input field is adding children but doesn't fuck up..
     std::pair<entityID_t, pk::TextRenderable*> inputFieldTest = pk::ui::create_input_field(
         "Very long input field info text here", *_pDefaultFont,
         pk::HorizontalConstraintType::PIXEL_CENTER_HORIZONTAL, 0,
