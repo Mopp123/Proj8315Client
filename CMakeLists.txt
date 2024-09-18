@@ -60,14 +60,15 @@ file (
     "${PROJECT_SOURCE_DIR}/src/*.cpp"
     "${PROJECT_SOURCE_DIR}/src/net/*.cpp"
     "${PROJECT_SOURCE_DIR}/src/net/platform/web/*.cpp"
-    #"${PROJECT_SOURCE_DIR}/src/scenes/*.cpp"
+    "${PROJECT_SOURCE_DIR}/src/scenes/*.cpp"
+    "${PROJECT_SOURCE_DIR}/src/ui/*.cpp"
 )
 
 add_executable(${proj_name} ${source_files})
 
 set(html_shell_location "${PROJECT_SOURCE_DIR}/shell.html")
-set(html_out "proj8315-client.html") # NOTE: This gets converted to camel case for some reason...
-set(assets_dir "${PROJECT_SOURCE_DIR}/assets")
+set(html_out "Proj8315Client.html") # NOTE: This gets converted to camel case for some reason...
+set(assets_dir "../assets") # NOTE: This has to be relative from build to assets dir
 
 if (${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
     message(STATUS "___TEST___SYSTEM WAS EMSCRIPTEN!")

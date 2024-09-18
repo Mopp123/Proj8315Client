@@ -1,5 +1,6 @@
 .cache
 *.swp
+compile_commands.json
 build/
 assets/
 site/*.wasm

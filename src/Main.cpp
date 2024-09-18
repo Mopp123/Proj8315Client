@@ -1,13 +1,42 @@
+#include "../PortablePesukarhu/ppk.h"
+
+#include "scenes/MainMenu.h"
+
+#include "net/Client.h"
+#include "net/platform/web/WebClient.h"
+
 #include <iostream>
 
-#include "net/platform/web/WebClient.h"
+using namespace pk;
+using namespace pk::web;
+using namespace ui;
 
 
 int main(int argc, const char** argv)
 {
-    std::cout << "Working!!\n";
+    std::cout << "TESTING123!\n";
 
-    net::web::WebClient* client = new net::web::WebClient("ws://127.0.0.1:51421");
+    // NOTE: ISSUES!
+    // * need to create window and input manager to heap using
+    // some "create func" like the other api/platform agnostic stuff..
+
+    // TODO: platform agnostic window creation
+    WebWindow window;
+    Context* pGraphicsContext = Context::create(GRAPHICS_API_WEBGL);
+    WebInputManager inputManager;
+
+    Application application(
+        PK_PLATFORM_ID_WEB,
+        "IndexApp Emscripten testing",
+        &window,
+        pGraphicsContext,
+        &inputManager
+    );
+
+    net::Client* pClient = (net::Client*)(new net::web::WebClient("ws://127.0.0.1:51421"));
+
+    application.switchScene((Scene*)(new MainMenu));
+    application.run();
 
     return 0;
 }
