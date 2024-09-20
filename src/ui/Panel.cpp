@@ -1,23 +1,42 @@
 #include "Panel.h"
 
+
 using namespace pk;
 
 
+static vec4 s_defaultUIColors[] = {
+    { 201, 197, 172, 255 },
+    { 215, 209, 185, 255 },
+    { 180, 173, 151, 255 },
+    //{ 136, 128, 99, 255 }
+    { 107, 102, 85, 255 }
+};
+static vec4 s_defaultUIColorsMonochrome[] = {
+    { 187, 187, 187, 255 },
+    { 200, 200, 200, 255 },
+    { 166, 166, 166, 255 },
+    { 96, 96, 96, 255 }
+};
+vec4* Panel::s_uiColor = s_defaultUIColors;
+
+
 void Panel::create(
-    pk::Scene* pScene,
-    pk::HorizontalConstraintType horizontalType, float horizontalValue,
-    pk::VerticalConstraintType verticalType, float verticalValue,
+    Scene* pScene,
+    Font* pDefaultFont,
+    HorizontalConstraintType horizontalType, float horizontalValue,
+    VerticalConstraintType verticalType, float verticalValue,
     vec2 scale,
     LayoutFillType layoutType,
     bool drawBackground,
-    pk::vec3 color,
+    vec3 color,
     bool drawBorder,
-    pk::vec4 borderColor,
+    vec4 borderColor,
     float borderThickness,
     float slotPadding
 )
 {
     _pScene = pScene;
+    _pDefaultFont = pDefaultFont;
 
     _horizontalConstraint = horizontalType;
     _horizontalConstraintValue = horizontalValue;
@@ -70,32 +89,79 @@ void Panel::create(
     }
 }
 
-void Panel::addButton(
-    std::string txt,
-    pk::ui::OnClickEvent* onClick,
-    bool selectable,
-    pk::vec3 color,
-    pk::Font& font
+void Panel::createDefault(
+    Scene* pScene,
+    Font* pDefaultFont,
+    HorizontalConstraintType horizontalType, float horizontalValue,
+    VerticalConstraintType verticalType, float verticalValue,
+    vec2 scale,
+    LayoutFillType fillType
 )
 {
-    vec4 borderColor(0.6f, 0.6f, 0.6f, 1.0f);
-    float borderThickness = 2.0f;
+    create(
+        pScene,
+        pDefaultFont,
+        horizontalType, horizontalValue,
+        verticalType, verticalValue,
+        scale,
+        fillType,
+        true,
+        get_base_ui_color(1).toVec3(),
+        false, // draw border
+        { 0, 0, 0, 1 }, // border color
+        0, // border thickness
+        4.0f // slot padding
+    );
+}
+
+void Panel::addDefaultText(std::string txt)
+{
+    const vec2 offsetFromPanel(4.0f, 4.0f);
+    vec2 toAdd = calcNewSlotPos();
+
+    std::pair<entityID_t, TextRenderable*> text = pk::ui::create_text(
+        txt, *_pDefaultFont,
+        _horizontalConstraint,
+        _horizontalConstraintValue + toAdd.x + offsetFromPanel.x,
+        _verticalConstraint,
+        _verticalConstraintValue + toAdd.y - offsetFromPanel.y,
+        get_base_ui_color(3).toVec3(), // color
+        false // bold
+    );
+    _pScene->addChild(_entity, text.first);
+    ++_slotCount;
+}
+
+void Panel::addDefaultButton(
+    std::string txt,
+    ui::OnClickEvent* onClick,
+    float width
+)
+{
+    vec4 color = get_base_ui_color(2);
+    vec4 borderColor = color;
+
+    const float borderThickness = 0.0f;
     Texture_new* pTexture = nullptr;
     vec4 textureCropping(0, 0, 1, 1);
 
+    const vec2 offsetFromPanel(4.0f, 4.0f);
     vec2 toAdd = calcNewSlotPos();
     uint32_t buttonEntity = create_button(
-        txt, font,
+        txt,
+        *_pDefaultFont,
         _horizontalConstraint,
-        _horizontalConstraintValue + toAdd.x,
+        _horizontalConstraintValue + toAdd.x + offsetFromPanel.x,
         _verticalConstraint,
-        0,
-        //_verticalConstraintValue + toAdd.y,
-        _slotScale.x, _slotScale.y,
+        _verticalConstraintValue + toAdd.y - offsetFromPanel.y,
+        width, _slotScale.y, // scale
         onClick,
-        selectable,
-        color,
-        borderColor,
+        false,
+        color.toVec3(), // color
+        get_base_ui_color(3).toVec3(), // text color
+        get_base_ui_color(1).toVec3(), // text highlight color
+        get_base_ui_color(3).toVec3(), // background highlight color
+        color, // border color
         borderThickness,
         pTexture,
         textureCropping
@@ -103,26 +169,50 @@ void Panel::addButton(
     // atm fucks up because constraint and transform systems are in conflict?
     _pScene->addChild(_entity, buttonEntity);
     ++_slotCount;
+}
 
-    /*
-    // TODO: figure these out
-    float width = 200.0f;
-    float height = 55.0f;
 
-    entityID_t buttonEntity = create_button(
-        txt, font,
-        _horizontalConstraint, _horizontalConstraintValue + xPos,
-        _verticalConstraint, _verticalConstraintValue + yPos,
-        float width, float height,
-        OnClickEvent* onClick,
-        bool selectable = false,
-        vec3 color = { 0.1f, 0.1f, 0.1f },
-        vec4 borderColor = { 0.6f, 0.6f, 0.6f, 1.0f },
-        float borderThickness = 2,
-        Texture_new* pTexture = nullptr,
-        vec4 textureCropping = vec4(0, 0, 1, 1)
+std::pair<entityID_t, pk::TextRenderable*> Panel::addDefaultInputField(
+    std::string infoTxt,
+    int width,
+    pk::ui::InputFieldOnSubmitEvent* onSubmitEvent,
+    bool clearOnSubmit
+)
+{
+    vec4 color = get_base_ui_color(2);
+    const vec2 offsetFromPanel(4.0f, 4.0f);
+    vec2 toAdd = calcNewSlotPos();
+    std::pair<entityID_t, pk::TextRenderable*> inputField = pk::ui::create_input_field(
+        infoTxt, *_pDefaultFont,
+        _horizontalConstraint,
+        _horizontalConstraintValue + toAdd.x + offsetFromPanel.x,
+        _verticalConstraint,
+        _verticalConstraintValue + toAdd.y - offsetFromPanel.y,
+        width,
+        nullptr, // on submit event
+        false, // clear on submit
+        color.toVec3(), // color
+        get_base_ui_color(3).toVec3(), // text color
+        get_base_ui_color(1).toVec3(), // text highlight color
+        get_base_ui_color(3).toVec3() // background highlight color
     );
-    */
+    _pScene->addChild(_entity, inputField.first);
+    ++_slotCount;
+
+    return inputField;
+}
+
+void Panel::setActive(bool arg, entityID_t entity)
+{
+    if (entity == 0)
+        entity = _entity;
+
+    std::vector<Component*> components = _pScene->getComponents(entity);
+    for (Component* pComponent : components)
+        pComponent->setActive(arg);
+    std::vector<entityID_t> children = _pScene->getChildren(entity);
+    for (entityID_t child: children)
+        setActive(arg, child);
 }
 
 vec2 Panel::calcNewSlotPos()
@@ -137,4 +227,25 @@ vec2 Panel::calcNewSlotPos()
         pos.y *= -1.0f;
 
     return pos;
+}
+
+
+vec4 Panel::get_base_ui_color(unsigned int colorIndex)
+{
+    if (colorIndex >= UI_BASE_COLOR_COUNT)
+    {
+        Debug::log(
+            "@Panel::get_base_ui_color "
+            "Invalid color index: " + std::to_string(colorIndex) + " "
+            "Last available color index is " + std::to_string(UI_BASE_COLOR_COUNT - 1),
+            Debug::MessageType::PK_FATAL_ERROR
+        );
+        return { 0, 0, 0, 1 };
+    }
+    vec4 color = s_uiColor[colorIndex];
+    color.x /= 255;
+    color.y /= 255;
+    color.z /= 255;
+    color.w /= 255;
+    return color;
 }

@@ -4,6 +4,8 @@
 #include "ecs/components/ui/ConstraintData.h"
 
 
+#define UI_BASE_COLOR_COUNT 4
+
 class Panel
 {
 public:
@@ -15,6 +17,7 @@ public:
 
 private:
     pk::Scene* _pScene = nullptr;
+    pk::Font* _pDefaultFont = nullptr;
     entityID_t _entity;
 
 
@@ -27,11 +30,13 @@ private:
     pk::vec2 _scale;
 
     float _slotPadding = 1.0f;
-    pk::vec2 _slotScale = pk::vec2(200.0f, 60.0f);
+    pk::vec2 _slotScale = pk::vec2(200.0f, 24.0f);
     pk::vec3 _color;
     pk::vec4 _borderColor;
 
     int _slotCount = 0;
+
+    static pk::vec4* s_uiColor;
 
 public:
     Panel() {};
@@ -39,6 +44,7 @@ public:
 
     void create(
         pk::Scene* pScene,
+        pk::Font* pDefaultFont,
         pk::HorizontalConstraintType horizontalType, float horizontalValue,
         pk::VerticalConstraintType verticalType, float verticalValue,
         pk::vec2 scale,
@@ -51,13 +57,33 @@ public:
         float slotPadding = 1.0f
     );
 
-    void addButton(
+    void createDefault(
+        pk::Scene* pScene,
+        pk::Font* pDefaultFont,
+        pk::HorizontalConstraintType horizontalType, float horizontalValue,
+        pk::VerticalConstraintType verticalType, float verticalValue,
+        pk::vec2 scale,
+        LayoutFillType fillType = LayoutFillType::VERTICAL
+    );
+
+    void addDefaultText(std::string txt);
+
+    void addDefaultButton(
         std::string txt,
         pk::ui::OnClickEvent* onClick,
-        bool selectable,
-        pk::vec3 color,
-        pk::Font& font
+        float width
     );
+
+    std::pair<entityID_t, pk::TextRenderable*> addDefaultInputField(
+        std::string infoTxt,
+        int width,
+        pk::ui::InputFieldOnSubmitEvent* onSubmitEvent,
+        bool clearOnSubmit = false
+    );
+
+    void setActive(bool arg, entityID_t entity = 0);
+
+    static pk::vec4 get_base_ui_color(unsigned int colorIndex);
 
 private:
     pk::vec2 calcNewSlotPos();

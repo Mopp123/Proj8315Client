@@ -2,7 +2,7 @@
 #include "core/Application.h"
 #include "core/Debug.h"
 #include "net/Client.h"
-
+#include "ui/Panel.h"
 
 using namespace pk;
 using namespace ui;
@@ -19,13 +19,16 @@ BaseScene::~BaseScene()
 
 void BaseScene::initBase()
 {
+    // Set clear color
+    Application::get()->getMasterRenderer().setClearColor(Panel::get_base_ui_color(0));
+
     activeCamera = createEntity();
     createCamera(activeCamera, { 0, 1.0f, 4.0f }, 0.0f, 0.0f);
     pk::Debug::log("@BaseScene::initBase Loading default font");
     pk::Application* pApp = pk::Application::get();
     pk::ResourceManager& resourceManager = pApp->getResourceManager();
     _pDefaultFont = resourceManager.createFont(
-        "assets/Ubuntu-R.ttf",
+        "assets/fonts/Matamata-Regular.otf",
         20
     );
 

@@ -1,0 +1,6 @@
+Fonts:
+    Exo-Regular.ttf
+    https://www.1001freefonts.com/exo.font
+
+    Matamata-Regular.otf
+    https://www.1001fonts.com/matamata-font.html
