@@ -114,22 +114,28 @@ void Panel::createDefault(
     );
 }
 
-void Panel::addDefaultText(std::string txt)
+std::pair<entityID_t, TextRenderable*> Panel::addText(std::string txt, vec3 color)
 {
     const vec2 offsetFromPanel(4.0f, 4.0f);
     vec2 toAdd = calcNewSlotPos();
-
     std::pair<entityID_t, TextRenderable*> text = pk::ui::create_text(
         txt, *_pDefaultFont,
         _horizontalConstraint,
         _horizontalConstraintValue + toAdd.x + offsetFromPanel.x,
         _verticalConstraint,
         _verticalConstraintValue + toAdd.y - offsetFromPanel.y,
-        get_base_ui_color(3).toVec3(), // color
+        color,
         false // bold
     );
     _pScene->addChild(_entity, text.first);
     ++_slotCount;
+
+    return text;
+}
+
+std::pair<entityID_t, TextRenderable*> Panel::addDefaultText(std::string txt)
+{
+    return  addText(txt, get_base_ui_color(3).toVec3());
 }
 
 void Panel::addDefaultButton(

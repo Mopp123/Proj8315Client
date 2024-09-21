@@ -42,15 +42,32 @@ void BaseScene::initBase()
         lightDirection
     );
 
-    _pInfoTxt = create_text(
+    _infoTextEntity = create_text(
         "", *_pDefaultFont,
         HorizontalConstraintType::PIXEL_LEFT, 0,
         VerticalConstraintType::PIXEL_TOP, 0
-    ).second;
+    ).first;
 }
 
-void BaseScene::setInfoText(const std::string& txt, pk::vec3 color)
+void BaseScene::setInfoText(
+    const std::string& txt,
+    pk::vec3 color,
+    float horizontalVal,
+    float verticalVal,
+    pk::HorizontalConstraintType horizontalConstraint,
+    pk::VerticalConstraintType verticalConstraint
+)
 {
-    _pInfoTxt->accessStr() = txt;
-    _pInfoTxt->setColor(color);
+    ConstraintData* pConstraintData =(ConstraintData*)getComponent(_infoTextEntity, ComponentType::PK_UI_CONSTRAINT);
+    pConstraintData->horizontalType = horizontalConstraint;
+    pConstraintData->horizontalValue = horizontalVal;
+    pConstraintData->verticalType = verticalConstraint;
+    pConstraintData->verticalValue = verticalVal;
+
+    TextRenderable* pRenderable =(TextRenderable*)getComponent(
+        _infoTextEntity,
+        ComponentType::PK_RENDERABLE_TEXT
+    );
+    pRenderable->accessStr() = txt;
+    pRenderable->color = color;
 }
