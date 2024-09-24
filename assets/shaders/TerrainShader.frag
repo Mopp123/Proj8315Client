@@ -9,6 +9,8 @@ varying vec3 var_camPos;
 varying vec4 var_dirLightDir;
 varying vec4 var_dirLightColor;
 
+varying float var_tileWidthPow2;
+
 
 struct Material
 {
@@ -20,8 +22,7 @@ struct Material
 };
 uniform Material material;
 
-
-const float textureTiling = 20.0;
+//const float textureTiling = 20.0;
 void main(void)
 {
     vec3 normal = normalize(var_normal);
@@ -32,7 +33,7 @@ void main(void)
 
 	vec4 blendmapColor = texture2D(material.blendmapTexSampler, var_uvCoord);
 	float blackAmount = 1.0 - (blendmapColor.r + blendmapColor.g + blendmapColor.b);
-	vec2 tiledUv = var_uvCoord * textureTiling;
+	vec2 tiledUv = var_uvCoord * var_tileWidthPow2;
 
 	vec4 diffuseColorBlack =		texture2D(material.channelTexSampler0, tiledUv) * blackAmount;
 	vec4 diffuseColorRed =			texture2D(material.channelTexSampler1, tiledUv) * blendmapColor.r;

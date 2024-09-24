@@ -62,6 +62,7 @@ file (
     "${PROJECT_SOURCE_DIR}/src/net/platform/web/*.cpp"
     "${PROJECT_SOURCE_DIR}/src/scenes/*.cpp"
     "${PROJECT_SOURCE_DIR}/src/ui/*.cpp"
+    "${PROJECT_SOURCE_DIR}/src/world/*.cpp"
 )
 
 add_executable(${proj_name} ${source_files})

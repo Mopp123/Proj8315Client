@@ -2,6 +2,8 @@
 #include "../../Proj8315Common/src/messages/Message.h"
 #include "../../Proj8315Common/src/messages/Message.h"
 #include "../../Proj8315Common/src/messages/GeneralMessages.h"
+#include "world/Objects.h"
+
 
 using namespace pk;
 using namespace net;
@@ -50,13 +52,14 @@ void MainMenu::OnClickLogin::onClick(pk::InputMouseButtonName button)
 }
 
 
-MainMenu::OnClickOpenRegisterMenu::OnClickOpenRegisterMenu(MainMenu& menuRef) :
-    _menuRef(menuRef)
-{}
-
 void MainMenu::OnClickOpenRegisterMenu::onClick(pk::InputMouseButtonName button)
 {
     _menuRef.setRegisterMenuActive();
+}
+
+void MainMenu::OnClickCancelRegister::onClick(pk::InputMouseButtonName button)
+{
+    _menuRef.setMainMenuActive();
 }
 
 
@@ -85,6 +88,7 @@ void MainMenu::OnClickRegister::onClick(pk::InputMouseButtonName button)
         }
     );
 }
+
 
 void MainMenu::OnMessageRegister::onMessage(const GC_byte* data, size_t dataSize)
 {
@@ -161,13 +165,13 @@ void MainMenu::OnMessageLogin::onMessage(const GC_byte* data, size_t dataSize)
     }
 }
 
-MainMenu::OnClickCancelRegister::OnClickCancelRegister(MainMenu& menuRef) :
-    _menuRef(menuRef)
-{}
 
-void MainMenu::OnClickCancelRegister::onClick(pk::InputMouseButtonName button)
+void MainMenu::OnMessageObjInfo::onMessage(const GC_byte* data, size_t dataSize)
 {
-    _menuRef.setMainMenuActive();
+    world::objects::ObjectInfoLib::create(data, dataSize);
+    Debug::log("Obj info lib created. Switching to user menu");
+    ((BaseScene&)_sceneRef).setInfoText("Server data acquired", vec3(0.0f, 1.0f, 0.0f));
+    Application::get()->switchScene((Scene*)(new MainMenu));
 }
 
 

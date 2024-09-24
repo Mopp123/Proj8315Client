@@ -34,7 +34,20 @@ private:
     private:
         MainMenu& _menuRef;
     public:
-        OnClickOpenRegisterMenu(MainMenu& menuRef);
+        OnClickOpenRegisterMenu(MainMenu& menuRef) :
+            _menuRef(menuRef)
+        {}
+        virtual void onClick(pk::InputMouseButtonName button);
+    };
+
+    class OnClickCancelRegister : public pk::ui::OnClickEvent
+    {
+    private:
+        MainMenu& _menuRef;
+    public:
+        OnClickCancelRegister(MainMenu& menuRef) :
+            _menuRef(menuRef)
+        {}
         virtual void onClick(pk::InputMouseButtonName button);
     };
 
@@ -50,15 +63,6 @@ private:
             std::string& passwordRef,
             std::string& repasswordRef
         );
-        virtual void onClick(pk::InputMouseButtonName button);
-    };
-
-    class OnClickCancelRegister : public pk::ui::OnClickEvent
-    {
-    private:
-        MainMenu& _menuRef;
-    public:
-        OnClickCancelRegister(MainMenu& menuRef);
         virtual void onClick(pk::InputMouseButtonName button);
     };
 
@@ -84,6 +88,21 @@ private:
 
     public:
         OnMessageLogin(
+            MainMenu& sceneRef
+        ) :
+            _sceneRef(sceneRef)
+        {}
+
+        virtual void onMessage(const GC_byte* data, size_t dataSize);
+    };
+
+    class OnMessageObjInfo : public net::OnMessageEvent
+    {
+    private:
+        MainMenu& _sceneRef;
+
+    public:
+        OnMessageObjInfo(
             MainMenu& sceneRef
         ) :
             _sceneRef(sceneRef)

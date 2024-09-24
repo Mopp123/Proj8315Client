@@ -15,6 +15,7 @@ assets/*.jpg
 assets/*.jpeg
 assets/*.bmp
 assets/textures/*
+assets/models/*
 assets/fonts/*
 
 site/*.wasm
