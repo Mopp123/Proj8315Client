@@ -81,8 +81,10 @@ namespace world
 
                 Static3DRenderable* pStaticRenderable = _sceneRef.createStatic3DRenderable(
                     visualObjEntity,
-                    pDefaultObjModel->getResourceID()
+                    pDefaultObjModel->getMesh(0)->getResourceID()
                 );
+
+                int show = std::rand() % 2;
                 pStaticRenderable->setActive(false);
 
                 objects::VisualObject visualObj(*this, visualObjEntity, pStaticRenderable);
@@ -140,25 +142,27 @@ namespace world
         int blendmapChannels = 4;
         _blendmapWidth = get_next_pow2(observeAreaWidth);
         size_t blendmapDataSize = (_blendmapWidth * _blendmapWidth) * blendmapChannels;
-        _pBlendmapData = new PK_ubyte[blendmapDataSize];
-        memset(_pBlendmapData, 0, blendmapDataSize);
+        PK_ubyte* pInitBlendmapData = new PK_ubyte[blendmapDataSize];
+        memset(pInitBlendmapData, 0, blendmapDataSize);
 
-        ImageData* pBlendmapImg = resourceManager.createImage(
-            _pBlendmapData,
+        _pTerrainBlendmapImg = resourceManager.createImage(
+            pInitBlendmapData,
             _blendmapWidth,
             _blendmapWidth,
             blendmapChannels
         );
-        Texture_new* pBlendmapTexture = resourceManager.createTexture(
-            pBlendmapImg->getResourceID(),
+        delete[] pInitBlendmapData;
+
+        _pTerrainBlendmapTexture = resourceManager.createTexture(
+            _pTerrainBlendmapImg->getResourceID(),
             terrainTextureSampler
         );
         // Terrain channel textures
-        //ImageData* pImgChannel0 = resourceManager.loadImage("assets/textures/terr0.jpg");
-        ImageData* pImgChannel0 = resourceManager.loadImage("assets/textures/box.jpg");
-        ImageData* pImgChannel1 = resourceManager.loadImage("assets/textures/terr1.jpg");
-        ImageData* pImgChannel2 = resourceManager.loadImage("assets/textures/terr2.jpg");
-        ImageData* pImgChannel3 = resourceManager.loadImage("assets/textures/terr3.jpg");
+        //ImageData* pImgChannel0 = resourceManager.loadImage("assets/textures/box.jpg");
+        ImageData* pImgChannel0 = resourceManager.loadImage("assets/textures/deadland.png");
+        ImageData* pImgChannel1 = resourceManager.loadImage("assets/textures/water.png");
+        ImageData* pImgChannel2 = resourceManager.loadImage("assets/textures/grass.png");
+        ImageData* pImgChannel3 = resourceManager.loadImage("assets/textures/snow.png");
         Texture_new* pTerrainTex0 = resourceManager.createTexture(
             pImgChannel0->getResourceID(),
             terrainTextureSampler
@@ -186,7 +190,7 @@ namespace world
             0,
             0.0f,
             0.0f,
-            pBlendmapTexture->getResourceID()
+            _pTerrainBlendmapTexture->getResourceID()
         );
 
         std::vector<float> initialHeightmap(observeAreaWidth * observeAreaWidth, 0.0f);
@@ -224,7 +228,6 @@ namespace world
 
     World::~World()
     {
-        delete[] _pBlendmapData;
     }
 
     // ..quite shit and inefficient
@@ -233,9 +236,31 @@ namespace world
         const int observeAreaWidth = _observer.observeRadius * 2 + 1;
 
         // Update terrain heights
-        size_t terrainVertexBufferOffset = sizeof(float); // x pos = 0, y = 1 thats why starting from sizeof(float) * 1
         Buffer* pBuffer = _pTerrainMesh->accessVertexBuffer_DANGER(0);
         // Atm just testing here!
+        /*
+        for (int y = 0; y < observeAreaWidth; ++y)
+        {
+            for (int x = 0; x < observeAreaWidth; ++x)
+            {
+                uint64_t tileState = mapState[x + y * observeAreaWidth];
+
+                float height = (float)(get_tile_terrelevation(tileState));
+                const float max = 15.0f;
+                if (height - max >= 0.0f)
+                    height -= max;
+
+                size_t bufPos = sizeof(float) + (x + y * observeAreaWidth) * (sizeof(float) * 8);
+                pBuffer->update(
+                    &height,
+                    bufPos,
+                    sizeof(float)
+                );
+            }
+        }
+        */
+        /*
+        size_t terrainVertexBufferOffset = sizeof(float); // x pos = 0, y = 1 thats why starting from sizeof(float) * 1
         for (int i = 0; i < observeAreaWidth * observeAreaWidth; ++i)
         {
             if (terrainVertexBufferOffset >= pBuffer->getTotalSize())
@@ -259,14 +284,78 @@ namespace world
                 sizeof(float)
             );
 
+
             terrainVertexBufferOffset += sizeof(float) * 8;
         }
+        */
+
+        for (int y = 0; y < observeAreaWidth; ++y)
+        {
+            for (int x = 0; x < observeAreaWidth; ++x)
+            {
+                uint64_t tileState = mapState[x + y * observeAreaWidth];
+
+                // Set vertex pos.y (height)
+                float height = (float)(get_tile_terrelevation(tileState));
+                const float max = 15.0f;
+                if (height - max >= 0.0f)
+                    height -= max;
+
+                size_t vertexYBufPos = sizeof(float) + (x + y * observeAreaWidth) * (sizeof(float) * 8);
+                pBuffer->update(
+                    &height,
+                    vertexYBufPos,
+                    sizeof(float)
+                );
+
+				// Figure out new normal (quite shit and unpercise way, but it looks fine for now..)
+				float left = 0;
+				float right = 0;
+				float down = 0;
+				float up = 0;
+
+				if (x - 1 >= 0)
+                    left = (float)(get_tile_terrelevation(mapState[(x-1) + y * observeAreaWidth]));
+
+				if (x + 1 < observeAreaWidth)
+                    right = (float)(get_tile_terrelevation(mapState[(x+1) + y * observeAreaWidth]));
+
+				if (y + 1 < observeAreaWidth)
+                    up = (float)(get_tile_terrelevation(mapState[x + (y+1) * observeAreaWidth]));
+
+				if (y - 1 >= 0)
+                    down = (float)(get_tile_terrelevation(mapState[x + (y-1) * observeAreaWidth]));
+
+				vec3 normal((left - right), 1.0f, (down - up)); // this is fucking dumb...
+				normal = normal.normalize();
+
+                size_t normalBufPos = sizeof(float) * 3 + (x + y * observeAreaWidth) * (sizeof(float) * 8);
+                pBuffer->update(
+                    &normal,
+                    normalBufPos,
+                    sizeof(vec3)
+                );
+
+                // Alter texturing depending on terrain type
+                PK_ubyte tileType = get_tile_terrtype(tileState);
+                updateBlendmapData(tileType, x, y);
+            }
+        }
+
+        _pTerrainBlendmapTexture->update(
+            (void*)_pTerrainBlendmapImg->getData(),
+            _pTerrainBlendmapImg->getSize(),
+            _pTerrainBlendmapImg->getWidth(),
+            _pTerrainBlendmapImg->getHeight(),
+            4 // atm needed for gl fuckery..
+        );
+
 
         // Move terrain if current tile changed
         // NOTE: Theres still something wonky how the grid moves.. feels something like rounding error, but not sure..
         // NOTE: These should actually be the last received coords, NOT requested coords?
-        float observeTileX = (float)_observer.requestedMapX;
-        float observeTileY = (float)_observer.requestedMapY;
+        float observeTileX = (float)_observer.lastReceivedMapX;
+        float observeTileY = (float)_observer.lastReceivedMapY;
         const float halfTileWidth = _tileVisualScale * 0.5f;
         float halfTerrainWorldWidth = ((float)observeAreaWidth) * halfTileWidth;
 
@@ -278,6 +367,7 @@ namespace world
         // Also need to add little offset cuz using vertices as "tiles"!
         tMat[0 + 3 * 4] = terrainWorldX + halfTileWidth;
         tMat[2 + 3 * 4] = terrainWorldZ + halfTileWidth;
+
 
         // NOTE: Old below..
         /*
@@ -533,7 +623,9 @@ namespace world
             //);
 
             // only testing here!
-            updateObservedArea(_tileData.data());
+            //_observer.lastReceivedMapX = tileX;
+            //_observer.lastReceivedMapY = tileY;
+
             /*
             Client::get_instance()->send(
                 (int32_t)MESSAGE_TYPE__UpdateObserverProperties,
@@ -752,7 +844,6 @@ namespace world
         }
     }
 
-
     void World::updateBlendmapData(PK_ubyte tileType, int x, int y)
     {
         const int r = tileType == 1 ? 255 : 0;
@@ -760,9 +851,23 @@ namespace world
         const int b = tileType == 3 ? 255 : 0;
         const int a = tileType == 4 ? 255 : 0;
 
-        _pBlendmapData[(x + y * _blendmapWidth) * 4] = r;
-        _pBlendmapData[(x + y * _blendmapWidth) * 4 + 1] = g;
-        _pBlendmapData[(x + y * _blendmapWidth) * 4 + 2] = b;
-        _pBlendmapData[(x + y * _blendmapWidth) * 4 + 3] = a;
+        _pTerrainBlendmapImg->setColorAt_UNSAFE(x, y, r, g, b, a);
+    }
+
+    void World::updateBlendmapData(PK_ubyte tileType, int pixelIndex)
+    {
+        const int r = tileType == 1 ? 255 : 0;
+        const int g = tileType == 2 ? 255 : 0;
+        const int b = tileType == 3 ? 255 : 0;
+        const int a = tileType == 4 ? 255 : 0;
+
+        _pTerrainBlendmapImg->setColorAt_UNSAFE(pixelIndex, r, g, b, a);
+    }
+
+    // NOTE: Again for some fucking reason YCM doesn't understand this..
+    // TODO: Update vim to 9.1+ and YCM as well..
+    void World::setAreaState(std::vector<uint64_t>& state)
+    {
+        updateObservedArea(state.data());
     }
 }

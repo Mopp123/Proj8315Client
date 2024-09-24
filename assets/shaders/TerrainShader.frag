@@ -9,8 +9,6 @@ varying vec3 var_camPos;
 varying vec4 var_dirLightDir;
 varying vec4 var_dirLightColor;
 
-varying float var_tileWidthPow2;
-
 
 struct Material
 {
@@ -22,6 +20,11 @@ struct Material
 };
 uniform Material material;
 
+
+const float verticesPerRow = 31.0;
+// Used to be next closest pow2 as the texture is constructed dynamically (atm 15 * 2 + 1)
+//const float tileWidthPow2 = 32.0;
+
 //const float textureTiling = 20.0;
 void main(void)
 {
@@ -31,9 +34,13 @@ void main(void)
     float diffFactor = max(dot(normal, -lightDir), 0.0);
     vec4 diffuseColor = diffFactor * var_dirLightColor;
 
-	vec4 blendmapColor = texture2D(material.blendmapTexSampler, var_uvCoord);
+    // Need to add displacement since using vertices as tiles
+    float displacement = 1.0 / verticesPerRow * 0.5;
+    vec2 u = var_uvCoord + displacement;
+
+	vec4 blendmapColor = texture2D(material.blendmapTexSampler, u);
 	float blackAmount = 1.0 - (blendmapColor.r + blendmapColor.g + blendmapColor.b);
-	vec2 tiledUv = var_uvCoord * var_tileWidthPow2;
+	vec2 tiledUv = u * verticesPerRow;
 
 	vec4 diffuseColorBlack =		texture2D(material.channelTexSampler0, tiledUv) * blackAmount;
 	vec4 diffuseColorRed =			texture2D(material.channelTexSampler1, tiledUv) * blendmapColor.r;

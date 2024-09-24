@@ -23,4 +23,5 @@ public:
 
     void init();
     void update();
+    virtual void lateUpdate();
 };

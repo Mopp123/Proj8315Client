@@ -117,13 +117,13 @@ namespace world
         std::vector<uint64_t> _tileData;
         std::vector<objects::VisualObject> _tileObjects;
 
-        PK_ubyte* _pBlendmapData = nullptr;
+        //PK_ubyte* _pTerrainBlendmapData = nullptr;
         int _blendmapWidth = 0;
         entityID_t _terrainEntity = NULL_ENTITY_ID;
+        pk::ImageData* _pTerrainBlendmapImg = nullptr;
         pk::Texture_new* _pTerrainBlendmapTexture = nullptr;
         pk::Material* _pTerrainMaterial = nullptr;
         pk::Mesh* _pTerrainMesh = nullptr;
-        pk::Transform* _pTerrainTransform = nullptr;
 
         // NOTE: old way below
         //  First = the actual tile data
@@ -167,6 +167,12 @@ namespace world
 
         pk::vec3 getMousePickCoords(const pk::mat4& projMat, const pk::mat4& viewMat) const;
 
+        inline WorldObserver& accessObserver() { return _observer; }
+
+        // Only for testing locally if not getting area state from server
+        void setAreaState(std::vector<uint64_t>& state);
+
+
     private:
         //void updateSprites();
         // Shifts "movements"-table, if moved camera, to make it look smooth
@@ -175,5 +181,6 @@ namespace world
         pk::vec3 getMidpoint(pk::vec3 rayStartPos, pk::vec3 ray, int recCount) const;
 
         void updateBlendmapData(PK_ubyte tileType, int x, int y);
+        void updateBlendmapData(PK_ubyte tileType, int pixelIndex);
     };
 }
