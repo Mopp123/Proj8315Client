@@ -1,8 +1,11 @@
 #include "InGame.h"
 #include "Tile.h"
+#include "../../Proj8315Common/src/messages/Message.h"
+#include "MainMenu.h"
 
 
 using namespace pk;
+using namespace net;
 
 
 static void get_world_state(int xPos, int zPos, int observeRadius, std::vector<uint64_t>& target, const std::vector<uint64_t>& worldMap, int worldWidth)
@@ -26,6 +29,37 @@ static void get_world_state(int xPos, int zPos, int observeRadius, std::vector<u
     }
 }
 
+
+void InGame::OnClickLogout::onClick(pk::InputMouseButtonName button)
+{
+    Client::get_instance()->send((int32_t)MESSAGE_TYPE__LogoutRequest, {});
+    _sceneRef.loggingOut = true;
+    _sceneRef.setInfoText(
+        "Logging out...",
+        { 1, 1, 0 },
+        0, 0,
+        HorizontalConstraintType::PIXEL_CENTER_HORIZONTAL,
+        VerticalConstraintType::PIXEL_CENTER_VERTICAL
+    );
+}
+
+
+void InGame::OnMessageLogin_TEST::onMessage(const GC_byte* data, size_t dataSize)
+{
+    _sceneRef.loggedIn = true;
+    Client* pClient = Client::get_instance();
+    pClient->user.name = _sceneRef.testUserName;
+    pClient->user.isLoggedIn = true;
+}
+
+
+void InGame::OnMessageLogout::onMessage(const GC_byte* data, size_t dataSize)
+{
+    Client::get_instance()->user.isLoggedIn = false;
+    Application::get()->switchScene(new MainMenu);
+}
+
+
 InGame::InGame()
 {}
 
@@ -37,6 +71,25 @@ InGame::~InGame()
 void InGame::init()
 {
     initBase();
+
+    _mainPanel.createDefault(
+        (Scene*)this,
+        _pDefaultFont,
+        HorizontalConstraintType::PIXEL_RIGHT, 5,
+        VerticalConstraintType::PIXEL_TOP, 2,
+        { 120, 25 },
+        Panel::LayoutFillType::HORIZONTAL
+    );
+    _mainPanel.addDefaultButton(
+        "Logout",
+        new OnClickLogout(*this),
+        100
+    );
+
+    Client* pClient = Client::get_instance();
+    pClient->addOnMessageEvent(MESSAGE_TYPE__LoginResponse, new OnMessageLogin_TEST(*this));
+    pClient->addOnMessageEvent(MESSAGE_TYPE__LogoutResponse, new OnMessageLogout);
+
     _pCamController = new CameraController(activeCamera, 10.0f);
 
     Transform* pCamTransform = (Transform*)getComponent(activeCamera, ComponentType::PK_TRANSFORM);
@@ -62,9 +115,52 @@ void InGame::init()
 
 void InGame::update()
 {
+    // Attempt logging in some test user immediately
+    if (!loggedIn && !waitingLogin)
+    {
+        Client* pClient = Client::get_instance();
+        if(pClient->isConnected())
+        {
+            waitingLogin = true;
+            pClient->send(
+                (int32_t)MESSAGE_TYPE__LoginRequest,
+                {
+                    {
+                        (GC_byte*)testUserName.data(),
+                        testUserName.size(),
+                        USER_NAME_SIZE
+                    },
+                    {
+                        (GC_byte*)testUserPassword.data(),
+                        testUserPassword.size(),
+                        USER_PASSWD_SIZE
+                    }
+                }
+            );
+            setInfoText(
+                "Logging in...",
+                { 1, 1, 0 },
+                0, 0,
+                HorizontalConstraintType::PIXEL_CENTER_HORIZONTAL,
+                VerticalConstraintType::PIXEL_CENTER_VERTICAL
+            );
+        }
+        else
+        {
+            setInfoText(
+                "Connecting...",
+                { 1, 1, 0 },
+                0, 0,
+                HorizontalConstraintType::PIXEL_CENTER_HORIZONTAL,
+                VerticalConstraintType::PIXEL_CENTER_VERTICAL
+            );
+        }
+    }
+
     _pCamController->update();
 
     // Simulate as if we got updated area from server
+    /*
     world::WorldObserver& obs = _pWorld->accessObserver();
     int reqX = obs.requestedMapX;
     int reqY = obs.requestedMapY;
@@ -80,15 +176,16 @@ void InGame::update()
         obs.lastReceivedMapY = reqY;
         Debug::log("___TEST___received from pos: " + std::to_string(gridX) + ", " + std::to_string(gridY));
     }
+    */
 
     Transform* pCamTransform = (Transform*)getComponent(activeCamera, ComponentType::PK_TRANSFORM);
     mat4& camTMat = pCamTransform->accessTransformationMatrix();
     _pWorld->update(camTMat[0 + 3 * 4], camTMat[2 + 3 * 4]);
 
-
-    setInfoText(
-        "Delta: " + std::to_string(Timing::get_delta_time())
-    );
+    if (loggedIn && !loggingOut)
+        setInfoText(
+            "Delta: " + std::to_string(Timing::get_delta_time())
+        );
 }
 
 void InGame::lateUpdate()

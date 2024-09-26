@@ -96,13 +96,13 @@ private:
         virtual void onMessage(const GC_byte* data, size_t dataSize);
     };
 
-    class OnMessageObjInfo : public net::OnMessageEvent
+    class OnMessagePostLogin : public net::OnMessageEvent
     {
     private:
         MainMenu& _sceneRef;
 
     public:
-        OnMessageObjInfo(
+        OnMessagePostLogin(
             MainMenu& sceneRef
         ) :
             _sceneRef(sceneRef)

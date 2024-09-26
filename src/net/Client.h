@@ -24,6 +24,7 @@ namespace net
         std::string name= "";
         bool hasFaction = false;
         std::string faction = "";
+        bool isLoggedIn = false;
     } UserData;
 
 

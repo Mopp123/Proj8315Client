@@ -166,7 +166,7 @@ void MainMenu::OnMessageLogin::onMessage(const GC_byte* data, size_t dataSize)
 }
 
 
-void MainMenu::OnMessageObjInfo::onMessage(const GC_byte* data, size_t dataSize)
+void MainMenu::OnMessagePostLogin::onMessage(const GC_byte* data, size_t dataSize)
 {
     world::objects::ObjectInfoLib::create(data, dataSize);
     Debug::log("Obj info lib created. Switching to user menu");
@@ -224,6 +224,10 @@ void MainMenu::init()
     Client::get_instance()->addOnMessageEvent(
         MESSAGE_TYPE__LoginResponse,
         new OnMessageLogin(*this)
+    );
+    Client::get_instance()->addOnMessageEvent(
+        MESSAGE_TYPE__ObjInfoLibResponse,
+        new OnMessagePostLogin(*this)
     );
 
     _mainPanel.addDefaultButton(

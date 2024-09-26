@@ -19,15 +19,17 @@ using namespace net;
 
 namespace world
 {
-    void World::OnMessageWorldState::onMessage(const PK_byte* data, size_t dataSize)
+    void World::OnMessageWorldState::onMessage(const GC_byte* data, size_t dataSize)
     {
         WorldObserver& observerRef = visualWorldRef._observer;
         const int dataWidth = (observerRef.observeRadius * 2) + 1;
         const size_t expectedDataSize = MESSAGE_ENTRY_SIZE__header + (dataWidth * dataWidth) * sizeof(uint64_t);
         if (dataSize >= expectedDataSize)
         {
-            const uint64_t* dataBuf = (const uint64_t*)(data + MESSAGE_ENTRY_SIZE__header);
-            visualWorldRef.updateObservedArea(dataBuf);
+            const GC_byte* pReceivedState = data + MESSAGE_ENTRY_SIZE__header;
+            const size_t receivedStateSize = dataSize - MESSAGE_ENTRY_SIZE__header;
+            // Trigger state update on next World::update
+            visualWorldRef.triggerStateUpdate(pReceivedState, receivedStateSize);
 
             observerRef.lastReceivedMapX = visualWorldRef._observer.requestedMapX;
             observerRef.lastReceivedMapY = visualWorldRef._observer.requestedMapY;
@@ -44,7 +46,8 @@ namespace world
         _observer.observeRadius = observeRadius;
 
         const int observeAreaWidth = _observer.observeRadius * 2 + 1;
-        _tileData.resize(observeAreaWidth * observeAreaWidth, 0);
+        _tileDataSize = observeAreaWidth * observeAreaWidth * sizeof(uint64_t);
+        _pTileData = new uint64_t[observeAreaWidth * observeAreaWidth];
 
         ResourceManager& resourceManager = Application::get()->getResourceManager();
         // Create visual tiles at first as "blank"
@@ -132,8 +135,13 @@ namespace world
         );
 
         // Create initial terrain textures and material
-        TextureSampler terrainTextureSampler(
+        TextureSampler blendmapTexSampler(
             TextureSamplerFilterMode::PK_SAMPLER_FILTER_MODE_LINEAR,
+            TextureSamplerAddressMode::PK_SAMPLER_ADDRESS_MODE_REPEAT,
+            2
+        );
+        TextureSampler channelTexSampler(
+            TextureSamplerFilterMode::PK_SAMPLER_FILTER_MODE_NEAR,
             TextureSamplerAddressMode::PK_SAMPLER_ADDRESS_MODE_REPEAT,
             2
         );
@@ -155,29 +163,29 @@ namespace world
 
         _pTerrainBlendmapTexture = resourceManager.createTexture(
             _pTerrainBlendmapImg->getResourceID(),
-            terrainTextureSampler
+            blendmapTexSampler
         );
         // Terrain channel textures
         //ImageData* pImgChannel0 = resourceManager.loadImage("assets/textures/box.jpg");
         ImageData* pImgChannel0 = resourceManager.loadImage("assets/textures/deadland.png");
         ImageData* pImgChannel1 = resourceManager.loadImage("assets/textures/water.png");
         ImageData* pImgChannel2 = resourceManager.loadImage("assets/textures/grass.png");
-        ImageData* pImgChannel3 = resourceManager.loadImage("assets/textures/snow.png");
+        ImageData* pImgChannel3 = resourceManager.loadImage("assets/textures/rock.png");
         Texture_new* pTerrainTex0 = resourceManager.createTexture(
             pImgChannel0->getResourceID(),
-            terrainTextureSampler
+            channelTexSampler
         );
         Texture_new* pTerrainTex1 = resourceManager.createTexture(
             pImgChannel1->getResourceID(),
-            terrainTextureSampler
+            channelTexSampler
         );
         Texture_new* pTerrainTex2 = resourceManager.createTexture(
             pImgChannel2->getResourceID(),
-            terrainTextureSampler
+            channelTexSampler
         );
         Texture_new* pTerrainTex3 = resourceManager.createTexture(
             pImgChannel3->getResourceID(),
-            terrainTextureSampler
+            channelTexSampler
         );
 
         Material* pTerrainMaterial = resourceManager.createMaterial(
@@ -228,67 +236,17 @@ namespace world
 
     World::~World()
     {
+        delete[] _pTileData;
     }
 
     // ..quite shit and inefficient
     void World::updateObservedArea(const uint64_t* mapState)
     {
+        _shouldUpdateLocalState = false;
         const int observeAreaWidth = _observer.observeRadius * 2 + 1;
 
-        // Update terrain heights
+        // Update terrain heights and blendmap
         Buffer* pBuffer = _pTerrainMesh->accessVertexBuffer_DANGER(0);
-        // Atm just testing here!
-        /*
-        for (int y = 0; y < observeAreaWidth; ++y)
-        {
-            for (int x = 0; x < observeAreaWidth; ++x)
-            {
-                uint64_t tileState = mapState[x + y * observeAreaWidth];
-
-                float height = (float)(get_tile_terrelevation(tileState));
-                const float max = 15.0f;
-                if (height - max >= 0.0f)
-                    height -= max;
-
-                size_t bufPos = sizeof(float) + (x + y * observeAreaWidth) * (sizeof(float) * 8);
-                pBuffer->update(
-                    &height,
-                    bufPos,
-                    sizeof(float)
-                );
-            }
-        }
-        */
-        /*
-        size_t terrainVertexBufferOffset = sizeof(float); // x pos = 0, y = 1 thats why starting from sizeof(float) * 1
-        for (int i = 0; i < observeAreaWidth * observeAreaWidth; ++i)
-        {
-            if (terrainVertexBufferOffset >= pBuffer->getTotalSize())
-            {
-                Debug::log(
-                    "___TEST___ERROR terrain vertex buffer offset out of bounds!",
-                    Debug::MessageType::PK_FATAL_ERROR
-                );
-            }
-
-            uint64_t tileState = mapState[i];
-
-            float height = (float)(get_tile_terrelevation(tileState));
-            const float max = 15.0f;
-            if (height - max >= 0.0f)
-                height -= max;
-
-            pBuffer->update(
-                &height,
-                terrainVertexBufferOffset,
-                sizeof(float)
-            );
-
-
-            terrainVertexBufferOffset += sizeof(float) * 8;
-        }
-        */
-
         for (int y = 0; y < observeAreaWidth; ++y)
         {
             for (int x = 0; x < observeAreaWidth; ++x)
@@ -336,7 +294,6 @@ namespace world
                     sizeof(vec3)
                 );
 
-                // Alter texturing depending on terrain type
                 PK_ubyte tileType = get_tile_terrtype(tileState);
                 updateBlendmapData(tileType, x, y);
             }
@@ -349,7 +306,6 @@ namespace world
             _pTerrainBlendmapImg->getHeight(),
             4 // atm needed for gl fuckery..
         );
-
 
         // Move terrain if current tile changed
         // NOTE: Theres still something wonky how the grid moves.. feels something like rounding error, but not sure..
@@ -367,86 +323,6 @@ namespace world
         // Also need to add little offset cuz using vertices as "tiles"!
         tMat[0 + 3 * 4] = terrainWorldX + halfTileWidth;
         tMat[2 + 3 * 4] = terrainWorldZ + halfTileWidth;
-
-
-        // NOTE: Old below..
-        /*
-        // this is used to group together all tiles' vertices which share the same pos
-        std::unordered_map<int, float> sharedVertexHeights;
-        for (int y = 0; y < observeAreaWidth; ++y)
-        {
-            for (int x = 0; x < observeAreaWidth; ++x)
-            {
-                const int tileIndex = x + y * observeAreaWidth;
-                uint64_t tileState = mapState[tileIndex];
-                _tileData[tileIndex].first = tileState;
-
-                TerrainTileRenderable* tileRenderable = _tileData[tileIndex].second.renderable_tile;
-                const int32_t tileWorldX = ((float)_observer.requestedMapX + (float)x) * _tileVisualScale;
-                const int32_t tileWorldZ = ((float)_observer.requestedMapY + (float)y) * _tileVisualScale;
-                tileRenderable->worldX = tileWorldX;
-                tileRenderable->worldZ = tileWorldZ;
-
-                float height = (float)(get_tile_terrelevation(tileState));
-                const float max = 15.0f;
-                if (height - max >= 0.0f)
-                    height -= max;
-                //height *= 2.0f;
-
-
-                for (int j = 0; j < 2; ++j)
-                {
-                    for (int i = 0; i < 2; ++i)
-                    {
-                        int sharedHeightIndex = (x + i) + (y + j) * observeAreaWidth;
-                        sharedVertexHeights[sharedHeightIndex] = std::max(sharedVertexHeights[sharedHeightIndex], height);
-                    }
-                }
-
-                // Alter texturing depending on terrain type
-                PK_ubyte tileType = get_tile_terrtype(tileState);
-                updateBlendmapData(tileType, x, y);
-
-                // Assign anim frames
-                objects::VisualObject& visualObj = _tileData[tileIndex].second.visualObject;
-                const PK_ubyte tileObject = get_tile_thingid(tileState);
-                const PK_ubyte tileAction = get_tile_action(tileState);
-                visualObj.assignAnimFrames(tileObject, tileAction, _tileAnimStates[tileIndex].anim);
-            }
-        }
-        */
-
-        // Tiles' vertices' heights' combining/smoothing according to "sharedVertexHeights"-mapping
-        /*
-        for (int y = 0; y < observeAreaWidth; ++y)
-        {
-            for (int x = 0; x < observeAreaWidth; ++x)
-            {
-                int tileIndex = x + y * observeAreaWidth;
-                TerrainTileRenderable* tileRenderable = _tileData[tileIndex].second.renderable_tile;
-
-                for (int j = 0; j < 2; ++j)
-                {
-                    for (int i = 0; i < 2; ++i)
-                    {
-                        // This looks fucking disqusting, but for now it prevents "heightbleedingbugthing"
-                        int addX = 0;
-                        if (x == 0 && i == 0)
-                            addX = 1;
-                        if (x == observeAreaWidth - 1 && i == 1)
-                            addX = -1;
-
-                        int heightIndex = i + j * 2;
-                        int sharedVertexIndex = (x + i + addX) + (y + j) * observeAreaWidth;
-                        tileRenderable->vertexHeights[heightIndex] = sharedVertexHeights[sharedVertexIndex];
-                    }
-                }
-
-            }
-        }
-
-        TerrainTileRenderable::s_blendmapTexture->update(_pBlendmapData);
-        */
     }
 
     // Updates tile sprites
@@ -597,73 +473,91 @@ namespace world
 
     void World::update(float worldX, float worldZ)
     {
-        _worldX = worldX;
-        _worldZ = worldZ;
+        Client* pClient = Client::get_instance();
 
-        // Calc the "map pos" according to "visual float pos"(this should be camera's pivot point, if rts style camera)
-        //int32_t tileX = (int32_t)std::floor((_worldX - (float)_observer.observeRadius * _tileVisualScale) / _tileVisualScale);
-        //int32_t tileY = (int32_t)std::floor((_worldZ - (float)_observer.observeRadius * _tileVisualScale) / _tileVisualScale);
-
-        // Need to add little offset cuz using vertices as "tiles"
-        float halfTileWidth = _tileVisualScale * 0.5f;
-        float displacedWorldX = _worldX + halfTileWidth;
-        float displacedWorldZ = _worldZ + halfTileWidth;
-        int32_t tileX = (int32_t)std::floor(displacedWorldX / _tileVisualScale);
-        int32_t tileY = (int32_t)std::floor(displacedWorldZ / _tileVisualScale);
-
-        _observer.requestedMapX = tileX;
-        _observer.requestedMapY = tileY;
-        // Send current observing position if tile had changed
-        if (tileX != _prevTileX || tileY != _prevTileY)
+        // Can receive world state and send location only after logging in
+        if (pClient->isConnected() && pClient->user.isLoggedIn)
         {
+            if (!_initialized)
+            {
+                pClient->addOnMessageEvent(
+                    MESSAGE_TYPE__WorldState,
+                    new OnMessageWorldState(*this)
+                );
+                _initialized = true;
+            }
+            else
+            {
+                _worldX = worldX;
+                _worldZ = worldZ;
 
-            //Debug::log(
-            //    "___TEST___tile changed: " + std::to_string(tileX) + ", " + std::to_string(tileY) + " "
-            //    "world: " + std::to_string(worldX) + ", " + std::to_string(worldZ)
-            //);
+                // Calc the "map pos" according to "visual float pos"(this should be camera's pivot point, if rts style camera)
+                //int32_t tileX = (int32_t)std::floor((_worldX - (float)_observer.observeRadius * _tileVisualScale) / _tileVisualScale);
+                //int32_t tileY = (int32_t)std::floor((_worldZ - (float)_observer.observeRadius * _tileVisualScale) / _tileVisualScale);
 
-            // only testing here!
-            //_observer.lastReceivedMapX = tileX;
-            //_observer.lastReceivedMapY = tileY;
+                // Need to add little offset cuz using vertices as "tiles"
+                float halfTileWidth = _tileVisualScale * 0.5f;
+                float displacedWorldX = _worldX + halfTileWidth;
+                float displacedWorldZ = _worldZ + halfTileWidth;
+                int32_t tileX = (int32_t)std::floor(displacedWorldX / _tileVisualScale);
+                int32_t tileY = (int32_t)std::floor(displacedWorldZ / _tileVisualScale);
 
-            /*
-            Client::get_instance()->send(
-                (int32_t)MESSAGE_TYPE__UpdateObserverProperties,
+                _observer.requestedMapX = tileX;
+                _observer.requestedMapY = tileY;
+                // Send current observing position if tile had changed
+                if (tileX != _prevTileX || tileY != _prevTileY)
                 {
-                    {
-                        (PK_byte*)(&_observer.requestedMapX),
-                        sizeof(int32_t), sizeof(int32_t)
-                    },
-                    {
-                        (PK_byte*)(&_observer.requestedMapY),
-                        sizeof(int32_t), sizeof(int32_t)
-                    },
-                    {
-                        (PK_byte*)(&_observer.observeRadius),
-                        sizeof(int32_t), sizeof(int32_t)
-                    }
+
+                    //Debug::log(
+                    //    "___TEST___tile changed: " + std::to_string(tileX) + ", " + std::to_string(tileY) + " "
+                    //    "world: " + std::to_string(worldX) + ", " + std::to_string(worldZ)
+                    //);
+
+                    // only testing here!
+                    //_observer.lastReceivedMapX = tileX;
+                    //_observer.lastReceivedMapY = tileY;
+
+                    Client::get_instance()->send(
+                        (int32_t)MESSAGE_TYPE__UpdateObserverProperties,
+                        {
+                            {
+                                (PK_byte*)(&_observer.requestedMapX),
+                                sizeof(int32_t), sizeof(int32_t)
+                            },
+                            {
+                                (PK_byte*)(&_observer.requestedMapY),
+                                sizeof(int32_t), sizeof(int32_t)
+                            },
+                            {
+                                (PK_byte*)(&_observer.observeRadius),
+                                sizeof(int32_t), sizeof(int32_t)
+                            }
+                        }
+                    );
                 }
-            );
-            */
+                if (_shouldUpdateLocalState)
+                    updateObservedArea(_pTileData);
+
+                // ONLY TEMPORARELY CHANGING THESE HERE!
+                _prevTileX = tileX;
+                _prevTileY = tileY;
+
+                // Update cam facing direction
+                vec3 camForward = _pCamTransform->forward();
+                vec2 camDirVec(camForward.x, camForward.z);
+                camDirVec.normalize();
+                float angle = std::atan2(camDirVec.y, camDirVec.x);
+                const float base = 8.0f;
+                const float displace = M_PI / base;
+                float fDir = (angle + displace + M_PI * 0.5f) / (M_PI / (base * 0.5f));
+                if (fDir < 0.0f)
+                    fDir = base + fDir;
+
+                _cameraDirection = (int)std::floor(fDir);
+
+                //updateSprites();
+            }
         }
-        // ONLY TEMPORARELY CHANGING THESE HERE!
-        _prevTileX = tileX;
-        _prevTileY = tileY;
-
-        // Update cam facing direction
-        vec3 camForward = _pCamTransform->forward();
-        vec2 camDirVec(camForward.x, camForward.z);
-        camDirVec.normalize();
-        float angle = std::atan2(camDirVec.y, camDirVec.x);
-        const float base = 8.0f;
-        const float displace = M_PI / base;
-        float fDir = (angle + displace + M_PI * 0.5f) / (M_PI / (base * 0.5f));
-        if (fDir < 0.0f)
-            fDir = base + fDir;
-
-        _cameraDirection = (int)std::floor(fDir);
-
-        //updateSprites();
     }
 
     void World::addFaction(const Faction& faction)
@@ -864,10 +758,19 @@ namespace world
         _pTerrainBlendmapImg->setColorAt_UNSAFE(pixelIndex, r, g, b, a);
     }
 
-    // NOTE: Again for some fucking reason YCM doesn't understand this..
-    // TODO: Update vim to 9.1+ and YCM as well..
-    void World::setAreaState(std::vector<uint64_t>& state)
+    void World::triggerStateUpdate(const GC_byte* pNewState, size_t stateSize)
     {
-        updateObservedArea(state.data());
+        if (stateSize != _tileDataSize)
+        {
+            Debug::log(
+                "@World::setAreaState "
+                "received state size: " + std::to_string(stateSize) + " "
+                "wasn't same as required size: " + std::to_string(_tileDataSize),
+                Debug::MessageType::PK_FATAL_ERROR
+            );
+            return;
+        }
+        memcpy(_pTileData, pNewState, _tileDataSize);
+        _shouldUpdateLocalState = true;
     }
 }

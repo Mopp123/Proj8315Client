@@ -114,7 +114,9 @@ namespace world
         pk::Scene& _sceneRef;
 
         // Tile data acquired from the server
-        std::vector<uint64_t> _tileData;
+        uint64_t* _pTileData = nullptr;
+        size_t _tileDataSize;
+
         std::vector<objects::VisualObject> _tileObjects;
 
         //PK_ubyte* _pTerrainBlendmapData = nullptr;
@@ -147,7 +149,11 @@ namespace world
 
         std::unordered_map<std::string, gamecommon::Faction> _factions;
 
+        bool _initialized = false;
+        bool _shouldUpdateLocalState = false;
+
     public:
+
         World(pk::Scene& scene, pk::Transform* pCamTransform, int observeRadius);
         ~World();
 
@@ -169,8 +175,8 @@ namespace world
 
         inline WorldObserver& accessObserver() { return _observer; }
 
-        // Only for testing locally if not getting area state from server
-        void setAreaState(std::vector<uint64_t>& state);
+        // Sets tile data to state
+        void triggerStateUpdate(const GC_byte* pNewState, size_t stateSize);
 
 
     private:
