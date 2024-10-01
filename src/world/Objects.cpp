@@ -57,16 +57,19 @@ namespace world
         VisualObject::VisualObject(
             World& worldRef,
             entityID_t entity,
-            pk::Static3DRenderable* pStaticRenderable
+            pk::Static3DRenderable* pStaticRenderable,
+            pk::vec3 originalGridPos
         ) :
             _worldRef(worldRef),
             _entity(entity),
-            _pStaticRenderable(pStaticRenderable)
+            _pStaticRenderable(pStaticRenderable),
+            _originalPos(originalGridPos)
         {}
 
         VisualObject::VisualObject(const VisualObject& other) :
             _worldRef(other._worldRef),
-            _entity(other._entity)
+            _entity(other._entity),
+            _originalPos(other._originalPos)
         {
             // Purposefully copying ptrs here and not their content!
             _pStaticRenderable = other._pStaticRenderable;
@@ -94,27 +97,28 @@ namespace world
         void VisualObject::show(
             Scene* pScene,
             GC_ubyte tileObject,
-            //PK_ubyte tileAction,
-            GC_ubyte objDir
+            GC_ubyte tileAction,
+            GC_ubyte objDir,
             //int camDir,
-            //const ObjectInfo& staticObjInfo,
-            //const VisualObjectInfo& visualObjInfo,
-            //float worldX,
-            //float worldZ,
+            const ObjectInfo& staticObjInfo,
+            const VisualObjectInfo& visualObjInfo,
+            float worldX,
+            float worldZ,
             ////pk::Animation* animation,
-            //pk::vec3& tileMovement
+            pk::vec3& tileMovement
         )
         {
             // Display correct model (Disable atm for testing)
             // Testing using just static model here..
             // TODO: Optimize below
             // NOTE: below fucks up if components pools resized!!
-            //_pStaticRenderable->meshID = visualObjInfo.pModel->getMesh(0)->getResourceID();
             //_pStaticRenderable->setActive(true);
+
             Static3DRenderable* pStaticRenderable = (Static3DRenderable*)pScene->getComponent(
                 _entity,
                 ComponentType::PK_RENDERABLE_STATIC3D
             );
+            pStaticRenderable->meshID = visualObjInfo.pModel->getMesh(0)->getResourceID();
             pStaticRenderable->setActive(true);
 
             // BELOW NOT READY!
@@ -153,8 +157,9 @@ namespace world
                 // This just temp here while testing rotateable sprites..
                 //_pSprite->textureOffset = vec2(0.0f, 0.0f);
             }
+            */
 
-            PK_ubyte speedStat = staticObjInfo.speed;
+            GC_ubyte speedStat = staticObjInfo.speed;
             // If action == movement of some kind -> move the sprite
             switch (tileAction)
             {
@@ -171,7 +176,6 @@ namespace world
             // JUST FOR TESTING: reset vertical offset, if someone had changed it for some reason..
             if (tileAction != TileStateAction::TILE_STATE_actionMoveVertical)
                 _verticalOffset = 0.0f;
-            */
 
             // NOTE: below may be a bit slow..
             Transform* pTransform = (Transform*)pScene->getComponent(
@@ -182,8 +186,21 @@ namespace world
             float& xPos = tMat[0 + 3 * 4];
             float& yPos = tMat[1 + 3 * 4];
             float& zPos = tMat[2 + 3 * 4];
-            //xPos = worldX + tileMovement.x;
-            //zPos = worldZ + tileMovement.z;
+            // If not moving reset to original local pos (not sure if this fucks ups smthn..)
+            /*
+            if (tileAction != TileStateAction::TILE_STATE_actionMove)
+            {
+                xPos = _originalPos.x;
+                zPos = _originalPos.z;
+            }
+            else
+            {
+                xPos += tileMovement.x;
+                zPos += tileMovement.z;
+            }
+            */
+            xPos = worldX + tileMovement.x;
+            zPos = worldZ + tileMovement.z;
             yPos = _worldRef.getTerrainHeight(
                 xPos,
                 zPos
@@ -327,6 +344,21 @@ namespace world
             ObjInfoLibResponse objInfoMsg(pData, dataSize);
             s_objects = objInfoMsg.getObjects();
 
+            create_object_visuals();
+        }
+
+        void ObjectInfoLib::create_object_visuals()
+        {
+            if (s_objects.empty())
+            {
+                Debug::log(
+                    "@ObjectInfoLib::create_object_visuals "
+                    "No objects assigned",
+                    Debug::MessageType::PK_FATAL_ERROR
+                );
+                return;
+            }
+
             ResourceManager& resourceManager = Application::get()->getResourceManager();
             TextureSampler defaultTextureSampler;
 
@@ -339,7 +371,7 @@ namespace world
 
                 // Test having just same model for all object types
                 ImageData* pImg = resourceManager.loadImage(
-                    "assets/textures/Test.png",
+                    "assets/textures/default.jpg",
                     true
                 );
                 Texture_new* pTexture = resourceManager.createTexture(
@@ -355,8 +387,13 @@ namespace world
                     0, // blendmap texture res id
                     true
                 );
-                Model* pModel = resourceManager.loadModel(
+                Model* pModel0 = resourceManager.loadModel(
                     "assets/models/Cube.glb",
+                    pMaterial->getResourceID(),
+                    true
+                );
+                Model* pModel1 = resourceManager.loadModel(
+                    "assets/models/Arrow.glb",
                     pMaterial->getResourceID(),
                     true
                 );
@@ -378,14 +415,14 @@ namespace world
                 switch (i)
                 {
                     case 1:
-                        visualObjInfo.pModel = pModel;
+                        visualObjInfo.pModel = pModel0;
                         break;
                     case 2:
                         visualObjInfo.rotateableSprite = true;
-                        visualObjInfo.pModel = pModel;
+                        visualObjInfo.pModel = pModel1;
                         break;
                     case 3:
-                        visualObjInfo.pModel = pModel;
+                        visualObjInfo.pModel = pModel0;
                         break;
                     default:
                         break;
@@ -400,6 +437,11 @@ namespace world
             for (Model* pModel : s_pModels)
                 resourceManager.deleteResource(pModel->getResourceID());
             s_initialized = false;
+        }
+
+        void ObjectInfoLib::set_objects_TESTING(const std::vector<gamecommon::ObjectInfo>& objects)
+        {
+            s_objects = objects;
         }
     }
 }

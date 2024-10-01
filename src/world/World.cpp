@@ -36,7 +36,8 @@ namespace world
             observerRef.lastReceivedMapX = visualWorldRef._observer.requestedMapX;
             observerRef.lastReceivedMapY = visualWorldRef._observer.requestedMapY;
 
-            //visualWorldRef.shift(observerRef.lastReceivedMapX, observerRef.lastReceivedMapY);
+            // Not tested!
+            visualWorldRef.shift(observerRef.lastReceivedMapX, observerRef.lastReceivedMapY);
         }
     }
 
@@ -50,6 +51,7 @@ namespace world
         const int observeAreaWidth = _observer.observeRadius * 2 + 1;
         _tileDataSize = observeAreaWidth * observeAreaWidth * sizeof(uint64_t);
         _pTileData = new uint64_t[observeAreaWidth * observeAreaWidth];
+        memset(_pTileData, 0, _tileDataSize);
 
         ResourceManager& resourceManager = Application::get()->getResourceManager();
 
@@ -167,9 +169,10 @@ namespace world
             {
                 entityID_t visualObjEntity = _sceneRef.createEntity();
 
+                const vec3 originalGridPos(x * _tileVisualScale, 0, y * _tileVisualScale);
                 Transform* pTransform = _sceneRef.createTransform(
                     visualObjEntity,
-                    { x * _tileVisualScale, 0, y * _tileVisualScale },
+                    originalGridPos,
                     { 0, 0, 0, 1},
                     { 1.0f, 1.0f, 1.0f }
                     //{ _tileVisualScale, _tileVisualScale, _tileVisualScale },
@@ -181,10 +184,14 @@ namespace world
                     pDefaultObjModel->getMesh(0)->getResourceID()
                 );
 
-                int show = std::rand() % 2;
                 pStaticRenderable->setActive(false);
 
-                objects::VisualObject visualObj(*this, visualObjEntity, pStaticRenderable);
+                objects::VisualObject visualObj(
+                    *this,
+                    visualObjEntity,
+                    pStaticRenderable,
+                    originalGridPos
+                );
                 _tileObjects.push_back(visualObj);
 
                 _sceneRef.addChild(_terrainEntity, visualObjEntity);
@@ -351,11 +358,34 @@ namespace world
                 VisualObject& obj = _tileObjects[tileIndex];
                 if (tileObject)
                 {
-                    obj.show(&_sceneRef, tileObject, tileFacingDirection);
+                    const float worldPosX = x * _tileVisualScale;
+                    const float worldPosZ = y * _tileVisualScale;
+                    obj.show(
+                        &_sceneRef,
+                        tileObject,
+                        tileAction,
+                        tileFacingDirection,
+                        *objects::ObjectInfoLib::get(tileObject),
+                        *objects::ObjectInfoLib::getVisual(tileObject),
+                        worldPosX,
+                        worldPosZ,
+                        _tileAnimStates[tileIndex].pos
+                    );
                 }
                 else
                 {
                     obj.hide(&_sceneRef);
+                }
+
+
+                // Reset movements if no action, even in case we didn't have any object here
+                if (!tileAction)
+                {
+                    _tileAnimStates[tileIndex].reset();
+                }
+                else
+                {
+                    Debug::log("___TEST___updating anim at: " + std::to_string(x) + ", " + std::to_string(y));
                 }
 
                 /*
@@ -491,12 +521,11 @@ namespace world
     */
 
     // Shifts "movements"-table, if moved camera, to make it look smooth
-    /*
     void World::shift(int32_t tileX, int32_t tileY)
     {
         const int observeAreaWidth = _observer.observeRadius * 2 + 1;
 
-        Animation* tempAnim = new Animation({ 0 }, 1.0f);
+        //Animation* tempAnim = new Animation({ 0 }, 1.0f);
         // moving right(default) (shift left)
         int startX = tileX > _prevTileX ? observeAreaWidth - 1 : 0;
         int startY = tileY > _prevTileY ? observeAreaWidth - 1 : 0;
@@ -514,23 +543,37 @@ namespace world
                 for (int shiftCount = 0; shiftCount < shiftCountX; shiftCount++)
                 {
                     pk::vec3 prevPos = _tileAnimStates[0 + y * observeAreaWidth].pos;
-                    Animation* prevAnim = _tileAnimStates[0 + y * observeAreaWidth].anim;
-                    prevAnim->reset();
+                    //Animation* prevAnim = _tileAnimStates[0 + y * observeAreaWidth].anim;
+                    //prevAnim->reset();
+                    int prevTileX = startX;
                     for (int x = startX; incrX ? x < observeAreaWidth : x >= 0; incrX ? ++x : --x)
                     {
                         const int tileIndex = x + y * observeAreaWidth;
                         pk::vec3 currentPos = _tileAnimStates[tileIndex].pos;
-                        Animation* currentAnim = _tileAnimStates[tileIndex].anim;
-                        tempAnim->copyStateFrom(*currentAnim);
+                        //Animation* currentAnim = _tileAnimStates[tileIndex].anim;
+                        //tempAnim->copyStateFrom(*currentAnim);
+                        if (get_tile_action(_pTileData[tileIndex]) != 0)
+                        {
+                            Debug::log(
+                                "___TEST___"
+                                "shifted horizontally from: " + std::to_string(prevTileX) + " "
+                                "to: " + std::to_string(x) + " "
+                                "new x: " + std::to_string(prevPos.x) +
+                                "current coords: " + std::to_string(tileX) + ", " + std::to_string(tileY) + " "
+                                "startX: " + std::to_string(startX)
+                            );
+                        }
                         _tileAnimStates[tileIndex].pos = prevPos;
-                        _tileAnimStates[tileIndex].anim->copyStateFrom(*prevAnim);
+                        //_tileAnimStates[tileIndex].anim->copyStateFrom(*prevAnim);
 
                         prevPos = currentPos;
-                        prevAnim->copyStateFrom(*tempAnim);
+                        prevTileX = x;
+                        //prevAnim->copyStateFrom(*tempAnim);
                     }
                 }
             }
         }
+        return;
         // Vertical shifting
         if (tileY != _prevTileY)
         {
@@ -539,31 +582,30 @@ namespace world
                 for (int shiftCount = 0; shiftCount < shiftCountY; shiftCount++)
                 {
                     pk::vec3 prevPos = _tileAnimStates[x + 0 * observeAreaWidth].pos;
-                    Animation* prevAnim = _tileAnimStates[x + 0 * observeAreaWidth].anim;
-                    prevAnim->reset();
+                    //Animation* prevAnim = _tileAnimStates[x + 0 * observeAreaWidth].anim;
+                    //prevAnim->reset();
                     for (int y = startY; incrY ? y < observeAreaWidth : y >= 0; incrY ? ++y : --y)
                     {
                         const int tileIndex = x + y * observeAreaWidth;
                         pk::vec3 currentPos = _tileAnimStates[tileIndex].pos;
-                        Animation* currentAnim = _tileAnimStates[tileIndex].anim;
-                        tempAnim->copyStateFrom(*currentAnim);
+                        //Animation* currentAnim = _tileAnimStates[tileIndex].anim;
+                        //tempAnim->copyStateFrom(*currentAnim);
                         _tileAnimStates[tileIndex].pos = prevPos;
-                        _tileAnimStates[tileIndex].anim->copyStateFrom(*prevAnim);
+                        //_tileAnimStates[tileIndex].anim->copyStateFrom(*prevAnim);
 
                         prevPos = currentPos;
-                        prevAnim->copyStateFrom(*tempAnim);
+                        //prevAnim->copyStateFrom(*tempAnim);
                     }
                 }
             }
         }
 
-        delete tempAnim;
+        //delete tempAnim;
 
         // Save previous tile pos
         _prevTileX = tileX;
         _prevTileY = tileY;
     }
-    */
 
     void World::update(float worldX, float worldZ)
     {
@@ -580,6 +622,7 @@ namespace world
         float displacedWorldZ = _worldZ + halfTileWidth;
         int32_t tileX = (int32_t)std::floor(displacedWorldX / _tileVisualScale);
         int32_t tileY = (int32_t)std::floor(displacedWorldZ / _tileVisualScale);
+        //Debug::log("___TEST___CURRENT TILE: " + std::to_string(tileX) + ", " + std::to_string(tileY));
 
         _observer.requestedMapX = tileX;
         _observer.requestedMapY = tileY;
@@ -632,7 +675,10 @@ namespace world
         }
 
         if (_shouldUpdateLocalState)
+        {
             updateObservedArea(_pTileData);
+            shift(tileX, tileY);
+        }
 
         // ONLY TEMPORARELY CHANGING THESE HERE!
         _prevTileX = tileX;
@@ -745,12 +791,13 @@ namespace world
 
 		// Get the current tile we are standing on
         // *Again needs that displacement thing...
-        float halfTileWidth = _tileVisualScale * 0.5f;
-        float displacedWorldX = worldX + halfTileWidth;
-        float displacedWorldZ = worldZ + halfTileWidth;
+        // NOTE: UPDATE: Seems that it actually doesn't need..
+        //float halfTileWidth = _tileVisualScale * 0.5f;
+        //float displacedWorldX = worldX + halfTileWidth;
+        //float displacedWorldZ = worldZ + halfTileWidth;
 
-		int gridX = (int)std::floor(displacedWorldX / _tileVisualScale);
-		int gridZ = (int)std::floor(displacedWorldZ / _tileVisualScale);
+		int gridX = (int)std::floor(worldX / _tileVisualScale);
+		int gridZ = (int)std::floor(worldZ / _tileVisualScale);
 
 		if (gridX < 0 || gridX + 1 >= verticesPerRow || gridZ < 0 || gridZ + 1 >= verticesPerRow)
 		{

@@ -179,11 +179,12 @@ namespace world
         void triggerStateUpdate(const GC_byte* pNewState, size_t stateSize);
 
 
+        // Shifts "movements"-table, if moved camera, to make it look smooth
+        void shift(int32_t tileX, int32_t tileY);
+
     private:
         void updateObjects();
         //void updateSprites();
-        // Shifts "movements"-table, if moved camera, to make it look smooth
-        //void shift(int32_t tileX, int32_t tileY);
 
         pk::vec3 getMidpoint(pk::vec3 rayStartPos, pk::vec3 ray, int recCount) const;
 

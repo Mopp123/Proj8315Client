@@ -1,8 +1,10 @@
 #include "InGame.h"
+#include "Object.h"
 #include "Tile.h"
 #include "../../Proj8315Common/src/messages/Message.h"
 #include "MainMenu.h"
 #include "core/input/InputEvent.h"
+#include "world/Objects.h"
 
 
 using namespace pk;
@@ -103,6 +105,48 @@ void InGame::init()
         _observeAreaRadius
     );
 
+    // Temporarely create ObjInfoLib locally
+    gamecommon::ObjectInfo emptyObj(
+        "Empty",
+        "",
+        {
+            "Idle"
+        },
+        0,
+        0
+    );
+    uint64_t staticObjState = 0;
+    set_tile_thingid(staticObjState, 1);
+    gamecommon::ObjectInfo staticObj(
+        "Static Object",
+        "Doesn't do anything",
+        {
+            "Idle"
+        },
+        0,
+        staticObjState
+    );
+    uint64_t movingObjState = 0;
+    set_tile_thingid(movingObjState, 2);
+    gamecommon::ObjectInfo movingObj(
+        "Moving Object",
+        "Capable of moving",
+        {
+            "Idle",
+            "Move"
+        },
+        1,
+        movingObjState
+    );
+    world::objects::ObjectInfoLib::set_objects_TESTING(
+        {
+            emptyObj,
+            staticObj,
+            movingObj
+        }
+    );
+    world::objects::ObjectInfoLib::create_object_visuals();
+
     _testMapFull.resize(_testMapWidth * _testMapWidth * sizeof(uint64_t), 0);
     for (int i = 0; i < _testMapWidth; ++i)
         set_tile_terrelevation(_testMapFull[i + 0 * _testMapWidth], 5);
@@ -112,10 +156,11 @@ void InGame::init()
     set_tile_terrtype(_testMapFull[2 + 2 * _testMapWidth], 1);
 
     set_tile_terrelevation(_testMapFull[3 + 3 * _testMapWidth], 3);
-    set_tile_thingid(_testMapFull[3 + 3 * _testMapWidth], 1);
+    set_tile_thingid(_testMapFull[3 + 3 * _testMapWidth], 2);
     set_tile_facingdir(_testMapFull[3 + 3 * _testMapWidth], 3);
 
     _testMapLocal.resize(_observeAreaWidth * _observeAreaWidth * sizeof(uint64_t), 0);
+
 }
 
 void InGame::update()
@@ -173,7 +218,6 @@ void InGame::update()
             _testMapFull[testTileIndex],
             TileStateDirection::TILE_STATE_dirN
         );
-        Debug::log("___TEST___dir set to N");
     }
     if (pInputManager->isKeyDown(InputKeyName::PK_INPUT_KEY_2))
     {
@@ -181,7 +225,6 @@ void InGame::update()
             _testMapFull[testTileIndex],
             TileStateDirection::TILE_STATE_dirNE
         );
-        Debug::log("___TEST___dir set to NE");
     }
     if (pInputManager->isKeyDown(InputKeyName::PK_INPUT_KEY_3))
     {
@@ -189,7 +232,6 @@ void InGame::update()
             _testMapFull[testTileIndex],
             TileStateDirection::TILE_STATE_dirE
         );
-        Debug::log("___TEST___dir set to E");
     }
     if (pInputManager->isKeyDown(InputKeyName::PK_INPUT_KEY_4))
     {
@@ -226,6 +268,21 @@ void InGame::update()
             TileStateDirection::TILE_STATE_dirNW
         );
     }
+    // test trigger moving
+    if (pInputManager->isKeyDown(InputKeyName::PK_INPUT_KEY_E))
+    {
+        set_tile_action(
+            _testMapFull[testTileIndex],
+            TileStateAction::TILE_STATE_actionMove
+        );
+    }
+    if (pInputManager->isKeyDown(InputKeyName::PK_INPUT_KEY_R))
+    {
+        set_tile_action(
+            _testMapFull[testTileIndex],
+            TileStateAction::TILE_STATE_actionIdle
+        );
+    }
 
     // Simulate as if we got updated area from server
     world::WorldObserver& obs = _pWorld->accessObserver();
@@ -246,9 +303,9 @@ void InGame::update()
     mat4& camTMat = pCamTransform->accessTransformationMatrix();
     _pWorld->update(camTMat[0 + 3 * 4], camTMat[2 + 3 * 4]);
 
+
     obs.lastReceivedMapX = reqX;
     obs.lastReceivedMapY = reqY;
-
 
 
     if (loggedIn && !loggingOut)

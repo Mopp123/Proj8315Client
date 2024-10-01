@@ -73,6 +73,7 @@ namespace world
             // NOTE: Current engine version doesn't support sprite rendering
             // TODO: Add sprite renderer to engine
             pk::Sprite3DRenderable* _pSprite = nullptr;
+            pk::vec3 _originalPos; // original local pos in grid
             float _verticalOffset = 0.0f;
 
             // *NOTE! Below was bad idea, especially when object rotates in middle of anim..
@@ -83,7 +84,8 @@ namespace world
             VisualObject(
                 World& worldRef,
                 entityID_t entity,
-                pk::Static3DRenderable* pStaticRenderable
+                pk::Static3DRenderable* pStaticRenderable,
+                pk::vec3 originalGridPos
             );
 
             VisualObject(const VisualObject& other);
@@ -95,19 +97,20 @@ namespace world
             void show(
                 pk::Scene* pScene,
                 GC_ubyte tileObject,
-                //PK_ubyte tileAction,
-                GC_ubyte objDir
+                GC_ubyte tileAction,
+                GC_ubyte objDir,
                 //int camDir,
-                //const gamecommon::ObjectInfo& staticObjInfo,
-                //const VisualObjectInfo& visualObjInfo,
-                //float worldX,
-                //float worldZ,
+                const gamecommon::ObjectInfo& staticObjInfo,
+                const VisualObjectInfo& visualObjInfo,
+                float worldX,
+                float worldZ,
                 ////pk::Animation* animation,
-                //pk::vec3& tileMovement
+                pk::vec3& tileMovement
             );
             void hide(pk::Scene* pScene);
 
             inline entityID_t getEntity() const { return _entity; }
+            inline const pk::vec3& getOriginalPos() const { return _originalPos;  }
 
         private:
             void move(int dir, float speed, pk::vec3& tileMovement);
@@ -134,7 +137,10 @@ namespace world
             static VisualObjectInfo* getVisual(int index);
             static size_t get_size();
             static void create(const PK_byte* pData, size_t dataSize);
+            static void create_object_visuals();
             static void destroy();
+
+            static void set_objects_TESTING(const std::vector<gamecommon::ObjectInfo>& objects);
         };
     }
 }
