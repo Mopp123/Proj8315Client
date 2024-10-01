@@ -66,7 +66,8 @@ public:
         LayoutFillType fillType = LayoutFillType::VERTICAL
     );
 
-    void addDefaultText(std::string txt);
+    std::pair<entityID_t, pk::TextRenderable*> addText(std::string txt, pk::vec3 color);
+    std::pair<entityID_t, pk::TextRenderable*> addDefaultText(std::string txt);
 
     void addDefaultButton(
         std::string txt,

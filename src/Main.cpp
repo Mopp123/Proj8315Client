@@ -1,6 +1,7 @@
 #include "../PortablePesukarhu/ppk.h"
 
 #include "scenes/MainMenu.h"
+#include "scenes/InGame.h"
 
 #include "net/Client.h"
 #include "net/platform/web/WebClient.h"
@@ -33,9 +34,10 @@ int main(int argc, const char** argv)
         &inputManager
     );
 
-    net::Client* pClient = (net::Client*)(new net::web::WebClient("ws://127.0.0.1:51421"));
+    //net::Client* pClient = (net::Client*)(new net::web::WebClient("ws://127.0.0.1:51421"));
 
-    application.switchScene((Scene*)(new MainMenu));
+    //application.switchScene((Scene*)(new MainMenu));
+    application.switchScene((Scene*)(new InGame));
     application.run();
 
     return 0;

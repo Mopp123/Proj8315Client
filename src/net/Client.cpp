@@ -29,7 +29,7 @@ namespace net
     {
         if (!s_pInstance)
         {
-            pk::Debug::log("Attempted to access client instance, but the client didn't exist");
+            //pk::Debug::log("Attempted to access client instance, but the client didn't exist");
             return nullptr;
         }
         else

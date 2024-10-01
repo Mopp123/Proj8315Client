@@ -37,12 +37,14 @@ varying vec3 var_camPos;
 varying vec4 var_dirLightDir;
 varying vec4 var_dirLightColor;
 
+
 void main()
 {
     vec4 worldPos = transformationMatrix * vec4(vertexPos, 1.0);
     gl_Position = common.projMat * common.viewMat * worldPos;
 
     var_normal = normal;
+
     var_uvCoord = uvCoord;
     var_ambientColor = environment.ambientColor;
 
