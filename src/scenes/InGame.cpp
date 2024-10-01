@@ -2,10 +2,13 @@
 #include "Tile.h"
 #include "../../Proj8315Common/src/messages/Message.h"
 #include "MainMenu.h"
+#include "core/input/InputEvent.h"
 
 
 using namespace pk;
 using namespace net;
+
+using namespace gamecommon;
 
 
 static void get_world_state(int xPos, int zPos, int observeRadius, std::vector<uint64_t>& target, const std::vector<uint64_t>& worldMap, int worldWidth)
@@ -102,15 +105,17 @@ void InGame::init()
 
     _testMapFull.resize(_testMapWidth * _testMapWidth * sizeof(uint64_t), 0);
     for (int i = 0; i < _testMapWidth; ++i)
-        gamecommon::set_tile_terrelevation(_testMapFull[i + 0 * _testMapWidth], 5);
+        set_tile_terrelevation(_testMapFull[i + 0 * _testMapWidth], 5);
     for (int i = 0; i < _testMapWidth; ++i)
-        gamecommon::set_tile_terrelevation(_testMapFull[0 + i * _testMapWidth], 5);
+        set_tile_terrelevation(_testMapFull[0 + i * _testMapWidth], 5);
 
-    gamecommon::set_tile_terrtype(_testMapFull[2 + 2 * _testMapWidth], 1);
+    set_tile_terrtype(_testMapFull[2 + 2 * _testMapWidth], 1);
+
+    set_tile_terrelevation(_testMapFull[3 + 3 * _testMapWidth], 3);
+    set_tile_thingid(_testMapFull[3 + 3 * _testMapWidth], 1);
+    set_tile_facingdir(_testMapFull[3 + 3 * _testMapWidth], 3);
 
     _testMapLocal.resize(_observeAreaWidth * _observeAreaWidth * sizeof(uint64_t), 0);
-
-    _pWorld->updateObservedArea(_testMapLocal.data());
 }
 
 void InGame::update()
@@ -159,8 +164,70 @@ void InGame::update()
 
     _pCamController->update();
 
+    InputManager* pInputManager = Application::get()->accessInputManager();
+    // test update tile dir
+    int testTileIndex = 3 + 3 * _testMapWidth;
+    if (pInputManager->isKeyDown(InputKeyName::PK_INPUT_KEY_1))
+    {
+        set_tile_facingdir(
+            _testMapFull[testTileIndex],
+            TileStateDirection::TILE_STATE_dirN
+        );
+        Debug::log("___TEST___dir set to N");
+    }
+    if (pInputManager->isKeyDown(InputKeyName::PK_INPUT_KEY_2))
+    {
+        set_tile_facingdir(
+            _testMapFull[testTileIndex],
+            TileStateDirection::TILE_STATE_dirNE
+        );
+        Debug::log("___TEST___dir set to NE");
+    }
+    if (pInputManager->isKeyDown(InputKeyName::PK_INPUT_KEY_3))
+    {
+        set_tile_facingdir(
+            _testMapFull[testTileIndex],
+            TileStateDirection::TILE_STATE_dirE
+        );
+        Debug::log("___TEST___dir set to E");
+    }
+    if (pInputManager->isKeyDown(InputKeyName::PK_INPUT_KEY_4))
+    {
+        set_tile_facingdir(
+            _testMapFull[testTileIndex],
+            TileStateDirection::TILE_STATE_dirSE
+        );
+    }
+    if (pInputManager->isKeyDown(InputKeyName::PK_INPUT_KEY_5))
+    {
+        set_tile_facingdir(
+            _testMapFull[testTileIndex],
+            TileStateDirection::TILE_STATE_dirS
+        );
+    }
+    if (pInputManager->isKeyDown(InputKeyName::PK_INPUT_KEY_6))
+    {
+        set_tile_facingdir(
+            _testMapFull[testTileIndex],
+            TileStateDirection::TILE_STATE_dirSW
+        );
+    }
+    if (pInputManager->isKeyDown(InputKeyName::PK_INPUT_KEY_7))
+    {
+        set_tile_facingdir(
+            _testMapFull[testTileIndex],
+            TileStateDirection::TILE_STATE_dirW
+        );
+    }
+    if (pInputManager->isKeyDown(InputKeyName::PK_INPUT_KEY_8))
+    {
+        set_tile_facingdir(
+            _testMapFull[testTileIndex],
+            TileStateDirection::TILE_STATE_dirNW
+        );
+    }
+
     // Simulate as if we got updated area from server
-    /*
     world::WorldObserver& obs = _pWorld->accessObserver();
     int reqX = obs.requestedMapX;
     int reqY = obs.requestedMapY;
@@ -168,19 +235,21 @@ void InGame::update()
     int gridX = obs.lastReceivedMapX;
     int gridY = obs.lastReceivedMapY;
 
-    if (gridX != reqX || gridY != reqY)
-    {
+    //if (gridX != reqX || gridY != reqY)
+    //{
         get_world_state(gridX, gridY, _observeAreaRadius, _testMapLocal, _testMapFull, _testMapWidth);
-        _pWorld->setAreaState(_testMapLocal);
-        obs.lastReceivedMapX = reqX;
-        obs.lastReceivedMapY = reqY;
-        Debug::log("___TEST___received from pos: " + std::to_string(gridX) + ", " + std::to_string(gridY));
-    }
-    */
+        const size_t recvSize = _observeAreaWidth * _observeAreaWidth * sizeof(uint64_t);
+        _pWorld->triggerStateUpdate((const GC_byte*)_testMapLocal.data(), recvSize);
+    //}
 
     Transform* pCamTransform = (Transform*)getComponent(activeCamera, ComponentType::PK_TRANSFORM);
     mat4& camTMat = pCamTransform->accessTransformationMatrix();
     _pWorld->update(camTMat[0 + 3 * 4], camTMat[2 + 3 * 4]);
+
+    obs.lastReceivedMapX = reqX;
+    obs.lastReceivedMapY = reqY;
+
+
 
     if (loggedIn && !loggingOut)
         setInfoText(

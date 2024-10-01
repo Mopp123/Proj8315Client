@@ -169,7 +169,7 @@ namespace world
         gamecommon::Faction getFaction(const std::string& factionName) const;
         bool factionExists(const std::string& factionName) const;
 
-        float getTileVisualHeightAt(float worldX, float worldZ) const;
+        float getTerrainHeight(float worldX, float worldZ) const;
 
         pk::vec3 getMousePickCoords(const pk::mat4& projMat, const pk::mat4& viewMat) const;
 
@@ -180,6 +180,7 @@ namespace world
 
 
     private:
+        void updateObjects();
         //void updateSprites();
         // Shifts "movements"-table, if moved camera, to make it look smooth
         //void shift(int32_t tileX, int32_t tileY);

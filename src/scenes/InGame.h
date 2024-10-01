@@ -54,7 +54,7 @@ public:
     std::string testUserPassword = "asd";
 
     bool waitingLogin = false;
-    bool loggedIn = false;
+    bool loggedIn = true;
     bool loggingOut = false;
 
     InGame();

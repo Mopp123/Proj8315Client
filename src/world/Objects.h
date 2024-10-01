@@ -93,19 +93,21 @@ namespace world
             //void assignAnimFrames(PK_ubyte tileObject, PK_ubyte tileAction, pk::Animation* anim);
 
             void show(
-                pk::Scene* scene,
-                PK_ubyte tileObject,
-                PK_ubyte tileAction,
-                int objDir,
-                int camDir,
-                const gamecommon::ObjectInfo& staticObjInfo,
-                const VisualObjectInfo& visualObjInfo,
-                float worldX,
-                float worldZ,
-                //pk::Animation* animation,
-                pk::vec3& tileMovement
+                pk::Scene* pScene,
+                GC_ubyte tileObject,
+                //PK_ubyte tileAction,
+                GC_ubyte objDir
+                //int camDir,
+                //const gamecommon::ObjectInfo& staticObjInfo,
+                //const VisualObjectInfo& visualObjInfo,
+                //float worldX,
+                //float worldZ,
+                ////pk::Animation* animation,
+                //pk::vec3& tileMovement
             );
-            void hide();
+            void hide(pk::Scene* pScene);
+
+            inline entityID_t getEntity() const { return _entity; }
 
         private:
             void move(int dir, float speed, pk::vec3& tileMovement);

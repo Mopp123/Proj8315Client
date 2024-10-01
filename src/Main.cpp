@@ -34,7 +34,7 @@ int main(int argc, const char** argv)
         &inputManager
     );
 
-    net::Client* pClient = (net::Client*)(new net::web::WebClient("ws://127.0.0.1:51421"));
+    //net::Client* pClient = (net::Client*)(new net::web::WebClient("ws://127.0.0.1:51421"));
 
     //application.switchScene((Scene*)(new MainMenu));
     application.switchScene((Scene*)(new InGame));

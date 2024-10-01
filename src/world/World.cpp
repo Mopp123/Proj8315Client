@@ -19,6 +19,8 @@ using namespace net;
 
 namespace world
 {
+    using namespace objects;
+
     void World::OnMessageWorldState::onMessage(const GC_byte* data, size_t dataSize)
     {
         WorldObserver& observerRef = visualWorldRef._observer;
@@ -50,80 +52,7 @@ namespace world
         _pTileData = new uint64_t[observeAreaWidth * observeAreaWidth];
 
         ResourceManager& resourceManager = Application::get()->getResourceManager();
-        // Create visual tiles at first as "blank"
-        //  -> we configure these eventually, when we fetch world state from server
 
-        TextureSampler defaultObjTextureSampler;
-        ImageData* pDefaultObjTexImage = resourceManager.loadImage("assets/textures/default.jpg");
-        Texture_new* pDefaultObjTexture = resourceManager.createTexture(
-            pDefaultObjTexImage->getResourceID(),
-            defaultObjTextureSampler
-        );
-        Material* pDefaultObjMaterial = resourceManager.createMaterial(
-            { pDefaultObjTexture->getResourceID() }
-        );
-        Model* pDefaultObjModel = resourceManager.loadModel(
-            "assets/models/Cube.glb",
-            pDefaultObjMaterial->getResourceID()
-        );
-
-        for (int y = 0; y < observeAreaWidth; ++y)
-        {
-            for (int x = 0; x < observeAreaWidth; ++x)
-            {
-                entityID_t visualObjEntity = _sceneRef.createEntity();
-
-                Transform* pTransform = _sceneRef.createTransform(
-                    visualObjEntity,
-                    { x * _tileVisualScale, 0, y * _tileVisualScale },
-                    { 0, 0, 0, 1},
-                    { 1.0f, 1.0f, 1.0f }
-                    //{ _tileVisualScale, _tileVisualScale, _tileVisualScale },
-                );
-                pTransform->setActive(false);
-
-                Static3DRenderable* pStaticRenderable = _sceneRef.createStatic3DRenderable(
-                    visualObjEntity,
-                    pDefaultObjModel->getMesh(0)->getResourceID()
-                );
-
-                int show = std::rand() % 2;
-                pStaticRenderable->setActive(false);
-
-                objects::VisualObject visualObj(*this, visualObjEntity, pStaticRenderable);
-                _tileObjects.push_back(visualObj);
-
-                /*
-                uint32_t tileEntity = _sceneRef.createEntity();
-
-                TerrainTileRenderable* tileRenderable = new TerrainTileRenderable(
-                        x * _tileVisualScale, y * _tileVisualScale,
-                        x, y,
-                        _tileVisualScale
-                        );
-
-                Sprite3DRenderable* effectRenderable = new Sprite3DRenderable(
-                        { x * _tileVisualScale, 0, y * _tileVisualScale },
-                        { _tileVisualScale, _tileVisualScale },
-                        nullptr
-                        );
-                Sprite3DRenderable* objectRenderable = new Sprite3DRenderable(
-                        { x * _tileVisualScale, 0, y * _tileVisualScale },
-                        { _tileVisualScale, _tileVisualScale },
-                        nullptr
-                        );
-
-                _sceneRef.addComponent(tileEntity, tileRenderable);
-                _sceneRef.addComponent(tileEntity, effectRenderable);
-                _sceneRef.addComponent(tileEntity, objectRenderable);
-
-                VisualTile t(scene, *this, tileEntity, tileRenderable, effectRenderable, objectRenderable);
-
-                uint64_t initialState = 0x0;
-                _tileData.push_back(std::make_pair(initialState, t));
-                */
-            }
-        }
 
         // Create terrain
         _terrainEntity = _sceneRef.createEntity();
@@ -216,6 +145,82 @@ namespace world
             _tileVisualScale
         );
 
+        // Create tile objects at first as "blank"
+        //  -> we configure these eventually, when we fetch world state from server
+        TextureSampler defaultObjTextureSampler;
+        ImageData* pDefaultObjTexImage = resourceManager.loadImage("assets/textures/default.jpg");
+        Texture_new* pDefaultObjTexture = resourceManager.createTexture(
+            pDefaultObjTexImage->getResourceID(),
+            defaultObjTextureSampler
+        );
+        Material* pDefaultObjMaterial = resourceManager.createMaterial(
+            { pDefaultObjTexture->getResourceID() }
+        );
+        Model* pDefaultObjModel = resourceManager.loadModel(
+            "assets/models/Arrow.glb",
+            pDefaultObjMaterial->getResourceID()
+        );
+
+        for (int y = 0; y < observeAreaWidth; ++y)
+        {
+            for (int x = 0; x < observeAreaWidth; ++x)
+            {
+                entityID_t visualObjEntity = _sceneRef.createEntity();
+
+                Transform* pTransform = _sceneRef.createTransform(
+                    visualObjEntity,
+                    { x * _tileVisualScale, 0, y * _tileVisualScale },
+                    { 0, 0, 0, 1},
+                    { 1.0f, 1.0f, 1.0f }
+                    //{ _tileVisualScale, _tileVisualScale, _tileVisualScale },
+                );
+                pTransform->setActive(true);
+
+                Static3DRenderable* pStaticRenderable = _sceneRef.createStatic3DRenderable(
+                    visualObjEntity,
+                    pDefaultObjModel->getMesh(0)->getResourceID()
+                );
+
+                int show = std::rand() % 2;
+                pStaticRenderable->setActive(false);
+
+                objects::VisualObject visualObj(*this, visualObjEntity, pStaticRenderable);
+                _tileObjects.push_back(visualObj);
+
+                _sceneRef.addChild(_terrainEntity, visualObjEntity);
+
+                /*
+                uint32_t tileEntity = _sceneRef.createEntity();
+
+                TerrainTileRenderable* tileRenderable = new TerrainTileRenderable(
+                        x * _tileVisualScale, y * _tileVisualScale,
+                        x, y,
+                        _tileVisualScale
+                        );
+
+                Sprite3DRenderable* effectRenderable = new Sprite3DRenderable(
+                        { x * _tileVisualScale, 0, y * _tileVisualScale },
+                        { _tileVisualScale, _tileVisualScale },
+                        nullptr
+                        );
+                Sprite3DRenderable* objectRenderable = new Sprite3DRenderable(
+                        { x * _tileVisualScale, 0, y * _tileVisualScale },
+                        { _tileVisualScale, _tileVisualScale },
+                        nullptr
+                        );
+
+                _sceneRef.addComponent(tileEntity, tileRenderable);
+                _sceneRef.addComponent(tileEntity, effectRenderable);
+                _sceneRef.addComponent(tileEntity, objectRenderable);
+
+                VisualTile t(scene, *this, tileEntity, tileRenderable, effectRenderable, objectRenderable);
+
+                uint64_t initialState = 0x0;
+                _tileData.push_back(std::make_pair(initialState, t));
+                */
+            }
+        }
+
         // Create "tile progressions/movements/anims table"
         const size_t tileCount = observeAreaWidth * observeAreaWidth;
         _tileAnimStates.resize(tileCount);
@@ -251,13 +256,15 @@ namespace world
         {
             for (int x = 0; x < observeAreaWidth; ++x)
             {
-                uint64_t tileState = mapState[x + y * observeAreaWidth];
+                const int tileIndex = x + y * observeAreaWidth;
+                uint64_t tileState = mapState[tileIndex];
 
                 // Set vertex pos.y (height)
                 float height = (float)(get_tile_terrelevation(tileState));
-                const float max = 15.0f;
-                if (height - max >= 0.0f)
-                    height -= max;
+                // No idea wtf is this..
+                //const float max = 15.0f;
+                //if (height - max >= 0.0f)
+                //    height -= max;
 
                 size_t vertexYBufPos = sizeof(float) + (x + y * observeAreaWidth) * (sizeof(float) * 8);
                 pBuffer->update(
@@ -324,6 +331,93 @@ namespace world
         tMat[0 + 3 * 4] = terrainWorldX + halfTileWidth;
         tMat[2 + 3 * 4] = terrainWorldZ + halfTileWidth;
     }
+
+    void World::updateObjects()
+    {
+        const int observeAreaWidth = _observer.observeRadius * 2 + 1;
+        for (int y = 0; y < observeAreaWidth; ++y)
+        {
+            for (int x = 0; x < observeAreaWidth; ++x)
+            {
+                const int tileIndex = x + y * observeAreaWidth;
+                uint64_t tileState = _pTileData[tileIndex];
+
+                PK_ubyte tileEffect = get_tile_terreffect(tileState);
+                PK_ubyte tileObject = get_tile_thingid(tileState);
+                PK_ubyte tileAction = get_tile_action(tileState);
+                PK_ubyte tileFacingDirection = get_tile_facingdir(tileState);
+
+                // Test displaying some object
+                VisualObject& obj = _tileObjects[tileIndex];
+                if (tileObject)
+                {
+                    obj.show(&_sceneRef, tileObject, tileFacingDirection);
+                }
+                else
+                {
+                    obj.hide(&_sceneRef);
+                }
+
+                /*
+                // TODO: Delete below
+                //  -> "visual tiles" and "tile renderables" don't exist anymore
+                //VisualTile& visualTile = _tileData[tileIndex].second;
+                //TerrainTileRenderable* tileRenderable = visualTile.renderable_tile;
+
+                // NOTE: May not work if component pools resized
+                Static3DRenderable* pTileObjTransform = _tileObjects[tileIndex];
+
+                const float spriteWorldX = ((float)tileRenderable->worldX + _tileVisualScale * 0.5f);
+                const float spriteWorldZ = ((float)tileRenderable->worldZ + _tileVisualScale * 0.5f);
+
+                Sprite3DRenderable* tileEffectSprite = _tileData[tileIndex].second.renderable_effect;
+                objects::VisualObject& visualObject = _tileData[tileIndex].second.visualObject;
+
+                // * Currently no effects exists yet!
+                tileEffectSprite->setActive(false);
+
+                // Reset movements if no action, even in case we didn't have any object here
+                if (!tileAction)
+                    _tileAnimStates[tileIndex].reset();
+
+                // Set tile object sprite
+                if (tileObject)
+                {
+                    int objDir = (int)get_tile_facingdir(tileState);
+                    if (tileObject < objects::ObjectInfoLib::get_size())
+                    {
+                        visualObject.show(
+                            tileObject,
+                            tileAction,
+                            objDir,
+                            _cameraDirection,
+                            *objects::ObjectInfoLib::get(tileObject),
+                            *objects::ObjectInfoLib::getVisual(tileObject),
+                            spriteWorldX,
+                            spriteWorldZ,
+                            _tileAnimStates[tileIndex].anim,
+                            _tileAnimStates[tileIndex].pos
+                        );
+                    }
+                    else
+                    {
+                        Debug::log(
+                            "Failed to find client side info for object of type: " +
+                            std::to_string(tileObject),
+                            Debug::MessageType::PK_ERROR
+                        );
+                    }
+                }
+                else
+                {
+                    visualObject.hide();
+                    //_tileAnimStates[tileIndex].anim->reset();
+                }
+                */
+            }
+        }
+    }
+
 
     // Updates tile sprites
     // * Has to be done after updating terrain heights and very frequently to not look funny..
@@ -473,9 +567,25 @@ namespace world
 
     void World::update(float worldX, float worldZ)
     {
-        Client* pClient = Client::get_instance();
+        _worldX = worldX;
+        _worldZ = worldZ;
+
+        // Calc the "map pos" according to "visual float pos"(this should be camera's pivot point, if rts style camera)
+        //int32_t tileX = (int32_t)std::floor((_worldX - (float)_observer.observeRadius * _tileVisualScale) / _tileVisualScale);
+        //int32_t tileY = (int32_t)std::floor((_worldZ - (float)_observer.observeRadius * _tileVisualScale) / _tileVisualScale);
+
+        // Need to add little offset cuz using vertices as "tiles"
+        float halfTileWidth = _tileVisualScale * 0.5f;
+        float displacedWorldX = _worldX + halfTileWidth;
+        float displacedWorldZ = _worldZ + halfTileWidth;
+        int32_t tileX = (int32_t)std::floor(displacedWorldX / _tileVisualScale);
+        int32_t tileY = (int32_t)std::floor(displacedWorldZ / _tileVisualScale);
+
+        _observer.requestedMapX = tileX;
+        _observer.requestedMapY = tileY;
 
         // Can receive world state and send location only after logging in
+        Client* pClient = Client::get_instance();
         if (pClient->isConnected() && pClient->user.isLoggedIn)
         {
             if (!_initialized)
@@ -488,26 +598,9 @@ namespace world
             }
             else
             {
-                _worldX = worldX;
-                _worldZ = worldZ;
-
-                // Calc the "map pos" according to "visual float pos"(this should be camera's pivot point, if rts style camera)
-                //int32_t tileX = (int32_t)std::floor((_worldX - (float)_observer.observeRadius * _tileVisualScale) / _tileVisualScale);
-                //int32_t tileY = (int32_t)std::floor((_worldZ - (float)_observer.observeRadius * _tileVisualScale) / _tileVisualScale);
-
-                // Need to add little offset cuz using vertices as "tiles"
-                float halfTileWidth = _tileVisualScale * 0.5f;
-                float displacedWorldX = _worldX + halfTileWidth;
-                float displacedWorldZ = _worldZ + halfTileWidth;
-                int32_t tileX = (int32_t)std::floor(displacedWorldX / _tileVisualScale);
-                int32_t tileY = (int32_t)std::floor(displacedWorldZ / _tileVisualScale);
-
-                _observer.requestedMapX = tileX;
-                _observer.requestedMapY = tileY;
                 // Send current observing position if tile had changed
                 if (tileX != _prevTileX || tileY != _prevTileY)
                 {
-
                     //Debug::log(
                     //    "___TEST___tile changed: " + std::to_string(tileX) + ", " + std::to_string(tileY) + " "
                     //    "world: " + std::to_string(worldX) + ", " + std::to_string(worldZ)
@@ -535,29 +628,31 @@ namespace world
                         }
                     );
                 }
-                if (_shouldUpdateLocalState)
-                    updateObservedArea(_pTileData);
-
-                // ONLY TEMPORARELY CHANGING THESE HERE!
-                _prevTileX = tileX;
-                _prevTileY = tileY;
-
-                // Update cam facing direction
-                vec3 camForward = _pCamTransform->forward();
-                vec2 camDirVec(camForward.x, camForward.z);
-                camDirVec.normalize();
-                float angle = std::atan2(camDirVec.y, camDirVec.x);
-                const float base = 8.0f;
-                const float displace = M_PI / base;
-                float fDir = (angle + displace + M_PI * 0.5f) / (M_PI / (base * 0.5f));
-                if (fDir < 0.0f)
-                    fDir = base + fDir;
-
-                _cameraDirection = (int)std::floor(fDir);
-
-                //updateSprites();
             }
         }
+
+        if (_shouldUpdateLocalState)
+            updateObservedArea(_pTileData);
+
+        // ONLY TEMPORARELY CHANGING THESE HERE!
+        _prevTileX = tileX;
+        _prevTileY = tileY;
+
+        // Update cam facing direction
+        vec3 camForward = _pCamTransform->forward();
+        vec2 camDirVec(camForward.x, camForward.z);
+        camDirVec.normalize();
+        float angle = std::atan2(camDirVec.y, camDirVec.x);
+        const float base = 8.0f;
+        const float displace = M_PI / base;
+        float fDir = (angle + displace + M_PI * 0.5f) / (M_PI / (base * 0.5f));
+        if (fDir < 0.0f)
+            fDir = base + fDir;
+
+        _cameraDirection = (int)std::floor(fDir);
+
+        updateObjects();
+        //updateSprites();
     }
 
     void World::addFaction(const Faction& faction)
@@ -633,65 +728,56 @@ namespace world
         return l1 * p1.y + l2 * p2.y + l3 * p3.y;
     }
 
-    float World::getTileVisualHeightAt(float worldX, float worldZ) const
-    {
-        // Calc the "map pos" according to "visual float pos"
+    float World::getTerrainHeight(float worldX, float worldZ) const
+	{
+		// Pos relative to terrain
+        Transform* pTerrainTransform = (Transform*)_sceneRef.getComponent(
+            _terrainEntity,
+            ComponentType::PK_TRANSFORM
+        );
+        const mat4& tMat = pTerrainTransform->getTransformationMatrix();
 
-        const int gridWidth = (_observer.observeRadius * 2) + 1;
+		const float terrainWorldX = tMat[0 + 3 * 4];
+		const float terrainWorldZ = tMat[2 + 3 * 4];
+		const int verticesPerRow = _observer.observeRadius * 2 + 1;
+		float terrainX = worldX - terrainWorldX;
+		float terrainZ = worldZ - terrainWorldZ;
 
-        int worldMapX = (int)std::floor(worldX / _tileVisualScale);
-        int worldMapY = (int)std::floor(worldZ / _tileVisualScale);
+		// Get the current tile we are standing on
+        // *Again needs that displacement thing...
+        float halfTileWidth = _tileVisualScale * 0.5f;
+        float displacedWorldX = worldX + halfTileWidth;
+        float displacedWorldZ = worldZ + halfTileWidth;
 
-        int mapX = worldMapX - _observer.lastReceivedMapX;
-        int mapY = worldMapY - _observer.lastReceivedMapY;
+		int gridX = (int)std::floor(displacedWorldX / _tileVisualScale);
+		int gridZ = (int)std::floor(displacedWorldZ / _tileVisualScale);
 
-        return 0.0f;
+		if (gridX < 0 || gridX + 1 >= verticesPerRow || gridZ < 0 || gridZ + 1 >= verticesPerRow)
+		{
+			return 0.0f;
+		}
 
-        // TODO: Fix below!
-        /*
-        int tileIndex = mapX + mapY * gridWidth;
-        if(tileIndex >= 0 && tileIndex < _tileData.size())
-        {
-            TerrainTileRenderable* tileRenderable = _tileData[tileIndex].second.renderable_tile;
+		// Coordinates in relation to the current tile, in range 0 to 1
+		float tileSpaceX = std::fmod(terrainX, _tileVisualScale) / _tileVisualScale;
+		float tileSpaceZ = std::fmod(terrainZ, _tileVisualScale) / _tileVisualScale;
 
-            // Coordinates in relation to the current tile, in range 0 to 1
-            float tileSpaceX = std::fmod(worldX, _tileVisualScale) / _tileVisualScale;
-            float tileSpaceZ = std::fmod(worldZ, _tileVisualScale) / _tileVisualScale;
-
-
-
-            const float height_tl = tileRenderable->vertexHeights[0];
-            const float height_tr = tileRenderable->vertexHeights[1];
-            const float height_bl = tileRenderable->vertexHeights[2];
-            const float height_br = tileRenderable->vertexHeights[3];
-
-
-            const int verticesPerRow = 2;
-
-            // Check which triangle of the tile we are standing on..
-            if (tileSpaceX <= tileSpaceZ) {
-                return get_triangle_height_barycentric(
-                        vec3(0, height_tl, 0),
-                        vec3(0, height_bl, 1),
-                        vec3(1, height_br, 1),
-                        vec2(tileSpaceX, tileSpaceZ));
-            }
-            else {
-                return get_triangle_height_barycentric(
-                        vec3(0, height_tl, 0),
-                        vec3(1, height_br, 1),
-                        vec3(1, height_tr, 0),
-                        vec2(tileSpaceX, tileSpaceZ));
-            }
-        }
-        else
-        {
-            return 0.0f;
-        }
-        */
-    }
-
-
+		// Check which triangle of the tile we are standing on..
+        // Could be optimized by having local heightmap separately from _pTileData?
+		if (tileSpaceX <= tileSpaceZ) {
+			return get_triangle_height_barycentric(
+				vec3(0, get_tile_terrelevation(_pTileData[gridX + gridZ * verticesPerRow]), 0),
+			    vec3(0, get_tile_terrelevation(_pTileData[gridX + (gridZ + 1) * verticesPerRow]), 1),
+			    vec3(1, get_tile_terrelevation(_pTileData[(gridX + 1) + (gridZ + 1) * verticesPerRow]), 1),
+			    vec2(tileSpaceX, tileSpaceZ));
+		}
+		else {
+			return get_triangle_height_barycentric(
+				vec3(0, get_tile_terrelevation(_pTileData[gridX + gridZ * verticesPerRow]), 0),
+				vec3(1, get_tile_terrelevation(_pTileData[(gridX + 1) + (gridZ + 1) * verticesPerRow]), 1),
+				vec3(1, get_tile_terrelevation(_pTileData[(gridX + 1) + gridZ * verticesPerRow]), 0),
+				vec2(tileSpaceX, tileSpaceZ));
+		}
+	}
 
     vec3 World::getMousePickCoords(const pk::mat4& projMat, const pk::mat4& viewMat) const
     {
@@ -724,9 +810,9 @@ namespace world
         }
         else
         {
-
             //float terrHeight = -terrain->getHeightAt(midPoint.x, midPoint.z);
-            float terrainHeight = getTileVisualHeightAt(midPoint.x, midPoint.z);
+            //float terrainHeight = getTileVisualHeightAt(midPoint.x, midPoint.z);
+            float terrainHeight = getTerrainHeight(midPoint.x, midPoint.z);
             if (midPoint.y < terrainHeight)
             {
                 return getMidpoint(rayStartPos, halfRay, recCount - 1);

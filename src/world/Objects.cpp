@@ -46,6 +46,14 @@ namespace world
             }
         };
 
+
+        static float dir_to_yaw(GC_ubyte dir)
+        {
+            const float dirAmount = M_PI / 4 * dir;
+            return M_PI * 2.0f - dirAmount;
+        }
+
+
         VisualObject::VisualObject(
             World& worldRef,
             entityID_t entity,
@@ -57,7 +65,8 @@ namespace world
         {}
 
         VisualObject::VisualObject(const VisualObject& other) :
-            _worldRef(other._worldRef)
+            _worldRef(other._worldRef),
+            _entity(other._entity)
         {
             // Purposefully copying ptrs here and not their content!
             _pStaticRenderable = other._pStaticRenderable;
@@ -83,25 +92,33 @@ namespace world
         // TODO: Sprite animating
         // TODO: Object speeds and stats
         void VisualObject::show(
-            Scene* scene,
-            PK_ubyte tileObject,
-            PK_ubyte tileAction,
-            int objDir,
-            int camDir,
-            const ObjectInfo& staticObjInfo,
-            const VisualObjectInfo& visualObjInfo,
-            float worldX,
-            float worldZ,
-            //pk::Animation* animation,
-            pk::vec3& tileMovement
+            Scene* pScene,
+            GC_ubyte tileObject,
+            //PK_ubyte tileAction,
+            GC_ubyte objDir
+            //int camDir,
+            //const ObjectInfo& staticObjInfo,
+            //const VisualObjectInfo& visualObjInfo,
+            //float worldX,
+            //float worldZ,
+            ////pk::Animation* animation,
+            //pk::vec3& tileMovement
         )
         {
+            // Display correct model (Disable atm for testing)
             // Testing using just static model here..
             // TODO: Optimize below
             // NOTE: below fucks up if components pools resized!!
-            _pStaticRenderable->meshID = visualObjInfo.pModel->getMesh(0)->getResourceID();
-            _pStaticRenderable->setActive(true);
+            //_pStaticRenderable->meshID = visualObjInfo.pModel->getMesh(0)->getResourceID();
+            //_pStaticRenderable->setActive(true);
+            Static3DRenderable* pStaticRenderable = (Static3DRenderable*)pScene->getComponent(
+                _entity,
+                ComponentType::PK_RENDERABLE_STATIC3D
+            );
+            pStaticRenderable->setActive(true);
 
+            // BELOW NOT READY!
+            /*
 
             //_pSprite->setActive(true);
             //_pSprite->texture = (Texture*)visualObjInfo.pTexture;
@@ -154,22 +171,31 @@ namespace world
             // JUST FOR TESTING: reset vertical offset, if someone had changed it for some reason..
             if (tileAction != TileStateAction::TILE_STATE_actionMoveVertical)
                 _verticalOffset = 0.0f;
+            */
 
             // NOTE: below may be a bit slow..
-            Transform* pTransform = (Transform*)scene->getComponent(
+            Transform* pTransform = (Transform*)pScene->getComponent(
                 _entity,
                 ComponentType::PK_TRANSFORM
             );
-            mat4& tMat = pTransform->accessTransformationMatrix();
+            mat4& tMat = pTransform->accessLocalTransformationMatrix();
             float& xPos = tMat[0 + 3 * 4];
             float& yPos = tMat[1 + 3 * 4];
             float& zPos = tMat[2 + 3 * 4];
-            xPos = worldX + tileMovement.x;
-            zPos = worldZ + tileMovement.z;
-            yPos = _worldRef.getTileVisualHeightAt(
+            //xPos = worldX + tileMovement.x;
+            //zPos = worldZ + tileMovement.z;
+            yPos = _worldRef.getTerrainHeight(
                 xPos,
                 zPos
-            ) + _verticalOffset + tileMovement.y;
+            );// + _verticalOffset + tileMovement.y;
+
+            // Adjust facing direction.
+            // Doing this only on y axis so no matrix multiplications required here
+            const float yaw = dir_to_yaw(objDir);
+            tMat[0 + 0 * 4] = std::cos(yaw);
+            tMat[0 + 2 * 4] = std::sin(yaw);
+            tMat[2 + 0 * 4] = -std::sin(yaw);
+            tMat[2 + 2 * 4] = std::cos(yaw);
 
             // NOTE: old below when using just sprites..
             // Animate sprite
@@ -186,9 +212,14 @@ namespace world
             //) + _verticalOffset + tileMovement.y;
         }
 
-        void VisualObject::hide()
+        void VisualObject::hide(pk::Scene* pScene)
         {
-            _pSprite->setActive(false);
+            //_pSprite->setActive(false);
+            Static3DRenderable* pStaticRenderable = (Static3DRenderable*)pScene->getComponent(
+                _entity,
+                ComponentType::PK_RENDERABLE_STATIC3D
+            );
+            pStaticRenderable->setActive(false);
         }
 
         void VisualObject::move(int dir, float speed, pk::vec3& tileMovement)
