@@ -2,6 +2,7 @@
 
 #include "scenes/MainMenu.h"
 #include "scenes/InGame.h"
+#include "scenes/InGameLocal.h"
 
 #include "net/Client.h"
 #include "net/platform/web/WebClient.h"
@@ -37,7 +38,7 @@ int main(int argc, const char** argv)
     //net::Client* pClient = (net::Client*)(new net::web::WebClient("ws://127.0.0.1:51421"));
 
     //application.switchScene((Scene*)(new MainMenu));
-    application.switchScene((Scene*)(new InGame));
+    application.switchScene((Scene*)(new InGameLocal));
     application.run();
 
     return 0;
