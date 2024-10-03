@@ -163,6 +163,10 @@ void InGame::init()
 
 }
 
+
+static float s_updateTimer = 0.0f;
+static float s_maxUpdateTimer = 0.5f;
+
 void InGame::update()
 {
     // Attempt logging in some test user immediately
@@ -294,18 +298,35 @@ void InGame::update()
 
     //if (gridX != reqX || gridY != reqY)
     //{
+    if (s_updateTimer >= s_maxUpdateTimer)
+    {
         get_world_state(gridX, gridY, _observeAreaRadius, _testMapLocal, _testMapFull, _testMapWidth);
         const size_t recvSize = _observeAreaWidth * _observeAreaWidth * sizeof(uint64_t);
-        _pWorld->triggerStateUpdate((const GC_byte*)_testMapLocal.data(), recvSize);
+        // NOTE: For some fucking reason u have to shift before updating state..
+        // -> earlier it was the opposite.
+        //  -> this has something to do with the order of operations when testing locally..
+        //   -> may fuck up when receiving from server
+        _pWorld->shift(obs.lastReceivedMapX, obs.lastReceivedMapY);
+
+        _pWorld->updateObservedArea(_testMapLocal.data());
+        s_updateTimer = 0.0f;
+
+        obs.lastReceivedMapX = reqX;
+        obs.lastReceivedMapY = reqY;
+    }
+    else
+    {
+        s_updateTimer += 1.0f * Timing::get_delta_time();
+    }
+
     //}
 
     Transform* pCamTransform = (Transform*)getComponent(activeCamera, ComponentType::PK_TRANSFORM);
     mat4& camTMat = pCamTransform->accessTransformationMatrix();
+
     _pWorld->update(camTMat[0 + 3 * 4], camTMat[2 + 3 * 4]);
 
 
-    obs.lastReceivedMapX = reqX;
-    obs.lastReceivedMapY = reqY;
 
 
     if (loggedIn && !loggingOut)

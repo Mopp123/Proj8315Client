@@ -264,6 +264,7 @@ namespace world
             for (int x = 0; x < observeAreaWidth; ++x)
             {
                 const int tileIndex = x + y * observeAreaWidth;
+                _pTileData[tileIndex] = mapState[tileIndex];
                 uint64_t tileState = mapState[tileIndex];
 
                 // Set vertex pos.y (height)
@@ -354,6 +355,19 @@ namespace world
                 PK_ubyte tileAction = get_tile_action(tileState);
                 PK_ubyte tileFacingDirection = get_tile_facingdir(tileState);
 
+
+                // Reset movements if no action, even in case we didn't have any object here
+                if (!tileAction)
+                {
+                    //if (_tileAnimStates[tileIndex].pos.x != 0.0f)
+                    //    Debug::log("___TEST___anim reset at: " + std::to_string(x) + ", " + std::to_string(y));
+                    _tileAnimStates[tileIndex].reset();
+                }
+                else
+                {
+                    //Debug::log("___TEST___updating anim at: " + std::to_string(x) + ", " + std::to_string(y));
+                }
+
                 // Test displaying some object
                 VisualObject& obj = _tileObjects[tileIndex];
                 if (tileObject)
@@ -371,22 +385,13 @@ namespace world
                         worldPosZ,
                         _tileAnimStates[tileIndex].pos
                     );
+                    Debug::log("___TEST___show obj at: " + std::to_string(x) + ", " + std::to_string(y) + " action: " + std::to_string(tileAction));
                 }
                 else
                 {
                     obj.hide(&_sceneRef);
                 }
 
-
-                // Reset movements if no action, even in case we didn't have any object here
-                if (!tileAction)
-                {
-                    _tileAnimStates[tileIndex].reset();
-                }
-                else
-                {
-                    Debug::log("___TEST___updating anim at: " + std::to_string(x) + ", " + std::to_string(y));
-                }
 
                 /*
                 // TODO: Delete below
@@ -529,7 +534,7 @@ namespace world
         // moving right(default) (shift left)
         int startX = tileX > _prevTileX ? observeAreaWidth - 1 : 0;
         int startY = tileY > _prevTileY ? observeAreaWidth - 1 : 0;
-        bool incrX = !(tileX > _prevTileX);
+        bool incrX = tileX < _prevTileX;
         bool incrY = !(tileY > _prevTileY);
 
         int shiftCountX = std::abs(tileX - _prevTileX);
@@ -545,35 +550,21 @@ namespace world
                     pk::vec3 prevPos = _tileAnimStates[0 + y * observeAreaWidth].pos;
                     //Animation* prevAnim = _tileAnimStates[0 + y * observeAreaWidth].anim;
                     //prevAnim->reset();
-                    int prevTileX = startX;
                     for (int x = startX; incrX ? x < observeAreaWidth : x >= 0; incrX ? ++x : --x)
                     {
                         const int tileIndex = x + y * observeAreaWidth;
                         pk::vec3 currentPos = _tileAnimStates[tileIndex].pos;
                         //Animation* currentAnim = _tileAnimStates[tileIndex].anim;
                         //tempAnim->copyStateFrom(*currentAnim);
-                        if (get_tile_action(_pTileData[tileIndex]) != 0)
-                        {
-                            Debug::log(
-                                "___TEST___"
-                                "shifted horizontally from: " + std::to_string(prevTileX) + " "
-                                "to: " + std::to_string(x) + " "
-                                "new x: " + std::to_string(prevPos.x) +
-                                "current coords: " + std::to_string(tileX) + ", " + std::to_string(tileY) + " "
-                                "startX: " + std::to_string(startX)
-                            );
-                        }
                         _tileAnimStates[tileIndex].pos = prevPos;
                         //_tileAnimStates[tileIndex].anim->copyStateFrom(*prevAnim);
 
                         prevPos = currentPos;
-                        prevTileX = x;
                         //prevAnim->copyStateFrom(*tempAnim);
                     }
                 }
             }
         }
-        return;
         // Vertical shifting
         if (tileY != _prevTileY)
         {
@@ -674,15 +665,16 @@ namespace world
             }
         }
 
+        /*
         if (_shouldUpdateLocalState)
         {
             updateObservedArea(_pTileData);
-            shift(tileX, tileY);
-        }
+            shift(_observer.lastReceivedMapX, _observer.lastReceivedMapY);
+        }*/
 
         // ONLY TEMPORARELY CHANGING THESE HERE!
-        _prevTileX = tileX;
-        _prevTileY = tileY;
+        //_prevTileX = tileX;
+        //_prevTileY = tileY;
 
         // Update cam facing direction
         vec3 camForward = _pCamTransform->forward();
