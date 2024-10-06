@@ -46,6 +46,10 @@ InGameLocal::~InGameLocal()
 void InGameLocal::init()
 {
     initBase();
+
+    // Set clear color
+    Application::get()->getMasterRenderer().setClearColor({ 0, 0, 0, 1});
+
     _pCamController = new CameraController(activeCamera, 10.0f);
     Transform* pCamTransform = (Transform*)getComponent(activeCamera, ComponentType::PK_TRANSFORM);
 
@@ -95,19 +99,32 @@ void InGameLocal::init()
             movingObj
         }
     );
+    Debug::log("___TEST___created obj info lib:\n" + world::objects::ObjectInfoLib::toString());
+
     world::objects::ObjectInfoLib::create_object_visuals();
 
     _testMapFull.resize(_testMapWidth * _testMapWidth * sizeof(uint64_t), 0);
-    for (int i = 0; i < _testMapWidth; ++i)
-        set_tile_terrelevation(_testMapFull[i + 0 * _testMapWidth], 5);
-    for (int i = 0; i < _testMapWidth; ++i)
-        set_tile_terrelevation(_testMapFull[0 + i * _testMapWidth], 5);
 
-    set_tile_terrtype(_testMapFull[2 + 2 * _testMapWidth], 1);
+    /*
+    int areaWidth = _testMapWidth;
+    for (int y = 0; y < areaWidth; ++y)
+    {
+        for (int x = 0; x < areaWidth; ++x)
+        {
+            int randTerrainType = std::rand() % 2;
+            set_tile_terrtype(_testMapFull[x + y * _testMapWidth], randTerrainType);
+            int randHeight = std::rand() % 3;
+            set_tile_terrelevation(_testMapFull[x + y * _testMapWidth], 1 + randHeight);
+            bool plantTree = (std::rand() % 4) == 3;
 
-    set_tile_terrelevation(_testMapFull[3 + 3 * _testMapWidth], 3);
-    set_tile_thingid(_testMapFull[3 + 3 * _testMapWidth], 2);
-    set_tile_facingdir(_testMapFull[3 + 3 * _testMapWidth], 3);
+            set_tile_thingid(_testMapFull[x + y * _testMapWidth], (GC_ubyte)plantTree);
+        }
+    }*/
+
+    set_tile_terrelevation(_testMapFull[2 + 2 * _testMapWidth], 2);
+    set_tile_terrelevation(_testMapFull[3 + 2 * _testMapWidth], 2);
+    set_tile_terrelevation(_testMapFull[2 + 3 * _testMapWidth], 2);
+    set_tile_terrelevation(_testMapFull[3 + 3 * _testMapWidth], 2);
 
     _testMapLocal.resize(_observeAreaWidth * _observeAreaWidth * sizeof(uint64_t), 0);
 
@@ -213,8 +230,10 @@ void InGameLocal::update()
         //  -> this has something to do with the order of operations when testing locally..
         //   -> may fuck up when receiving from server
         _pWorld->shift(obs.lastReceivedMapX, obs.lastReceivedMapY);
-
         _pWorld->updateObservedArea(_testMapLocal.data());
+
+        //_pWorld->triggerStateUpdate((GC_byte*)_testMapLocal.data(), recvSize);
+
         s_updateTimer = 0.0f;
 
         obs.lastReceivedMapX = reqX;
@@ -229,6 +248,9 @@ void InGameLocal::update()
     mat4& camTMat = pCamTransform->accessTransformationMatrix();
 
     _pWorld->update(camTMat[0 + 3 * 4], camTMat[2 + 3 * 4]);
+
+    // Test glue cam to ground
+    camTMat[1 + 3 * 4] = _pWorld->getTerrainHeight(camTMat[0 + 3 * 4], camTMat[2 + 3 * 4]) + 1.0f;
 
     setInfoText(
         "Delta: " + std::to_string(Timing::get_delta_time())

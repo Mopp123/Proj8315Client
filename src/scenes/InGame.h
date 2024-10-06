@@ -31,6 +31,21 @@ private:
         virtual void onMessage(const GC_byte* data, size_t dataSize);
     };
 
+    class OnMessagePostLogin_TEST : public net::OnMessageEvent
+    {
+    private:
+        InGame& _sceneRef;
+
+    public:
+        OnMessagePostLogin_TEST(
+            InGame& sceneRef
+        ) :
+            _sceneRef(sceneRef)
+        {}
+
+        virtual void onMessage(const GC_byte* data, size_t dataSize);
+    };
+
     class OnMessageLogout : public net::OnMessageEvent
     {
     public:
@@ -51,7 +66,7 @@ public:
     std::string testUserPassword = "asd";
 
     bool waitingLogin = false;
-    bool loggedIn = true;
+    bool loggedIn = false;
     bool loggingOut = false;
 
     InGame();

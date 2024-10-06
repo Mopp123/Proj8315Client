@@ -52,6 +52,9 @@ void main()
     vec4 specularColor = specularStrength * specularFactor * directionalLight.color * specularTexColor;
 
     vec4 diffuseTexColor0 = texture2D(material.diffuseTexSampler0, var_uvCoord);
+    if (diffuseTexColor0.a < 0.05)
+        discard;
+
     vec4 finalColor = (var_ambientColor + diffuseColor + specularColor) * diffuseTexColor0;
     gl_FragColor = finalColor;
 }

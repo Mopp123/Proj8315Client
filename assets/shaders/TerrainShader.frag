@@ -15,7 +15,8 @@ struct Material
     sampler2D channelTexSampler0;
     sampler2D channelTexSampler1;
     sampler2D channelTexSampler2;
-    sampler2D channelTexSampler3; // TODO: channel texture for alpha
+    sampler2D channelTexSampler3;
+    sampler2D channelTexSampler4;
     sampler2D blendmapTexSampler;
 };
 uniform Material material;
@@ -39,15 +40,16 @@ void main(void)
     vec2 u = var_uvCoord + displacement;
 
 	vec4 blendmapColor = texture2D(material.blendmapTexSampler, u);
-	float blackAmount = 1.0 - (blendmapColor.r + blendmapColor.g + blendmapColor.b);
+	float blackAmount = 1.0 - (blendmapColor.r + blendmapColor.g + blendmapColor.b + blendmapColor.a);
 	vec2 tiledUv = u * verticesPerRow;
 
 	vec4 diffuseColorBlack =		texture2D(material.channelTexSampler0, tiledUv) * blackAmount;
 	vec4 diffuseColorRed =			texture2D(material.channelTexSampler1, tiledUv) * blendmapColor.r;
 	vec4 diffuseColorGreen =		texture2D(material.channelTexSampler2, tiledUv) * blendmapColor.g;
 	vec4 diffuseColorBlue =			texture2D(material.channelTexSampler3, tiledUv) * blendmapColor.b;
+	vec4 diffuseColorAlpha =		texture2D(material.channelTexSampler4, tiledUv) * blendmapColor.a;
 
-	vec4 blendedColor = diffuseColorBlack + diffuseColorRed + diffuseColorGreen + diffuseColorBlue;
+	vec4 blendedColor = diffuseColorBlack + diffuseColorRed + diffuseColorGreen + diffuseColorBlue + diffuseColorAlpha;
 
     vec4 finalColor = (var_ambientColor + diffuseColor) * blendedColor;
     gl_FragColor = finalColor;

@@ -26,18 +26,33 @@ namespace world
         WorldObserver& observerRef = visualWorldRef._observer;
         const int dataWidth = (observerRef.observeRadius * 2) + 1;
         const size_t expectedDataSize = MESSAGE_ENTRY_SIZE__header + (dataWidth * dataWidth) * sizeof(uint64_t);
-        if (dataSize >= expectedDataSize)
+        if (dataSize == expectedDataSize)
         {
-            const GC_byte* pReceivedState = data + MESSAGE_ENTRY_SIZE__header;
-            const size_t receivedStateSize = dataSize - MESSAGE_ENTRY_SIZE__header;
-            // Trigger state update on next World::update
-            visualWorldRef.triggerStateUpdate(pReceivedState, receivedStateSize);
 
             observerRef.lastReceivedMapX = visualWorldRef._observer.requestedMapX;
             observerRef.lastReceivedMapY = visualWorldRef._observer.requestedMapY;
+            //visualWorldRef.shift(observerRef.lastReceivedMapX, observerRef.lastReceivedMapY);
 
-            // Not tested!
-            visualWorldRef.shift(observerRef.lastReceivedMapX, observerRef.lastReceivedMapY);
+            const GC_byte* pReceivedState = data + MESSAGE_ENTRY_SIZE__header;
+            //const uint64_t* pReceivedState = (const uint64_t*)(data + MESSAGE_ENTRY_SIZE__header);
+            const size_t receivedStateSize = dataSize - MESSAGE_ENTRY_SIZE__header;
+            // Trigger state update on next World::update
+            visualWorldRef.triggerStateUpdate(pReceivedState, receivedStateSize);
+            //visualWorldRef.updateObservedArea(pReceivedState);
+        }
+        else
+        {
+            int offset = 0;
+            Debug::log("___TEST___ERROR: msg too long. Found message types:");
+
+            while (offset < dataSize)
+            {
+                uint32_t msgType = (uint32_t)(*(data + offset));
+                Debug::log("___TEST___msg type: " + std::to_string(msgType) + " offset: " + std::to_string(offset));
+                offset += expectedDataSize;
+            }
+
+            Debug::log("___TEST___world state response fatal error", Debug::MessageType::PK_FATAL_ERROR);
         }
     }
 
@@ -97,11 +112,12 @@ namespace world
             blendmapTexSampler
         );
         // Terrain channel textures
-        //ImageData* pImgChannel0 = resourceManager.loadImage("assets/textures/box.jpg");
         ImageData* pImgChannel0 = resourceManager.loadImage("assets/textures/deadland.png");
         ImageData* pImgChannel1 = resourceManager.loadImage("assets/textures/water.png");
-        ImageData* pImgChannel2 = resourceManager.loadImage("assets/textures/grass.png");
+        ImageData* pImgChannel2 = resourceManager.loadImage("assets/textures/snow.png");
         ImageData* pImgChannel3 = resourceManager.loadImage("assets/textures/rock.png");
+        ImageData* pImgChannel4 = resourceManager.loadImage("assets/textures/grass.png");
+
         Texture_new* pTerrainTex0 = resourceManager.createTexture(
             pImgChannel0->getResourceID(),
             channelTexSampler
@@ -118,13 +134,17 @@ namespace world
             pImgChannel3->getResourceID(),
             channelTexSampler
         );
-
+        Texture_new* pTerrainTex4 = resourceManager.createTexture(
+            pImgChannel4->getResourceID(),
+            channelTexSampler
+        );
         Material* pTerrainMaterial = resourceManager.createMaterial(
             {
                 pTerrainTex0->getResourceID(),
                 pTerrainTex1->getResourceID(),
                 pTerrainTex2->getResourceID(),
                 pTerrainTex3->getResourceID(),
+                pTerrainTex4->getResourceID()
             },
             0,
             0.0f,
@@ -385,7 +405,6 @@ namespace world
                         worldPosZ,
                         _tileAnimStates[tileIndex].pos
                     );
-                    Debug::log("___TEST___show obj at: " + std::to_string(x) + ", " + std::to_string(y) + " action: " + std::to_string(tileAction));
                 }
                 else
                 {
@@ -665,12 +684,12 @@ namespace world
             }
         }
 
-        /*
+
         if (_shouldUpdateLocalState)
         {
-            updateObservedArea(_pTileData);
             shift(_observer.lastReceivedMapX, _observer.lastReceivedMapY);
-        }*/
+            updateObservedArea(_pTileData);
+        }
 
         // ONLY TEMPORARELY CHANGING THESE HERE!
         //_prevTileX = tileX;
@@ -766,6 +785,7 @@ namespace world
         return l1 * p1.y + l2 * p2.y + l3 * p3.y;
     }
 
+    /*
     float World::getTerrainHeight(float worldX, float worldZ) const
 	{
 		// Pos relative to terrain
@@ -817,6 +837,72 @@ namespace world
 				vec2(tileSpaceX, tileSpaceZ));
 		}
 	}
+    */
+
+    float World::getTerrainHeight(float worldX, float worldZ) const
+    {
+        // Calc the "map pos" according to "visual float pos"
+
+        const int gridWidth = (_observer.observeRadius * 2) + 1;
+
+        int worldMapX = (int)std::floor(worldX / _tileVisualScale);
+        int worldMapY = (int)std::floor(worldZ / _tileVisualScale);
+
+        int mapX = worldMapX; //- _observer.lastReceivedMapX;
+        int mapY = worldMapY; //- _observer.lastReceivedMapY;
+
+        // world to local coords
+        int testX = mapX + _observer.observeRadius + 1;
+        int testY = mapY + _observer.observeRadius + 1;
+        mapX = testX;
+        mapY = testY;
+
+        const GC_ubyte h = get_tile_terrelevation(_pTileData[testX + testY * gridWidth]);
+        Debug::log("___TEST___grid pos: " + std::to_string(testX) + ", " + std::to_string(testY) + " height: " + std::to_string(h));
+
+        int tileIndex = mapX + mapY * gridWidth;
+        const int observeAreaWidth = _observer.observeRadius * 2 + 1;
+        if(tileIndex >= 0 && tileIndex < (observeAreaWidth * observeAreaWidth))
+        {
+            // Coordinates in relation to the current tile, in range 0 to 1
+            float tileSpaceX = std::fmod(worldX, _tileVisualScale) / _tileVisualScale;
+            float tileSpaceZ = std::fmod(worldZ, _tileVisualScale) / _tileVisualScale;
+
+            const float tl = get_tile_terrelevation(_pTileData[mapX + mapY * observeAreaWidth]);
+            const float tr = get_tile_terrelevation(_pTileData[(mapX + 1) + mapY * observeAreaWidth]);
+            const float bl = get_tile_terrelevation(_pTileData[mapX + (mapY + 1) * observeAreaWidth]);
+            const float br = get_tile_terrelevation(_pTileData[(mapX + 1) + (mapY + 1) * observeAreaWidth]);
+
+            /*
+            const float height_tl = tileRenderable->vertexHeights[0];
+            const float height_tr = tileRenderable->vertexHeights[1];
+            const float height_bl = tileRenderable->vertexHeights[2];
+            const float height_br = tileRenderable->vertexHeights[3];
+            */
+
+            const int verticesPerRow = 2;
+
+            // Check which triangle of the tile we are standing on..
+            if (tileSpaceX <= tileSpaceZ) {
+                return get_triangle_height_barycentric(
+                        vec3(0, tl, 0),
+                        vec3(0, bl, 1),
+                        vec3(1, br, 1),
+                        vec2(tileSpaceX, tileSpaceZ));
+            }
+            else {
+                return get_triangle_height_barycentric(
+                        vec3(0, tl, 0),
+                        vec3(1, br, 1),
+                        vec3(1, tr, 0),
+                        vec2(tileSpaceX, tileSpaceZ));
+            }
+        }
+        else
+        {
+            return 0.0f;
+        }
+    }
 
     vec3 World::getMousePickCoords(const pk::mat4& projMat, const pk::mat4& viewMat) const
     {
@@ -865,12 +951,20 @@ namespace world
 
     void World::updateBlendmapData(PK_ubyte tileType, int x, int y)
     {
-        const int r = tileType == 1 ? 255 : 0;
-        const int g = tileType == 2 ? 255 : 0;
-        const int b = tileType == 3 ? 255 : 0;
-        const int a = tileType == 4 ? 255 : 0;
+        // First channel using "black" so need do a bit differently
+        if (tileType == 0)
+        {
+            _pTerrainBlendmapImg->setColorAt_UNSAFE(x, y, 0, 0, 0, 0);
+        }
+        else
+        {
+            const int r = tileType == 1 ? 255 : 0;
+            const int g = tileType == 2 ? 255 : 0;
+            const int b = tileType == 3 ? 255 : 0;
+            const int a = tileType == 4 ? 255 : 0;
 
-        _pTerrainBlendmapImg->setColorAt_UNSAFE(x, y, r, g, b, a);
+            _pTerrainBlendmapImg->setColorAt_UNSAFE(x, y, r, g, b, a);
+        }
     }
 
     void World::updateBlendmapData(PK_ubyte tileType, int pixelIndex)

@@ -141,6 +141,8 @@ namespace world
             static void destroy();
 
             static void set_objects_TESTING(const std::vector<gamecommon::ObjectInfo>& objects);
+
+            static std::string toString();
         };
     }
 }

@@ -370,31 +370,53 @@ namespace world
                 // *use 'i' since index of that list is equal to the object's type id
 
                 // Test having just same model for all object types
-                ImageData* pImg = resourceManager.loadImage(
+                ImageData* pDefaultImage = resourceManager.loadImage(
                     "assets/textures/default.jpg",
                     true
                 );
-                Texture_new* pTexture = resourceManager.createTexture(
-                    pImg->getResourceID(),
+                ImageData* pTreeImage = resourceManager.loadImage(
+                    "assets/textures/tree1.png",
+                    true
+                );
+                Texture_new* pDefaultTexture = resourceManager.createTexture(
+                    pDefaultImage->getResourceID(),
                     defaultTextureSampler,
                     true
                 );
-                Material* pMaterial = resourceManager.createMaterial(
-                    {pTexture->getResourceID()},
+                Texture_new* pTreeTexture = resourceManager.createTexture(
+                    pTreeImage->getResourceID(),
+                    defaultTextureSampler,
+                    true
+                );
+                Material* pDefaultMaterial = resourceManager.createMaterial(
+                    {pDefaultTexture->getResourceID()},
                     0, // specular texture res id
                     2.0f, // specular strength
                     8.0f, // shininess
                     0, // blendmap texture res id
                     true
                 );
-                Model* pModel0 = resourceManager.loadModel(
-                    "assets/models/Cube.glb",
-                    pMaterial->getResourceID(),
+                Material* pTreeMaterial = resourceManager.createMaterial(
+                    {pTreeTexture->getResourceID()},
+                    0, // specular texture res id
+                    0.0f, // specular strength
+                    0.0f, // shininess
+                    0, // blendmap texture res id
                     true
                 );
-                Model* pModel1 = resourceManager.loadModel(
+                Model* pDefaultModel = resourceManager.loadModel(
+                    "assets/models/Cube.glb",
+                    pDefaultMaterial->getResourceID(),
+                    true
+                );
+                Model* pTreeModel1 = resourceManager.loadModel(
+                    "assets/models/tree1.glb",
+                    pTreeMaterial->getResourceID(),
+                    true
+                );
+                Model* pMovementTestModel = resourceManager.loadModel(
                     "assets/models/Arrow.glb",
-                    pMaterial->getResourceID(),
+                    pDefaultMaterial->getResourceID(),
                     true
                 );
 
@@ -415,14 +437,14 @@ namespace world
                 switch (i)
                 {
                     case 1:
-                        visualObjInfo.pModel = pModel0;
+                        visualObjInfo.pModel = pTreeModel1;
                         break;
                     case 2:
                         visualObjInfo.rotateableSprite = true;
-                        visualObjInfo.pModel = pModel1;
+                        visualObjInfo.pModel = pMovementTestModel;
                         break;
                     case 3:
-                        visualObjInfo.pModel = pModel0;
+                        visualObjInfo.pModel = pDefaultModel;
                         break;
                     default:
                         break;
@@ -442,6 +464,30 @@ namespace world
         void ObjectInfoLib::set_objects_TESTING(const std::vector<gamecommon::ObjectInfo>& objects)
         {
             s_objects = objects;
+        }
+
+        std::string ObjectInfoLib::toString()
+        {
+            std::string output = "Object Info Library(" + std::to_string(s_objects.size()) + ")\n";
+            for (int i = 0; i < s_objects.size(); ++i)
+            {
+                ObjectInfo& objInfo = s_objects[i];
+                std::string objName(objInfo.name);
+                std::string objDescription(objInfo.description);
+
+                output += "  " + std::to_string(i) + ": " + objName + " -----------------\n";
+                output += "    Description:\n      " + objDescription + "\n";
+                output += "    Actions:\n";
+
+                for (int j = 0; j < TILE_STATE_MAX_action; ++j)
+                {
+                    std::string action(objInfo.actionSlot[j]);
+                    output += "      " + std::to_string(j) + ": " + action + "\n";
+                }
+
+                output += "    Stats:\n      Speed: " + std::to_string(objInfo.speed) + "\n\n";
+            }
+            return output;
         }
     }
 }

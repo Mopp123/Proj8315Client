@@ -29,8 +29,19 @@ void InGame::OnClickLogout::onClick(pk::InputMouseButtonName button)
 
 void InGame::OnMessageLogin_TEST::onMessage(const GC_byte* data, size_t dataSize)
 {
-    _sceneRef.loggedIn = true;
+    Debug::log("___TEST___recv login response");
     Client* pClient = Client::get_instance();
+    pClient->send((int32_t)MESSAGE_TYPE__ObjInfoLibRequest, {});
+}
+
+
+void InGame::OnMessagePostLogin_TEST::onMessage(const GC_byte* data, size_t dataSize)
+{
+    world::objects::ObjectInfoLib::create(data, dataSize);
+    Debug::log("___TEST___Obj info lib created");
+
+    Client* pClient = Client::get_instance();
+    _sceneRef.loggedIn = true;
     pClient->user.name = _sceneRef.testUserName;
     pClient->user.isLoggedIn = true;
 }
@@ -55,6 +66,9 @@ void InGame::init()
 {
     initBase();
 
+    // Set clear color
+    Application::get()->getMasterRenderer().setClearColor({ 0, 0, 0, 1});
+
     _mainPanel.createDefault(
         (Scene*)this,
         _pDefaultFont,
@@ -71,6 +85,7 @@ void InGame::init()
 
     Client* pClient = Client::get_instance();
     pClient->addOnMessageEvent(MESSAGE_TYPE__LoginResponse, new OnMessageLogin_TEST(*this));
+    pClient->addOnMessageEvent(MESSAGE_TYPE__ObjInfoLibResponse, new OnMessagePostLogin_TEST(*this));
     pClient->addOnMessageEvent(MESSAGE_TYPE__LogoutResponse, new OnMessageLogout);
 
     _pCamController = new CameraController(activeCamera, 10.0f);
@@ -92,6 +107,7 @@ void InGame::update()
         Client* pClient = Client::get_instance();
         if(pClient->isConnected())
         {
+            Debug::log("___TEST___sending login request");
             waitingLogin = true;
             pClient->send(
                 (int32_t)MESSAGE_TYPE__LoginRequest,
@@ -134,6 +150,9 @@ void InGame::update()
     mat4& camTMat = pCamTransform->accessTransformationMatrix();
 
     _pWorld->update(camTMat[0 + 3 * 4], camTMat[2 + 3 * 4]);
+
+    // Test glue cam to ground
+    camTMat[1 + 3 * 4] = _pWorld->getTerrainHeight(camTMat[0 + 3 * 4], camTMat[2 + 3 * 4]) + 1.0f;
 
 
     if (loggedIn && !loggingOut)
