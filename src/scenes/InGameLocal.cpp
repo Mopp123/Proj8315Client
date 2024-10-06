@@ -121,13 +121,15 @@ void InGameLocal::init()
         }
     }*/
 
-    set_tile_terrelevation(_testMapFull[2 + 2 * _testMapWidth], 2);
+    set_tile_terrelevation(_testMapFull[0 + 0 * _testMapWidth], 1);
     set_tile_terrelevation(_testMapFull[3 + 2 * _testMapWidth], 2);
     set_tile_terrelevation(_testMapFull[2 + 3 * _testMapWidth], 2);
     set_tile_terrelevation(_testMapFull[3 + 3 * _testMapWidth], 2);
 
     _testMapLocal.resize(_observeAreaWidth * _observeAreaWidth * sizeof(uint64_t), 0);
 
+    //get_world_state(0, 0, _observeAreaRadius, _testMapLocal, _testMapFull, _testMapWidth);
+    //_pWorld->updateObservedArea(_testMapLocal.data());
 }
 
 

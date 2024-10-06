@@ -785,7 +785,6 @@ namespace world
         return l1 * p1.y + l2 * p2.y + l3 * p3.y;
     }
 
-    /*
     float World::getTerrainHeight(float worldX, float worldZ) const
 	{
 		// Pos relative to terrain
@@ -798,8 +797,12 @@ namespace world
 		const float terrainWorldX = tMat[0 + 3 * 4];
 		const float terrainWorldZ = tMat[2 + 3 * 4];
 		const int verticesPerRow = _observer.observeRadius * 2 + 1;
+        const float halfTerrainWidth = ((float)_observer.observeRadius * _tileVisualScale);
+        //worldX += halfTerrainWidth;
+        //worldZ += halfTerrainWidth;
 		float terrainX = worldX - terrainWorldX;
 		float terrainZ = worldZ - terrainWorldZ;
+        //Debug::log("___TEST___terrain space: " + std::to_string(terrainX) + ", " + std::to_string(terrainZ));
 
 		// Get the current tile we are standing on
         // *Again needs that displacement thing...
@@ -808,8 +811,9 @@ namespace world
         //float displacedWorldX = worldX + halfTileWidth;
         //float displacedWorldZ = worldZ + halfTileWidth;
 
-		int gridX = (int)std::floor(worldX / _tileVisualScale);
-		int gridZ = (int)std::floor(worldZ / _tileVisualScale);
+		int gridX = (int)std::floor(terrainX / _tileVisualScale);
+		int gridZ = (int)std::floor(terrainZ / _tileVisualScale);
+
 
 		if (gridX < 0 || gridX + 1 >= verticesPerRow || gridZ < 0 || gridZ + 1 >= verticesPerRow)
 		{
@@ -837,72 +841,63 @@ namespace world
 				vec2(tileSpaceX, tileSpaceZ));
 		}
 	}
-    */
 
-    float World::getTerrainHeight(float worldX, float worldZ) const
-    {
-        // Calc the "map pos" according to "visual float pos"
+    //float World::getTerrainHeight(float worldX, float worldZ) const
+    //{
+    //    // Calc the "map pos" according to "visual float pos"
 
-        const int gridWidth = (_observer.observeRadius * 2) + 1;
+    //    const int observeAreaWidth = _observer.observeRadius * 2 + 1;
 
-        int worldMapX = (int)std::floor(worldX / _tileVisualScale);
-        int worldMapY = (int)std::floor(worldZ / _tileVisualScale);
+    //    int worldMapX = (int)std::floor(worldX / _tileVisualScale);
+    //    int worldMapY = (int)std::floor(worldZ / _tileVisualScale);
 
-        int mapX = worldMapX; //- _observer.lastReceivedMapX;
-        int mapY = worldMapY; //- _observer.lastReceivedMapY;
+    //    int mapX = worldMapX + _observer.observeRadius; //- _observer.lastReceivedMapX;
+    //    int mapY = worldMapY + _observer.observeRadius; //- _observer.lastReceivedMapY;
 
-        // world to local coords
-        int testX = mapX + _observer.observeRadius + 1;
-        int testY = mapY + _observer.observeRadius + 1;
-        mapX = testX;
-        mapY = testY;
+    //    const GC_ubyte h = get_tile_terrelevation(_pTileData[mapX + mapY * observeAreaWidth]);
+    //    Debug::log("___TEST___grid pos: " + std::to_string(mapX) + ", " + std::to_string(mapY) + " height: " + std::to_string(h));
 
-        const GC_ubyte h = get_tile_terrelevation(_pTileData[testX + testY * gridWidth]);
-        Debug::log("___TEST___grid pos: " + std::to_string(testX) + ", " + std::to_string(testY) + " height: " + std::to_string(h));
+    //    int tileIndex = mapX + mapY * observeAreaWidth;
+    //    if(tileIndex >= 0 && tileIndex < (observeAreaWidth * observeAreaWidth))
+    //    {
+    //        // Coordinates in relation to the current tile, in range 0 to 1
+    //        float tileSpaceX = std::fmod(worldX + _tileVisualScale * 0.5f, _tileVisualScale) / _tileVisualScale;
+    //        float tileSpaceZ = std::fmod(worldZ + _tileVisualScale * 0.5f, _tileVisualScale) / _tileVisualScale;
+    //        Debug::log("___TEST___tile space coords: " + std::to_string(tileSpaceX) + ", " + std::to_string(tileSpaceZ));
 
-        int tileIndex = mapX + mapY * gridWidth;
-        const int observeAreaWidth = _observer.observeRadius * 2 + 1;
-        if(tileIndex >= 0 && tileIndex < (observeAreaWidth * observeAreaWidth))
-        {
-            // Coordinates in relation to the current tile, in range 0 to 1
-            float tileSpaceX = std::fmod(worldX, _tileVisualScale) / _tileVisualScale;
-            float tileSpaceZ = std::fmod(worldZ, _tileVisualScale) / _tileVisualScale;
+    //        const float tl = get_tile_terrelevation(_pTileData[mapX + mapY * observeAreaWidth]);
+    //        const float tr = get_tile_terrelevation(_pTileData[(mapX + 1) + mapY * observeAreaWidth]);
+    //        const float bl = get_tile_terrelevation(_pTileData[mapX + (mapY + 1) * observeAreaWidth]);
+    //        const float br = get_tile_terrelevation(_pTileData[(mapX + 1) + (mapY + 1) * observeAreaWidth]);
 
-            const float tl = get_tile_terrelevation(_pTileData[mapX + mapY * observeAreaWidth]);
-            const float tr = get_tile_terrelevation(_pTileData[(mapX + 1) + mapY * observeAreaWidth]);
-            const float bl = get_tile_terrelevation(_pTileData[mapX + (mapY + 1) * observeAreaWidth]);
-            const float br = get_tile_terrelevation(_pTileData[(mapX + 1) + (mapY + 1) * observeAreaWidth]);
+    //        /*
+    //        const float height_tl = tileRenderable->vertexHeights[0];
+    //        const float height_tr = tileRenderable->vertexHeights[1];
+    //        const float height_bl = tileRenderable->vertexHeights[2];
+    //        const float height_br = tileRenderable->vertexHeights[3];
+    //        */
 
-            /*
-            const float height_tl = tileRenderable->vertexHeights[0];
-            const float height_tr = tileRenderable->vertexHeights[1];
-            const float height_bl = tileRenderable->vertexHeights[2];
-            const float height_br = tileRenderable->vertexHeights[3];
-            */
-
-            const int verticesPerRow = 2;
-
-            // Check which triangle of the tile we are standing on..
-            if (tileSpaceX <= tileSpaceZ) {
-                return get_triangle_height_barycentric(
-                        vec3(0, tl, 0),
-                        vec3(0, bl, 1),
-                        vec3(1, br, 1),
-                        vec2(tileSpaceX, tileSpaceZ));
-            }
-            else {
-                return get_triangle_height_barycentric(
-                        vec3(0, tl, 0),
-                        vec3(1, br, 1),
-                        vec3(1, tr, 0),
-                        vec2(tileSpaceX, tileSpaceZ));
-            }
-        }
-        else
-        {
-            return 0.0f;
-        }
-    }
+    //        // Check which triangle of the tile we are standing on..
+    //        if (tileSpaceX <= tileSpaceZ) {
+    //            return get_triangle_height_barycentric(
+    //                    vec3(0, tl, 0),
+    //                    vec3(0, bl, 1),
+    //                    vec3(1, br, 1),
+    //                    vec2(tileSpaceX, tileSpaceZ));
+    //        }
+    //        else {
+    //            return get_triangle_height_barycentric(
+    //                    vec3(0, tl, 0),
+    //                    vec3(1, br, 1),
+    //                    vec3(1, tr, 0),
+    //                    vec2(tileSpaceX, tileSpaceZ));
+    //        }
+    //    }
+    //    else
+    //    {
+    //        return 0.0f;
+    //    }
+    //}
 
     vec3 World::getMousePickCoords(const pk::mat4& projMat, const pk::mat4& viewMat) const
     {
