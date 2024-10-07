@@ -183,9 +183,15 @@ namespace world
                 ComponentType::PK_TRANSFORM
             );
             mat4& tMat = pTransform->accessLocalTransformationMatrix();
+            mat4& tMatGlobal = pTransform->accessTransformationMatrix();
             float& xPos = tMat[0 + 3 * 4];
             float& yPos = tMat[1 + 3 * 4];
             float& zPos = tMat[2 + 3 * 4];
+
+            float& xPosGlobal = tMatGlobal[0 + 3 * 4];
+            float& yPosGlobal = tMatGlobal[1 + 3 * 4];
+            float& zPosGlobal = tMatGlobal[2 + 3 * 4];
+
             // If not moving reset to original local pos (not sure if this fucks ups smthn..)
             /*
             if (tileAction != TileStateAction::TILE_STATE_actionMove)
@@ -201,10 +207,11 @@ namespace world
             */
             xPos = worldX + tileMovement.x;
             zPos = worldZ + tileMovement.z;
-            yPos = _worldRef.getTerrainHeight(
-                xPos,
-                zPos
+            yPosGlobal = _worldRef.getTerrainHeight(
+                xPosGlobal,
+                zPosGlobal
             );// + _verticalOffset + tileMovement.y;
+            //Debug::log("___TEST___SHOW obj height: " + std::to_string(yPos));
 
             // Adjust facing direction.
             // Doing this only on y axis so no matrix multiplications required here

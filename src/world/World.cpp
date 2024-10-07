@@ -9,6 +9,7 @@
 #include "../../Proj8315Common/src/Common.h"
 #include "../../Proj8315Common/src/messages/Message.h"
 
+#include <chrono>
 
 using namespace pk;
 using namespace pk::web;
@@ -21,24 +22,46 @@ namespace world
 {
     using namespace objects;
 
+
+    static std::chrono::time_point<std::chrono::high_resolution_clock> s_lastSend;
+    static bool s_TEST_skipUpdate = false;
+    static bool s_TEST_allowSend = false;
+
     void World::OnMessageWorldState::onMessage(const GC_byte* data, size_t dataSize)
     {
         WorldObserver& observerRef = visualWorldRef._observer;
         const int dataWidth = (observerRef.observeRadius * 2) + 1;
         const size_t expectedDataSize = MESSAGE_ENTRY_SIZE__header + (dataWidth * dataWidth) * sizeof(uint64_t);
+        // WARNING TESTING:
+        // if received multiple times use only "first message"
         if (dataSize == expectedDataSize)
         {
-
             observerRef.lastReceivedMapX = visualWorldRef._observer.requestedMapX;
             observerRef.lastReceivedMapY = visualWorldRef._observer.requestedMapY;
-            //visualWorldRef.shift(observerRef.lastReceivedMapX, observerRef.lastReceivedMapY);
 
-            const GC_byte* pReceivedState = data + MESSAGE_ENTRY_SIZE__header;
-            //const uint64_t* pReceivedState = (const uint64_t*)(data + MESSAGE_ENTRY_SIZE__header);
-            const size_t receivedStateSize = dataSize - MESSAGE_ENTRY_SIZE__header;
+            /*
+            if (s_TEST_skipUpdate)
+            {
+                Debug::log("___TEST___skipping update");
+                s_TEST_skipUpdate = false;
+                return;
+            }
+            */
+
+            visualWorldRef.shift(observerRef.lastReceivedMapX, observerRef.lastReceivedMapY);
+
+            // NOTE: It looks fucked up if not updating all and shifting immediately here.. don't understant why tho..
+            //  -> thats why the whol "triggering" thing isn't used atm
             // Trigger state update on next World::update
-            visualWorldRef.triggerStateUpdate(pReceivedState, receivedStateSize);
-            //visualWorldRef.updateObservedArea(pReceivedState);
+            //visualWorldRef.triggerStateUpdate(pReceivedState, receivedStateSize);
+
+            const uint64_t* pReceivedState = (const uint64_t*)(data + MESSAGE_ENTRY_SIZE__header);
+            const size_t receivedStateSize = dataSize - MESSAGE_ENTRY_SIZE__header;
+            visualWorldRef.updateObservedArea(pReceivedState);
+            visualWorldRef.moveTerrain();
+            visualWorldRef.updateObjects();
+
+            s_TEST_allowSend = true;
         }
         else
         {
@@ -70,6 +93,8 @@ namespace world
 
         ResourceManager& resourceManager = Application::get()->getResourceManager();
 
+        // init last send
+        s_lastSend = std::chrono::high_resolution_clock::now();
 
         // Create terrain
         _terrainEntity = _sceneRef.createEntity();
@@ -341,23 +366,6 @@ namespace world
             _pTerrainBlendmapImg->getHeight(),
             4 // atm needed for gl fuckery..
         );
-
-        // Move terrain if current tile changed
-        // NOTE: Theres still something wonky how the grid moves.. feels something like rounding error, but not sure..
-        // NOTE: These should actually be the last received coords, NOT requested coords?
-        float observeTileX = (float)_observer.lastReceivedMapX;
-        float observeTileY = (float)_observer.lastReceivedMapY;
-        const float halfTileWidth = _tileVisualScale * 0.5f;
-        float halfTerrainWorldWidth = ((float)observeAreaWidth) * halfTileWidth;
-
-        const float terrainWorldX = ((observeTileX * _tileVisualScale) - halfTerrainWorldWidth);
-        const float terrainWorldZ = ((observeTileY * _tileVisualScale) - halfTerrainWorldWidth);
-
-        Transform* pTerrainTransform = (Transform*)_sceneRef.getComponent(_terrainEntity, ComponentType::PK_TRANSFORM);
-        mat4& tMat = pTerrainTransform->accessTransformationMatrix();
-        // Also need to add little offset cuz using vertices as "tiles"!
-        tMat[0 + 3 * 4] = terrainWorldX + halfTileWidth;
-        tMat[2 + 3 * 4] = terrainWorldZ + halfTileWidth;
     }
 
     void World::updateObjects()
@@ -472,6 +480,26 @@ namespace world
         }
     }
 
+    void World::moveTerrain()
+    {
+        // Move terrain if current tile changed
+        // NOTE: Theres still something wonky how the grid moves.. feels something like rounding error, but not sure..
+        // NOTE: These should actually be the last received coords, NOT requested coords?
+        const int observeAreaWidth = _observer.observeRadius * 2 + 1;
+        float observeTileX = (float)_observer.lastReceivedMapX;
+        float observeTileY = (float)_observer.lastReceivedMapY;
+        const float halfTileWidth = _tileVisualScale * 0.5f;
+        float halfTerrainWorldWidth = ((float)observeAreaWidth) * halfTileWidth;
+
+        const float terrainWorldX = ((observeTileX * _tileVisualScale) - halfTerrainWorldWidth);
+        const float terrainWorldZ = ((observeTileY * _tileVisualScale) - halfTerrainWorldWidth);
+
+        Transform* pTerrainTransform = (Transform*)_sceneRef.getComponent(_terrainEntity, ComponentType::PK_TRANSFORM);
+        mat4& tMat = pTerrainTransform->accessTransformationMatrix();
+        // Also need to add little offset cuz using vertices as "tiles"!
+        tMat[0 + 3 * 4] = terrainWorldX + halfTileWidth;
+        tMat[2 + 3 * 4] = terrainWorldZ + halfTileWidth;
+    }
 
     // Updates tile sprites
     // * Has to be done after updating terrain heights and very frequently to not look funny..
@@ -632,10 +660,7 @@ namespace world
         float displacedWorldZ = _worldZ + halfTileWidth;
         int32_t tileX = (int32_t)std::floor(displacedWorldX / _tileVisualScale);
         int32_t tileY = (int32_t)std::floor(displacedWorldZ / _tileVisualScale);
-        //Debug::log("___TEST___CURRENT TILE: " + std::to_string(tileX) + ", " + std::to_string(tileY));
 
-        _observer.requestedMapX = tileX;
-        _observer.requestedMapY = tileY;
 
         // Can receive world state and send location only after logging in
         Client* pClient = Client::get_instance();
@@ -652,48 +677,51 @@ namespace world
             else
             {
                 // Send current observing position if tile had changed
-                if (tileX != _prevTileX || tileY != _prevTileY)
+                std::chrono::time_point<std::chrono::high_resolution_clock> currentTime = std::chrono::high_resolution_clock::now();
+                std::chrono::duration<float> elapsedSinceLastSend = currentTime - s_lastSend;
+                if (s_TEST_allowSend)
                 {
-                    //Debug::log(
-                    //    "___TEST___tile changed: " + std::to_string(tileX) + ", " + std::to_string(tileY) + " "
-                    //    "world: " + std::to_string(worldX) + ", " + std::to_string(worldZ)
-                    //);
-
-                    // only testing here!
-                    //_observer.lastReceivedMapX = tileX;
-                    //_observer.lastReceivedMapY = tileY;
-
-                    Client::get_instance()->send(
-                        (int32_t)MESSAGE_TYPE__UpdateObserverProperties,
+                    if (elapsedSinceLastSend.count() >= 0.3f)
+                    {
+                        if (tileX != _observer.lastReceivedMapX || tileY != _observer.lastReceivedMapY)
                         {
-                            {
-                                (PK_byte*)(&_observer.requestedMapX),
-                                sizeof(int32_t), sizeof(int32_t)
-                            },
-                            {
-                                (PK_byte*)(&_observer.requestedMapY),
-                                sizeof(int32_t), sizeof(int32_t)
-                            },
-                            {
-                                (PK_byte*)(&_observer.observeRadius),
-                                sizeof(int32_t), sizeof(int32_t)
-                            }
+                            Debug::log("___TEST___sending pos update");
+                            _observer.requestedMapX = tileX;
+                            _observer.requestedMapY = tileY;
+                            Client::get_instance()->send(
+                                (int32_t)MESSAGE_TYPE__UpdateObserverProperties,
+                                {
+                                    {
+                                        (PK_byte*)(&_observer.requestedMapX),
+                                        sizeof(int32_t), sizeof(int32_t)
+                                    },
+                                    {
+                                        (PK_byte*)(&_observer.requestedMapY),
+                                        sizeof(int32_t), sizeof(int32_t)
+                                    },
+                                    {
+                                        (PK_byte*)(&_observer.observeRadius),
+                                        sizeof(int32_t), sizeof(int32_t)
+                                    }
+                                }
+                            );
+                            s_lastSend = std::chrono::high_resolution_clock::now();
+                            s_TEST_skipUpdate = true;
                         }
-                    );
+                    }
                 }
             }
         }
 
 
+        // Visuals aren't in sync and looks fucked if using "triggering"
+        // system to update
+        /*
         if (_shouldUpdateLocalState)
         {
             shift(_observer.lastReceivedMapX, _observer.lastReceivedMapY);
             updateObservedArea(_pTileData);
-        }
-
-        // ONLY TEMPORARELY CHANGING THESE HERE!
-        //_prevTileX = tileX;
-        //_prevTileY = tileY;
+        }*/
 
         // Update cam facing direction
         vec3 camForward = _pCamTransform->forward();
@@ -708,7 +736,9 @@ namespace world
 
         _cameraDirection = (int)std::floor(fDir);
 
-        updateObjects();
+        // Atm object update should be done immediately after state update and shifting
+        // has been done by on message event
+        //updateObjects();
         //updateSprites();
     }
 
@@ -797,23 +827,12 @@ namespace world
 		const float terrainWorldX = tMat[0 + 3 * 4];
 		const float terrainWorldZ = tMat[2 + 3 * 4];
 		const int verticesPerRow = _observer.observeRadius * 2 + 1;
-        const float halfTerrainWidth = ((float)_observer.observeRadius * _tileVisualScale);
-        //worldX += halfTerrainWidth;
-        //worldZ += halfTerrainWidth;
+
 		float terrainX = worldX - terrainWorldX;
 		float terrainZ = worldZ - terrainWorldZ;
-        //Debug::log("___TEST___terrain space: " + std::to_string(terrainX) + ", " + std::to_string(terrainZ));
-
-		// Get the current tile we are standing on
-        // *Again needs that displacement thing...
-        // NOTE: UPDATE: Seems that it actually doesn't need..
-        //float halfTileWidth = _tileVisualScale * 0.5f;
-        //float displacedWorldX = worldX + halfTileWidth;
-        //float displacedWorldZ = worldZ + halfTileWidth;
 
 		int gridX = (int)std::floor(terrainX / _tileVisualScale);
 		int gridZ = (int)std::floor(terrainZ / _tileVisualScale);
-
 
 		if (gridX < 0 || gridX + 1 >= verticesPerRow || gridZ < 0 || gridZ + 1 >= verticesPerRow)
 		{
@@ -841,63 +860,6 @@ namespace world
 				vec2(tileSpaceX, tileSpaceZ));
 		}
 	}
-
-    //float World::getTerrainHeight(float worldX, float worldZ) const
-    //{
-    //    // Calc the "map pos" according to "visual float pos"
-
-    //    const int observeAreaWidth = _observer.observeRadius * 2 + 1;
-
-    //    int worldMapX = (int)std::floor(worldX / _tileVisualScale);
-    //    int worldMapY = (int)std::floor(worldZ / _tileVisualScale);
-
-    //    int mapX = worldMapX + _observer.observeRadius; //- _observer.lastReceivedMapX;
-    //    int mapY = worldMapY + _observer.observeRadius; //- _observer.lastReceivedMapY;
-
-    //    const GC_ubyte h = get_tile_terrelevation(_pTileData[mapX + mapY * observeAreaWidth]);
-    //    Debug::log("___TEST___grid pos: " + std::to_string(mapX) + ", " + std::to_string(mapY) + " height: " + std::to_string(h));
-
-    //    int tileIndex = mapX + mapY * observeAreaWidth;
-    //    if(tileIndex >= 0 && tileIndex < (observeAreaWidth * observeAreaWidth))
-    //    {
-    //        // Coordinates in relation to the current tile, in range 0 to 1
-    //        float tileSpaceX = std::fmod(worldX + _tileVisualScale * 0.5f, _tileVisualScale) / _tileVisualScale;
-    //        float tileSpaceZ = std::fmod(worldZ + _tileVisualScale * 0.5f, _tileVisualScale) / _tileVisualScale;
-    //        Debug::log("___TEST___tile space coords: " + std::to_string(tileSpaceX) + ", " + std::to_string(tileSpaceZ));
-
-    //        const float tl = get_tile_terrelevation(_pTileData[mapX + mapY * observeAreaWidth]);
-    //        const float tr = get_tile_terrelevation(_pTileData[(mapX + 1) + mapY * observeAreaWidth]);
-    //        const float bl = get_tile_terrelevation(_pTileData[mapX + (mapY + 1) * observeAreaWidth]);
-    //        const float br = get_tile_terrelevation(_pTileData[(mapX + 1) + (mapY + 1) * observeAreaWidth]);
-
-    //        /*
-    //        const float height_tl = tileRenderable->vertexHeights[0];
-    //        const float height_tr = tileRenderable->vertexHeights[1];
-    //        const float height_bl = tileRenderable->vertexHeights[2];
-    //        const float height_br = tileRenderable->vertexHeights[3];
-    //        */
-
-    //        // Check which triangle of the tile we are standing on..
-    //        if (tileSpaceX <= tileSpaceZ) {
-    //            return get_triangle_height_barycentric(
-    //                    vec3(0, tl, 0),
-    //                    vec3(0, bl, 1),
-    //                    vec3(1, br, 1),
-    //                    vec2(tileSpaceX, tileSpaceZ));
-    //        }
-    //        else {
-    //            return get_triangle_height_barycentric(
-    //                    vec3(0, tl, 0),
-    //                    vec3(1, br, 1),
-    //                    vec3(1, tr, 0),
-    //                    vec2(tileSpaceX, tileSpaceZ));
-    //        }
-    //    }
-    //    else
-    //    {
-    //        return 0.0f;
-    //    }
-    //}
 
     vec3 World::getMousePickCoords(const pk::mat4& projMat, const pk::mat4& viewMat) const
     {

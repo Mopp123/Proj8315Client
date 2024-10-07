@@ -88,7 +88,7 @@ void InGame::init()
     pClient->addOnMessageEvent(MESSAGE_TYPE__ObjInfoLibResponse, new OnMessagePostLogin_TEST(*this));
     pClient->addOnMessageEvent(MESSAGE_TYPE__LogoutResponse, new OnMessageLogout);
 
-    _pCamController = new CameraController(activeCamera, 10.0f);
+    _pCamController = new CameraController(activeCamera, 6.0f);
 
     Transform* pCamTransform = (Transform*)getComponent(activeCamera, ComponentType::PK_TRANSFORM);
 
@@ -146,17 +146,19 @@ void InGame::update()
 
     _pCamController->update();
 
-    Transform* pCamTransform = (Transform*)getComponent(activeCamera, ComponentType::PK_TRANSFORM);
-    mat4& camTMat = pCamTransform->accessTransformationMatrix();
-
-    _pWorld->update(camTMat[0 + 3 * 4], camTMat[2 + 3 * 4]);
-
-    // Test glue cam to ground
-    camTMat[1 + 3 * 4] = _pWorld->getTerrainHeight(camTMat[0 + 3 * 4], camTMat[2 + 3 * 4]) + 1.0f;
+    vec3 camPivotPoint = _pCamController->getPivotPoint();
+   _pCamController->setPivotPointHeight(_pWorld->getTerrainHeight(camPivotPoint.x, camPivotPoint.z));
+    //_pWorld->moveTerrain();
+    _pWorld->update(camPivotPoint.x, camPivotPoint.z);
 
 
     if (loggedIn && !loggingOut)
         setInfoText(
             "Delta: " + std::to_string(Timing::get_delta_time())
         );
+}
+
+void InGame::lateUpdate()
+{
+    _pWorld->updateObjects();
 }

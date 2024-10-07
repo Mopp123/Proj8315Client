@@ -126,6 +126,15 @@ void InGameLocal::init()
     set_tile_terrelevation(_testMapFull[2 + 3 * _testMapWidth], 2);
     set_tile_terrelevation(_testMapFull[3 + 3 * _testMapWidth], 2);
 
+    //set_tile_thingid(_testMapFull[0 + 0 * _testMapWidth], 1);
+    //set_tile_thingid(_testMapFull[3 + 2 * _testMapWidth], 1);
+    //set_tile_thingid(_testMapFull[2 + 3 * _testMapWidth], 1);
+    //set_tile_thingid(_testMapFull[3 + 3 * _testMapWidth], 1);
+
+
+    set_tile_terrelevation(_testMapFull[10 + 12 * _testMapWidth], 2);
+    set_tile_thingid(_testMapFull[10 + 12 * _testMapWidth], 2);
+
     _testMapLocal.resize(_observeAreaWidth * _observeAreaWidth * sizeof(uint64_t), 0);
 
     //get_world_state(0, 0, _observeAreaRadius, _testMapLocal, _testMapFull, _testMapWidth);
@@ -142,7 +151,7 @@ void InGameLocal::update()
 
     InputManager* pInputManager = Application::get()->accessInputManager();
     // test update tile dir
-    int testTileIndex = 3 + 3 * _testMapWidth;
+    int testTileIndex = 10 + 12 * _testMapWidth;
     if (pInputManager->isKeyDown(InputKeyName::PK_INPUT_KEY_1))
     {
         set_tile_facingdir(
@@ -233,6 +242,7 @@ void InGameLocal::update()
         //   -> may fuck up when receiving from server
         _pWorld->shift(obs.lastReceivedMapX, obs.lastReceivedMapY);
         _pWorld->updateObservedArea(_testMapLocal.data());
+        _pWorld->moveTerrain();
 
         //_pWorld->triggerStateUpdate((GC_byte*)_testMapLocal.data(), recvSize);
 
@@ -246,15 +256,15 @@ void InGameLocal::update()
         s_updateTimer += 1.0f * Timing::get_delta_time();
     }
 
-    Transform* pCamTransform = (Transform*)getComponent(activeCamera, ComponentType::PK_TRANSFORM);
-    mat4& camTMat = pCamTransform->accessTransformationMatrix();
-
-    _pWorld->update(camTMat[0 + 3 * 4], camTMat[2 + 3 * 4]);
-
-    // Test glue cam to ground
-    camTMat[1 + 3 * 4] = _pWorld->getTerrainHeight(camTMat[0 + 3 * 4], camTMat[2 + 3 * 4]) + 1.0f;
+    vec3 camPivotPoint = _pCamController->getPivotPoint();
+    _pWorld->update(camPivotPoint.x, camPivotPoint.z);
 
     setInfoText(
         "Delta: " + std::to_string(Timing::get_delta_time())
     );
+}
+
+void InGameLocal::lateUpdate()
+{
+    _pWorld->updateObjects();
 }

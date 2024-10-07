@@ -74,4 +74,5 @@ public:
 
     void init();
     void update();
+    void lateUpdate();
 };
