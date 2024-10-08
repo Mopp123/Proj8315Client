@@ -139,6 +139,8 @@ namespace world
 
         float _worldX = 0.0f;
         float _worldZ = 0.0f;
+        int _tileX = 0;
+        int _tileY = 0;
         int _prevTileX = 0;
         int _prevTileY = 0;
         WorldObserver _observer;
@@ -173,8 +175,6 @@ namespace world
 
         pk::vec3 getMousePickCoords(const pk::mat4& projMat, const pk::mat4& viewMat) const;
 
-        inline WorldObserver& accessObserver() { return _observer; }
-
         // Sets tile data to state
         void triggerStateUpdate(const GC_byte* pNewState, size_t stateSize);
 
@@ -185,6 +185,10 @@ namespace world
         void updateObjects();
 
         void moveTerrain();
+
+        inline WorldObserver& accessObserver() { return _observer; }
+        inline int getTileX() const { return _tileX; }
+        inline int getTileY() const { return _tileY; }
 
     private:
         //void updateSprites();

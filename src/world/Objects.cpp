@@ -57,18 +57,23 @@ namespace world
         VisualObject::VisualObject(
             World& worldRef,
             entityID_t entity,
+            entityID_t rootJointEntity,
             pk::Static3DRenderable* pStaticRenderable,
+            pk::SkinnedRenderable* pSkinnedRenderable,
             pk::vec3 originalGridPos
         ) :
             _worldRef(worldRef),
             _entity(entity),
+            _rootJointEntity(rootJointEntity),
             _pStaticRenderable(pStaticRenderable),
+            _pSkinnedRenderable(pSkinnedRenderable),
             _originalPos(originalGridPos)
         {}
 
         VisualObject::VisualObject(const VisualObject& other) :
             _worldRef(other._worldRef),
             _entity(other._entity),
+            _rootJointEntity(other._rootJointEntity),
             _originalPos(other._originalPos)
         {
             // Purposefully copying ptrs here and not their content!
@@ -108,56 +113,38 @@ namespace world
             pk::vec3& tileMovement
         )
         {
-            // Display correct model (Disable atm for testing)
-            // Testing using just static model here..
-            // TODO: Optimize below
-            // NOTE: below fucks up if components pools resized!!
-            //_pStaticRenderable->setActive(true);
-
+            // Display correct model
+            // TODO: Make this shit better..
+            Transform* pTransform = (Transform*)pScene->getComponent(
+                _entity,
+                ComponentType::PK_TRANSFORM
+            );
+            pTransform->setActive(true);
             Static3DRenderable* pStaticRenderable = (Static3DRenderable*)pScene->getComponent(
                 _entity,
                 ComponentType::PK_RENDERABLE_STATIC3D
             );
-            pStaticRenderable->meshID = visualObjInfo.pModel->getMesh(0)->getResourceID();
-            pStaticRenderable->setActive(true);
-
-            // BELOW NOT READY!
-            /*
-
-            //_pSprite->setActive(true);
-            //_pSprite->texture = (Texture*)visualObjInfo.pTexture;
-
-            // NOTE: JUST FOR TESTING ATM
-            if (tileObject == 3)
+            SkinnedRenderable* pSkinnedRenderable = (SkinnedRenderable*)pScene->getComponent(
+                _entity,
+                ComponentType::PK_RENDERABLE_SKINNED
+            );
+            // Figure out should we render static or animated renderable
+            if (tileObject == 2)
             {
-                //animation->enableLooping(false);
-                _pSprite->scale = vec2(8, 8);
-            }
-            else if (tileObject == 2)
-            {
-                _pSprite->scale = vec2(1.5f, 1.5f);
+                pSkinnedRenderable->meshID = visualObjInfo.pModel->getMesh(0)->getResourceID();
+                pSkinnedRenderable->setActive(true);
+
+                AnimationData* pAnimData = (AnimationData*)pScene->getComponent(
+                    _rootJointEntity,
+                    ComponentType::PK_ANIMATION_DATA
+                );
+                pAnimData->setActive(true);
             }
             else
             {
-                //animation->enableLooping(true);
-                _pSprite->scale = vec2(2, 2);
+                pStaticRenderable->meshID = visualObjInfo.pModel->getMesh(0)->getResourceID();
+                pStaticRenderable->setActive(true);
             }
-
-            // NOTE: JUST TESTING ATM!
-            // TODO: ..make it properly
-            if (visualObjInfo.rotateableSprite)
-            {
-                int toDisplayDir = get_display_dir(objDir, camDir);
-                vec2 texOffset = _pSprite->textureOffset;
-                texOffset.y = (float)toDisplayDir;
-                _pSprite->textureOffset = texOffset;
-            }
-            else
-            {
-                // This just temp here while testing rotateable sprites..
-                //_pSprite->textureOffset = vec2(0.0f, 0.0f);
-            }
-            */
 
             GC_ubyte speedStat = staticObjInfo.speed;
             // If action == movement of some kind -> move the sprite
@@ -178,10 +165,6 @@ namespace world
                 _verticalOffset = 0.0f;
 
             // NOTE: below may be a bit slow..
-            Transform* pTransform = (Transform*)pScene->getComponent(
-                _entity,
-                ComponentType::PK_TRANSFORM
-            );
             mat4& tMat = pTransform->accessLocalTransformationMatrix();
             mat4& tMatGlobal = pTransform->accessTransformationMatrix();
             float& xPos = tMat[0 + 3 * 4];
@@ -239,11 +222,26 @@ namespace world
         void VisualObject::hide(pk::Scene* pScene)
         {
             //_pSprite->setActive(false);
+            Transform* pTransform = (Transform*)pScene->getComponent(
+                _entity,
+                ComponentType::PK_TRANSFORM
+            );
             Static3DRenderable* pStaticRenderable = (Static3DRenderable*)pScene->getComponent(
                 _entity,
                 ComponentType::PK_RENDERABLE_STATIC3D
             );
+            SkinnedRenderable* pSkinnedRenderable = (SkinnedRenderable*)pScene->getComponent(
+                _entity,
+                ComponentType::PK_RENDERABLE_SKINNED
+            );
+            AnimationData* pAnimData = (AnimationData*)pScene->getComponent(
+                _rootJointEntity,
+                ComponentType::PK_ANIMATION_DATA
+            );
+            pTransform->setActive(false);
             pStaticRenderable->setActive(false);
+            pSkinnedRenderable->setActive(false);
+            pAnimData->setActive(false);
         }
 
         void VisualObject::move(int dir, float speed, pk::vec3& tileMovement)
@@ -332,6 +330,8 @@ namespace world
             return &s_objectVisuals[index];
         }
 
+
+        std::vector<pk::Model*> ObjectInfoLib::s_models;
         size_t ObjectInfoLib::get_size()
         {
             return s_objects.size();
@@ -369,63 +369,83 @@ namespace world
             ResourceManager& resourceManager = Application::get()->getResourceManager();
             TextureSampler defaultTextureSampler;
 
+            // Test having just same model for all object types
+            ImageData* pDefaultImage = resourceManager.loadImage(
+                "assets/textures/default.jpg",
+                true
+            );
+            ImageData* pTreeImage = resourceManager.loadImage(
+                "assets/textures/tree1.png",
+                true
+            );
+            ImageData* pUnitTexImage = resourceManager.loadImage(
+                "assets/textures/characterTest.png",
+                true
+            );
+            Texture_new* pDefaultTexture = resourceManager.createTexture(
+                pDefaultImage->getResourceID(),
+                defaultTextureSampler,
+                true
+            );
+            Texture_new* pTreeTexture = resourceManager.createTexture(
+                pTreeImage->getResourceID(),
+                defaultTextureSampler,
+                true
+            );
+            Texture_new* pUnitTexture = resourceManager.createTexture(
+                pUnitTexImage->getResourceID(),
+                defaultTextureSampler,
+                true
+            );
+            Material* pDefaultMaterial = resourceManager.createMaterial(
+                {pDefaultTexture->getResourceID()},
+                0, // specular texture res id
+                2.0f, // specular strength
+                8.0f, // shininess
+                0, // blendmap texture res id
+                true
+            );
+            Material* pTreeMaterial = resourceManager.createMaterial(
+                {pTreeTexture->getResourceID()},
+                0, // specular texture res id
+                0.0f, // specular strength
+                1.0f, // shininess
+                0, // blendmap texture res id
+                true
+            );
+            Material* pUnitMaterial = resourceManager.createMaterial(
+                {pUnitTexture->getResourceID()},
+                0, // specular texture res id
+                0.0f, // specular strength
+                1.0f, // shininess
+                0, // blendmap texture res id
+                true
+            );
+            Model* pDefaultModel = resourceManager.loadModel(
+                "assets/models/Cube.glb",
+                pDefaultMaterial->getResourceID(),
+                true
+            );
+            Model* pTreeModel1 = resourceManager.loadModel(
+                "assets/models/tree1.glb",
+                pTreeMaterial->getResourceID(),
+                true
+            );
+            Model* pUnitModel = resourceManager.loadModel(
+                "assets/models/characterTest.glb",
+                pUnitMaterial->getResourceID()
+            );
+
+            s_models.push_back(pDefaultModel);
+            s_models.push_back(pTreeModel1);
+            s_models.push_back(pUnitModel);
+
+            // TODO: Make below somehow more less dumb..
+            // Set these objects' visual properties
+            // *use 'i' since index of that list is equal to the object's type id
             for (int i = 0; i < s_objects.size(); ++i)
             {
                 VisualObjectInfo visualObjInfo;
-                // TODO: Make below somehow more less dumb..
-                // Set these objects' visual properties
-                // *use 'i' since index of that list is equal to the object's type id
-
-                // Test having just same model for all object types
-                ImageData* pDefaultImage = resourceManager.loadImage(
-                    "assets/textures/default.jpg",
-                    true
-                );
-                ImageData* pTreeImage = resourceManager.loadImage(
-                    "assets/textures/tree1.png",
-                    true
-                );
-                Texture_new* pDefaultTexture = resourceManager.createTexture(
-                    pDefaultImage->getResourceID(),
-                    defaultTextureSampler,
-                    true
-                );
-                Texture_new* pTreeTexture = resourceManager.createTexture(
-                    pTreeImage->getResourceID(),
-                    defaultTextureSampler,
-                    true
-                );
-                Material* pDefaultMaterial = resourceManager.createMaterial(
-                    {pDefaultTexture->getResourceID()},
-                    0, // specular texture res id
-                    2.0f, // specular strength
-                    8.0f, // shininess
-                    0, // blendmap texture res id
-                    true
-                );
-                Material* pTreeMaterial = resourceManager.createMaterial(
-                    {pTreeTexture->getResourceID()},
-                    0, // specular texture res id
-                    0.0f, // specular strength
-                    0.0f, // shininess
-                    0, // blendmap texture res id
-                    true
-                );
-                Model* pDefaultModel = resourceManager.loadModel(
-                    "assets/models/Cube.glb",
-                    pDefaultMaterial->getResourceID(),
-                    true
-                );
-                Model* pTreeModel1 = resourceManager.loadModel(
-                    "assets/models/tree1.glb",
-                    pTreeMaterial->getResourceID(),
-                    true
-                );
-                Model* pMovementTestModel = resourceManager.loadModel(
-                    "assets/models/Arrow.glb",
-                    pDefaultMaterial->getResourceID(),
-                    true
-                );
 
                 // Below old way of using sprites for everything..
                 // NOTE: Also texture loading has changed
@@ -448,7 +468,7 @@ namespace world
                         break;
                     case 2:
                         visualObjInfo.rotateableSprite = true;
-                        visualObjInfo.pModel = pMovementTestModel;
+                        visualObjInfo.pModel = pUnitModel;
                         break;
                     case 3:
                         visualObjInfo.pModel = pDefaultModel;
@@ -463,7 +483,7 @@ namespace world
         void ObjectInfoLib::destroy()
         {
             ResourceManager& resourceManager = Application::get()->getResourceManager();
-            for (Model* pModel : s_pModels)
+            for (Model* pModel : s_models)
                 resourceManager.deleteResource(pModel->getResourceID());
             s_initialized = false;
         }
@@ -495,6 +515,35 @@ namespace world
                 output += "    Stats:\n      Speed: " + std::to_string(objInfo.speed) + "\n\n";
             }
             return output;
+        }
+
+        pk::Model* ObjectInfoLib::get_default_static_model()
+        {
+            if (s_models.empty())
+            {
+                Debug::log(
+                    "@ObjectInfoLib::get_default_static_model "
+                    "No default static model assigned to required model slot: 0"
+                    "ObjectInfoLib models was empty",
+                    Debug::MessageType::PK_FATAL_ERROR
+                );
+                return nullptr;
+            }
+            return s_models[0];
+        }
+
+        pk::Model* ObjectInfoLib::get_default_rigged_model()
+        {
+            if (s_models.empty())
+            {
+                Debug::log(
+                    "@ObjectInfoLib::get_default_rigged_model "
+                    "No default rigged model assigned to required model slot: 2",
+                    Debug::MessageType::PK_FATAL_ERROR
+                );
+                return nullptr;
+            }
+            return s_models[2];
         }
     }
 }

@@ -147,10 +147,8 @@ void InGame::update()
     _pCamController->update();
 
     vec3 camPivotPoint = _pCamController->getPivotPoint();
-   _pCamController->setPivotPointHeight(_pWorld->getTerrainHeight(camPivotPoint.x, camPivotPoint.z));
-    //_pWorld->moveTerrain();
+    _pCamController->setPivotPointHeight(_pWorld->getTerrainHeight(camPivotPoint.x, camPivotPoint.z));
     _pWorld->update(camPivotPoint.x, camPivotPoint.z);
-
 
     if (loggedIn && !loggingOut)
         setInfoText(

@@ -23,30 +23,30 @@ namespace world
     using namespace objects;
 
 
+    static float s_idleAnimSpeed = 0.75f;
+    static std::vector<uint32_t> s_idleAnimFrames = {
+        1, 6
+    };
+    static float s_moveAnimSpeed = 10.0f;
+    static std::vector<uint32_t> s_moveAnimFrames = {
+        11, 16, 21, 26
+    };
+
+
     static std::chrono::time_point<std::chrono::high_resolution_clock> s_lastSend;
-    static bool s_TEST_skipUpdate = false;
-    static bool s_TEST_allowSend = false;
+    // Used to start sending in sync with receiving world state
+    // NOTE: This may not even fucking matter?
+    static bool s_allowSend = false;
 
     void World::OnMessageWorldState::onMessage(const GC_byte* data, size_t dataSize)
     {
         WorldObserver& observerRef = visualWorldRef._observer;
         const int dataWidth = (observerRef.observeRadius * 2) + 1;
         const size_t expectedDataSize = MESSAGE_ENTRY_SIZE__header + (dataWidth * dataWidth) * sizeof(uint64_t);
-        // WARNING TESTING:
-        // if received multiple times use only "first message"
         if (dataSize == expectedDataSize)
         {
             observerRef.lastReceivedMapX = visualWorldRef._observer.requestedMapX;
             observerRef.lastReceivedMapY = visualWorldRef._observer.requestedMapY;
-
-            /*
-            if (s_TEST_skipUpdate)
-            {
-                Debug::log("___TEST___skipping update");
-                s_TEST_skipUpdate = false;
-                return;
-            }
-            */
 
             visualWorldRef.shift(observerRef.lastReceivedMapX, observerRef.lastReceivedMapY);
 
@@ -61,7 +61,7 @@ namespace world
             visualWorldRef.moveTerrain();
             visualWorldRef.updateObjects();
 
-            s_TEST_allowSend = true;
+            s_allowSend = true;
         }
         else
         {
@@ -194,18 +194,13 @@ namespace world
 
         // Create tile objects at first as "blank"
         //  -> we configure these eventually, when we fetch world state from server
-        TextureSampler defaultObjTextureSampler;
-        ImageData* pDefaultObjTexImage = resourceManager.loadImage("assets/textures/default.jpg");
-        Texture_new* pDefaultObjTexture = resourceManager.createTexture(
-            pDefaultObjTexImage->getResourceID(),
-            defaultObjTextureSampler
-        );
-        Material* pDefaultObjMaterial = resourceManager.createMaterial(
-            { pDefaultObjTexture->getResourceID() }
-        );
-        Model* pDefaultObjModel = resourceManager.loadModel(
-            "assets/models/Arrow.glb",
-            pDefaultObjMaterial->getResourceID()
+        Model* pDefaultStaticModel = objects::ObjectInfoLib::get_default_static_model();
+        Model* pDefaultRiggedModel = objects::ObjectInfoLib::get_default_rigged_model();
+        const Mesh* pDefaultRiggedMesh = pDefaultRiggedModel->getMesh(0);
+
+        Animation* pDefaultAnimation = resourceManager.createAnimation(
+            pDefaultRiggedMesh->getBindPose(),
+            pDefaultRiggedMesh->getAnimPoses()
         );
 
         for (int y = 0; y < observeAreaWidth; ++y)
@@ -226,15 +221,40 @@ namespace world
 
                 Static3DRenderable* pStaticRenderable = _sceneRef.createStatic3DRenderable(
                     visualObjEntity,
-                    pDefaultObjModel->getMesh(0)->getResourceID()
+                    pDefaultStaticModel->getMesh(0)->getResourceID()
+                );
+                pStaticRenderable->setActive(false);
+
+                // NOTE: ISSUE!
+                // This assumes we always use same skeleton
+                // -> requires that the model's skeleton config is also always the same..
+                entityID_t rootJointEntity = _sceneRef.createSkeletonEntity(
+                    visualObjEntity,
+                    pDefaultRiggedMesh->getBindPose()
+                );
+                SkinnedRenderable* pSkinnedRenderable = _sceneRef.createSkinnedRenderable(
+                    visualObjEntity,
+                    pDefaultRiggedModel->getResourceID(),
+                    pDefaultRiggedMesh->getResourceID(),
+                    rootJointEntity
+                );
+                pSkinnedRenderable->setActive(false);
+
+                _sceneRef.createAnimationData(
+                    rootJointEntity,
+                    ((Resource*)pDefaultAnimation)->getResourceID(),
+                    AnimationMode::PK_ANIMATION_MODE_REPEAT,
+                    s_idleAnimSpeed,
+                    s_idleAnimFrames
                 );
 
-                pStaticRenderable->setActive(false);
 
                 objects::VisualObject visualObj(
                     *this,
                     visualObjEntity,
+                    rootJointEntity,
                     pStaticRenderable,
+                    pSkinnedRenderable,
                     originalGridPos
                 );
                 _tileObjects.push_back(visualObj);
@@ -385,18 +405,10 @@ namespace world
 
 
                 // Reset movements if no action, even in case we didn't have any object here
+                // so shifted anims don't look fucked
                 if (!tileAction)
-                {
-                    //if (_tileAnimStates[tileIndex].pos.x != 0.0f)
-                    //    Debug::log("___TEST___anim reset at: " + std::to_string(x) + ", " + std::to_string(y));
                     _tileAnimStates[tileIndex].reset();
-                }
-                else
-                {
-                    //Debug::log("___TEST___updating anim at: " + std::to_string(x) + ", " + std::to_string(y));
-                }
 
-                // Test displaying some object
                 VisualObject& obj = _tileObjects[tileIndex];
                 if (tileObject)
                 {
@@ -483,8 +495,6 @@ namespace world
     void World::moveTerrain()
     {
         // Move terrain if current tile changed
-        // NOTE: Theres still something wonky how the grid moves.. feels something like rounding error, but not sure..
-        // NOTE: These should actually be the last received coords, NOT requested coords?
         const int observeAreaWidth = _observer.observeRadius * 2 + 1;
         float observeTileX = (float)_observer.lastReceivedMapX;
         float observeTileY = (float)_observer.lastReceivedMapY;
@@ -658,8 +668,8 @@ namespace world
         float halfTileWidth = _tileVisualScale * 0.5f;
         float displacedWorldX = _worldX + halfTileWidth;
         float displacedWorldZ = _worldZ + halfTileWidth;
-        int32_t tileX = (int32_t)std::floor(displacedWorldX / _tileVisualScale);
-        int32_t tileY = (int32_t)std::floor(displacedWorldZ / _tileVisualScale);
+        _tileX = (int)std::floor(displacedWorldX / _tileVisualScale);
+        _tileY = (int)std::floor(displacedWorldZ / _tileVisualScale);
 
 
         // Can receive world state and send location only after logging in
@@ -679,15 +689,14 @@ namespace world
                 // Send current observing position if tile had changed
                 std::chrono::time_point<std::chrono::high_resolution_clock> currentTime = std::chrono::high_resolution_clock::now();
                 std::chrono::duration<float> elapsedSinceLastSend = currentTime - s_lastSend;
-                if (s_TEST_allowSend)
+                if (s_allowSend)
                 {
                     if (elapsedSinceLastSend.count() >= 0.3f)
                     {
-                        if (tileX != _observer.lastReceivedMapX || tileY != _observer.lastReceivedMapY)
+                        if (_tileX != _observer.lastReceivedMapX || _tileY != _observer.lastReceivedMapY)
                         {
-                            Debug::log("___TEST___sending pos update");
-                            _observer.requestedMapX = tileX;
-                            _observer.requestedMapY = tileY;
+                            _observer.requestedMapX = _tileX;
+                            _observer.requestedMapY = _tileY;
                             Client::get_instance()->send(
                                 (int32_t)MESSAGE_TYPE__UpdateObserverProperties,
                                 {
@@ -706,7 +715,6 @@ namespace world
                                 }
                             );
                             s_lastSend = std::chrono::high_resolution_clock::now();
-                            s_TEST_skipUpdate = true;
                         }
                     }
                 }

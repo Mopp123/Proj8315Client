@@ -68,8 +68,11 @@ namespace world
         private:
             World& _worldRef;
             entityID_t _entity = NULL_ENTITY_ID;
+            entityID_t _rootJointEntity = NULL_ENTITY_ID;
             pk::Static3DRenderable* _pStaticRenderable = nullptr;
             pk::SkinnedRenderable* _pSkinnedRenderable = nullptr;
+            pk::AnimationData* _pAnimData = nullptr;
+
             // NOTE: Current engine version doesn't support sprite rendering
             // TODO: Add sprite renderer to engine
             pk::Sprite3DRenderable* _pSprite = nullptr;
@@ -84,7 +87,9 @@ namespace world
             VisualObject(
                 World& worldRef,
                 entityID_t entity,
+                entityID_t rootJointEntity,
                 pk::Static3DRenderable* pStaticRenderable,
+                pk::SkinnedRenderable* pSkinnedRenderable,
                 pk::vec3 originalGridPos
             );
 
@@ -124,7 +129,7 @@ namespace world
             static bool s_initialized;
             // For now all objects are 3d models..
             //static std::vector<pk::Texture_new*> s_pTextures;
-            static std::vector<pk::Model*> s_pModels;
+            static std::vector<pk::Model*> s_models;
 
 
             // TODO: Unify object(properties) and visuals somehow together
@@ -143,6 +148,11 @@ namespace world
             static void set_objects_TESTING(const std::vector<gamecommon::ObjectInfo>& objects);
 
             static std::string toString();
+
+            static pk::Model* get_default_static_model();
+            // TODO: better way to specify default models
+            //  -> atm these are hardcoded!!
+            static pk::Model* get_default_rigged_model();
         };
     }
 }

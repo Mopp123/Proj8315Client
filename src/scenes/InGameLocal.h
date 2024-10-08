@@ -19,6 +19,9 @@ private:
     std::vector<uint64_t> _testMapFull;
     std::vector<uint64_t> _testMapLocal;
 
+    entityID_t _rootJointEntity = 0;
+
+
 public:
     InGameLocal();
     ~InGameLocal();

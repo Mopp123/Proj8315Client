@@ -13,6 +13,16 @@ using namespace net;
 using namespace gamecommon;
 
 
+static float s_idleAnimSpeed = 0.75f;
+static std::vector<uint32_t> s_idleAnimFrames = {
+    1, 6
+};
+
+static float s_moveAnimSpeed = 10.0f;
+static std::vector<uint32_t> s_moveAnimFrames = {
+    11, 16, 21, 26
+};
+
 static void get_world_state(int xPos, int zPos, int observeRadius, std::vector<uint64_t>& target, const std::vector<uint64_t>& worldMap, int worldWidth)
 {
     int writePos = 0;
@@ -52,12 +62,6 @@ void InGameLocal::init()
 
     _pCamController = new CameraController(activeCamera, 10.0f);
     Transform* pCamTransform = (Transform*)getComponent(activeCamera, ComponentType::PK_TRANSFORM);
-
-    _pWorld = new world::World(
-        (Scene&)(*this),
-        pCamTransform,
-        _observeAreaRadius
-    );
 
     // Temporarely create ObjInfoLib locally
     gamecommon::ObjectInfo emptyObj(
@@ -103,6 +107,14 @@ void InGameLocal::init()
 
     world::objects::ObjectInfoLib::create_object_visuals();
 
+    // World can be created only after object info lib creation
+    _pWorld = new world::World(
+        (Scene&)(*this),
+        pCamTransform,
+        _observeAreaRadius
+    );
+
+
     _testMapFull.resize(_testMapWidth * _testMapWidth * sizeof(uint64_t), 0);
 
     /*
@@ -121,24 +133,63 @@ void InGameLocal::init()
         }
     }*/
 
-    set_tile_terrelevation(_testMapFull[0 + 0 * _testMapWidth], 1);
-    set_tile_terrelevation(_testMapFull[3 + 2 * _testMapWidth], 2);
-    set_tile_terrelevation(_testMapFull[2 + 3 * _testMapWidth], 2);
-    set_tile_terrelevation(_testMapFull[3 + 3 * _testMapWidth], 2);
-
-    //set_tile_thingid(_testMapFull[0 + 0 * _testMapWidth], 1);
-    //set_tile_thingid(_testMapFull[3 + 2 * _testMapWidth], 1);
-    //set_tile_thingid(_testMapFull[2 + 3 * _testMapWidth], 1);
-    //set_tile_thingid(_testMapFull[3 + 3 * _testMapWidth], 1);
-
-
-    set_tile_terrelevation(_testMapFull[10 + 12 * _testMapWidth], 2);
+    set_tile_terrelevation(_testMapFull[10 + 12 * _testMapWidth], 0);
     set_tile_thingid(_testMapFull[10 + 12 * _testMapWidth], 2);
+    set_tile_thingid(_testMapFull[2 + 4 * _testMapWidth], 2);
+    set_tile_thingid(_testMapFull[5 + 10 * _testMapWidth], 2);
+    set_tile_thingid(_testMapFull[12 + 5 * _testMapWidth], 2);
 
     _testMapLocal.resize(_observeAreaWidth * _observeAreaWidth * sizeof(uint64_t), 0);
 
     //get_world_state(0, 0, _observeAreaRadius, _testMapLocal, _testMapFull, _testMapWidth);
     //_pWorld->updateObservedArea(_testMapLocal.data());
+
+
+    // TESTING ANIM LOADING
+    /*
+    pk::ResourceManager& resourceManager = pk::Application::get()->getResourceManager();
+    pk::ImageData* pTestImg = resourceManager.loadImage("assets/textures/characterTest.png");
+    pk::TextureSampler defaultTexSampler;
+    pk::Texture_new* pTestTexture = resourceManager.createTexture(
+        pTestImg->getResourceID(),
+        defaultTexSampler
+    );
+    pk::Material* pMaterial = resourceManager.createMaterial(
+        { pTestTexture->getResourceID() },
+        0,
+        0.0f,
+        1.0f
+    );
+    Model* pAnimModel = resourceManager.loadModel(
+        "assets/models/characterTest.glb",
+        pMaterial->getResourceID()
+    );
+    Mesh* pAnimMesh = pAnimModel->accessMesh(0);
+    Animation* pTestAnimation = resourceManager.createAnimation(
+        pAnimMesh->accessBindPose(),
+        pAnimMesh->accessAnimPoses()
+    );
+
+    entityID_t animatedEntity = createEntity();
+
+    createTransform(animatedEntity, { 0, 5.0f, 0 }, { 1.0f, 1.0f, 1.0f }, 0.0f, 0.0f);
+
+    _rootJointEntity = createSkeletonEntity(animatedEntity, pAnimMesh->accessBindPose());
+
+    createSkinnedRenderable(
+        animatedEntity,
+        pAnimModel->getResourceID(),
+        pAnimMesh->getResourceID(),
+        _rootJointEntity
+    );
+    createAnimationData(
+        _rootJointEntity,
+        ((Resource*)pTestAnimation)->getResourceID(),
+        AnimationMode::PK_ANIMATION_MODE_REPEAT,
+        s_idleAnimSpeed,
+        s_idleAnimFrames
+    );
+    */
 }
 
 
@@ -150,6 +201,36 @@ void InGameLocal::update()
     _pCamController->update();
 
     InputManager* pInputManager = Application::get()->accessInputManager();
+    // test change animation
+    /*
+    if (pInputManager->isKeyDown(InputKeyName::PK_INPUT_KEY_F))
+    {
+        Scene* pScene = (Scene*)this;
+        AnimationData* pAnimData = (AnimationData*)(pScene->getComponent(
+            _rootJointEntity,
+            ComponentType::PK_ANIMATION_DATA
+        ));
+        pAnimData->set(
+            s_idleAnimFrames,
+            s_idleAnimSpeed,
+            AnimationMode::PK_ANIMATION_MODE_REPEAT
+        );
+    }
+    if (pInputManager->isKeyDown(InputKeyName::PK_INPUT_KEY_G))
+    {
+        Scene* pScene = (Scene*)this;
+        AnimationData* pAnimData = (AnimationData*)(pScene->getComponent(
+            _rootJointEntity,
+            ComponentType::PK_ANIMATION_DATA
+        ));
+        pAnimData->set(
+            s_moveAnimFrames,
+            s_moveAnimSpeed,
+            AnimationMode::PK_ANIMATION_MODE_REPEAT
+        );
+    }
+    */
+
     // test update tile dir
     int testTileIndex = 10 + 12 * _testMapWidth;
     if (pInputManager->isKeyDown(InputKeyName::PK_INPUT_KEY_1))
@@ -226,20 +307,25 @@ void InGameLocal::update()
 
     // Simulate as if we got updated area from server
     world::WorldObserver& obs = _pWorld->accessObserver();
-    int reqX = obs.requestedMapX;
-    int reqY = obs.requestedMapY;
 
-    int gridX = obs.lastReceivedMapX;
-    int gridY = obs.lastReceivedMapY;
+    int currentTileX = _pWorld->getTileX();
+    int currentTileY = _pWorld->getTileY();
 
     if (s_updateTimer >= s_maxUpdateTimer)
     {
-        get_world_state(gridX, gridY, _observeAreaRadius, _testMapLocal, _testMapFull, _testMapWidth);
+        obs.requestedMapX = currentTileX;
+        obs.requestedMapY = currentTileY;
+
+        get_world_state(currentTileX, currentTileY, _observeAreaRadius, _testMapLocal, _testMapFull, _testMapWidth);
         const size_t recvSize = _observeAreaWidth * _observeAreaWidth * sizeof(uint64_t);
         // NOTE: For some fucking reason u have to shift before updating state..
         // -> earlier it was the opposite.
         //  -> this has something to do with the order of operations when testing locally..
         //   -> may fuck up when receiving from server
+
+        obs.lastReceivedMapX = currentTileX;
+        obs.lastReceivedMapY = currentTileY;
+
         _pWorld->shift(obs.lastReceivedMapX, obs.lastReceivedMapY);
         _pWorld->updateObservedArea(_testMapLocal.data());
         _pWorld->moveTerrain();
@@ -248,8 +334,6 @@ void InGameLocal::update()
 
         s_updateTimer = 0.0f;
 
-        obs.lastReceivedMapX = reqX;
-        obs.lastReceivedMapY = reqY;
     }
     else
     {
