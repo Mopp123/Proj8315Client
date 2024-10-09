@@ -5,7 +5,7 @@ set (proj_name "Proj8315Client")
 project(${proj_name})
 
 # set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Werror -std=c++17")
-set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=c++17 -O3")
+set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=c++17")
 
 
 # add_compile_options()
@@ -16,7 +16,7 @@ set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${USE_FLAGS}")
 set(CMAKE_EXECUTABLE_SUFFIX .html)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-#add_compile_definitions(PK_DEBUG_FULL=1)
+add_compile_definitions(PK_DEBUG_FULL=1)
 add_compile_definitions(PK_PLATFORM_WEB=1)
 
 include_directories (
