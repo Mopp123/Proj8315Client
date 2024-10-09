@@ -134,10 +134,10 @@ void InGameLocal::init()
     }*/
 
     set_tile_terrelevation(_testMapFull[10 + 12 * _testMapWidth], 0);
-    set_tile_thingid(_testMapFull[10 + 12 * _testMapWidth], 2);
-    set_tile_thingid(_testMapFull[2 + 4 * _testMapWidth], 2);
-    set_tile_thingid(_testMapFull[5 + 10 * _testMapWidth], 2);
-    set_tile_thingid(_testMapFull[12 + 5 * _testMapWidth], 2);
+    set_tile_thingid(_testMapFull[1 + 1 * _testMapWidth], 2);
+    set_tile_thingid(_testMapFull[3 + 5 * _testMapWidth], 2);
+    set_tile_thingid(_testMapFull[9 + 10 * _testMapWidth], 2);
+    set_tile_thingid(_testMapFull[12 + 4 * _testMapWidth], 2);
 
     _testMapLocal.resize(_observeAreaWidth * _observeAreaWidth * sizeof(uint64_t), 0);
 

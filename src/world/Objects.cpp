@@ -57,14 +57,12 @@ namespace world
         VisualObject::VisualObject(
             World& worldRef,
             entityID_t entity,
-            entityID_t rootJointEntity,
             pk::Static3DRenderable* pStaticRenderable,
             pk::SkinnedRenderable* pSkinnedRenderable,
             pk::vec3 originalGridPos
         ) :
             _worldRef(worldRef),
             _entity(entity),
-            _rootJointEntity(rootJointEntity),
             _pStaticRenderable(pStaticRenderable),
             _pSkinnedRenderable(pSkinnedRenderable),
             _originalPos(originalGridPos)
@@ -73,7 +71,6 @@ namespace world
         VisualObject::VisualObject(const VisualObject& other) :
             _worldRef(other._worldRef),
             _entity(other._entity),
-            _rootJointEntity(other._rootJointEntity),
             _originalPos(other._originalPos)
         {
             // Purposefully copying ptrs here and not their content!
@@ -135,7 +132,7 @@ namespace world
                 pSkinnedRenderable->setActive(true);
 
                 AnimationData* pAnimData = (AnimationData*)pScene->getComponent(
-                    _rootJointEntity,
+                    _entity,
                     ComponentType::PK_ANIMATION_DATA
                 );
                 pAnimData->setActive(true);
@@ -235,7 +232,7 @@ namespace world
                 ComponentType::PK_RENDERABLE_SKINNED
             );
             AnimationData* pAnimData = (AnimationData*)pScene->getComponent(
-                _rootJointEntity,
+                _entity,
                 ComponentType::PK_ANIMATION_DATA
             );
             pTransform->setActive(false);

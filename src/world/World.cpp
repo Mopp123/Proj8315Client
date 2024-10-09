@@ -228,20 +228,15 @@ namespace world
                 // NOTE: ISSUE!
                 // This assumes we always use same skeleton
                 // -> requires that the model's skeleton config is also always the same..
-                entityID_t rootJointEntity = _sceneRef.createSkeletonEntity(
-                    visualObjEntity,
-                    pDefaultRiggedMesh->getBindPose()
-                );
                 SkinnedRenderable* pSkinnedRenderable = _sceneRef.createSkinnedRenderable(
                     visualObjEntity,
                     pDefaultRiggedModel->getResourceID(),
-                    pDefaultRiggedMesh->getResourceID(),
-                    rootJointEntity
+                    pDefaultRiggedMesh->getResourceID()
                 );
                 pSkinnedRenderable->setActive(false);
 
                 _sceneRef.createAnimationData(
-                    rootJointEntity,
+                    visualObjEntity,
                     ((Resource*)pDefaultAnimation)->getResourceID(),
                     AnimationMode::PK_ANIMATION_MODE_REPEAT,
                     s_idleAnimSpeed,
@@ -252,7 +247,6 @@ namespace world
                 objects::VisualObject visualObj(
                     *this,
                     visualObjEntity,
-                    rootJointEntity,
                     pStaticRenderable,
                     pSkinnedRenderable,
                     originalGridPos
