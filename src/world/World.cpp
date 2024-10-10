@@ -80,9 +80,15 @@ namespace world
     }
 
 
-    World::World(pk::Scene& scene, pk::Transform* pCamTransform, int observeRadius) :
+    World::World(
+        pk::Scene& scene,
+        pk::Transform* pCamTransform,
+        int observeRadius,
+        float tileVisualScale
+    ) :
         _sceneRef(scene),
-        _pCamTransform(pCamTransform)
+        _pCamTransform(pCamTransform),
+        _tileVisualScale(tileVisualScale)
     {
         _observer.observeRadius = observeRadius;
 
@@ -239,8 +245,8 @@ namespace world
                     visualObjEntity,
                     ((Resource*)pDefaultAnimation)->getResourceID(),
                     AnimationMode::PK_ANIMATION_MODE_REPEAT,
-                    s_idleAnimSpeed,
-                    s_idleAnimFrames
+                    s_moveAnimSpeed,
+                    s_moveAnimFrames
                 );
 
 
@@ -726,6 +732,9 @@ namespace world
         }*/
 
         // Update cam facing direction
+        // NOTE: Atm gets fucked since _pCamTransform ptr is out of date
+        // due to propable transform component pool resizing!
+        // TODO: Fix this!
         vec3 camForward = _pCamTransform->forward();
         vec2 camDirVec(camForward.x, camForward.z);
         camDirVec.normalize();

@@ -1,0 +1,77 @@
+showing 4 skinned renderables
+
+Optimized build system delta:
+    0.009000
+    0.007000
+    0.006000
+    0.009000
+    0.007000
+    0.006000
+    0.007000
+    0.012000
+    0.009000
+
+Unoptimized build system delta:
+    0.032000
+    0.034000
+    0.030000
+    0.032000
+    0.030000
+    0.031000
+    0.032000
+
+Optimized animation system (unoptimized build): <- ALREADY SHITLOAD FASTER THAN BOTH ABOVE!
+    0.003000
+    0.004000
+    0.002000
+    0.003000
+    0.002000
+    0.003000
+    0.002000
+    0.003000
+    0.002000
+
+
+New performance recordings
+
+    @SceneManager::handleSceneUpdate Performance record results:
+      Scene update: 0.000000
+      Scene late update: 0.004000
+      Systems update: 0.035000
+      Renderer submitting: 0.008000
+
+    @Application::update(Emscripten)    Rendering took: 0.024000
+
+    ---
+
+    @SceneManager::handleSceneUpdate Performance record results:
+       Scene update: 0.001000
+       Scene late update: 0.004000
+       Systems update: 0.032000
+       Renderer submitting: 0.006000
+
+     @Application::update(Emscripten)    Rendering took: 0.016000
+
+
+    ---
+    (Testing allowing anim update to happen only at set intervals..)
+     @SceneManager::handleSceneUpdate Performance record results:
+       Scene update: 0.000000
+       Scene late update: 0.004000
+       Systems update: 0.015000
+       Renderer submitting: 0.006000
+
+     @Application::update(Emscripten)    Rendering took: 0.019000
+
+
+
+     OBSERVATION:
+        Systems update and rendering takes too long!
+
+    Possible solutions:
+        * Some kind of "animation resolution" stuff..
+        -> Don't need to update all joints each frame
+        -> don't need to update all joints every update
+        (some insignificant joints could be ignored in some
+        cases, like if camera is far away, etc)
+        some ideas: https://www.gamedev.net/articles/programming/graphics/skeletal-animation-optimization-tips-and-tricks-r3988/

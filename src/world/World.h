@@ -135,8 +135,6 @@ namespace world
         // used for animating movement and sprites of a tile
         std::vector<TileAnimation> _tileAnimStates; // *Previously "tileMovements"
 
-        float _tileVisualScale = 2.0f;
-
         float _worldX = 0.0f;
         float _worldZ = 0.0f;
         int _tileX = 0;
@@ -146,6 +144,9 @@ namespace world
         WorldObserver _observer;
 
         pk::Transform* _pCamTransform = nullptr;
+
+        float _tileVisualScale = 2.0f;
+
         // Facing direction of the camera. In form of TileStateDirection::north, etc..
         int _cameraDirection = 0;
 
@@ -156,7 +157,12 @@ namespace world
 
     public:
 
-        World(pk::Scene& scene, pk::Transform* pCamTransform, int observeRadius);
+        World(
+            pk::Scene& scene,
+            pk::Transform* pCamTransform,
+            int observeRadius,
+            float tileVisualScale = 2.0f
+        );
         ~World();
 
         void updateObservedArea(const uint64_t* mapState);

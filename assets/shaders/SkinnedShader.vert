@@ -33,7 +33,7 @@ const int maxJoints = 50;
 const int maxJointInfluences = 4;
 uniform mat4 jointMatrices[maxJoints];
 
-//uniform mat4 transformationMatrix;
+uniform mat4 transformationMatrix;
 
 varying vec3 var_normal;
 varying vec2 var_uvCoord;
@@ -47,20 +47,20 @@ varying vec4 var_dirLightColor;
 void main()
 {
     float weightSum = weights[0] + weights[1] + weights[2] + weights[3];
-    mat4 finalTransform = jointMatrices[0];
+    mat4 jointTransform = jointMatrices[0];
     if (weightSum >= 1.0)
     {
-        finalTransform =  jointMatrices[int(joints[0])] * weights[0];
-	      finalTransform += jointMatrices[int(joints[1])] * weights[1];
-	      finalTransform += jointMatrices[int(joints[2])] * weights[2];
-	      finalTransform += jointMatrices[int(joints[3])] * weights[3];
+        jointTransform =  jointMatrices[int(joints[0])] * weights[0];
+	      jointTransform += jointMatrices[int(joints[1])] * weights[1];
+	      jointTransform += jointMatrices[int(joints[2])] * weights[2];
+	      jointTransform += jointMatrices[int(joints[3])] * weights[3];
     }
     else
     {
-        finalTransform = jointMatrices[int(joints[0])];
+        jointTransform = jointMatrices[int(joints[0])];
     }
 
-    //finalTransform = transformationMatrix * finalTransform;
+    mat4 finalTransform = transformationMatrix * jointTransform;
 
     vec4 worldPos = finalTransform * vec4(vertexPos, 1.0);
     gl_Position = common.projMat * common.viewMat * worldPos;

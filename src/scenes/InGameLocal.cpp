@@ -60,7 +60,7 @@ void InGameLocal::init()
     // Set clear color
     Application::get()->getMasterRenderer().setClearColor({ 0, 0, 0, 1});
 
-    _pCamController = new CameraController(activeCamera, 10.0f);
+    _pCamController = new CameraController(activeCamera, 30.0f);
     Transform* pCamTransform = (Transform*)getComponent(activeCamera, ComponentType::PK_TRANSFORM);
 
     // Temporarely create ObjInfoLib locally
@@ -111,7 +111,8 @@ void InGameLocal::init()
     _pWorld = new world::World(
         (Scene&)(*this),
         pCamTransform,
-        _observeAreaRadius
+        _observeAreaRadius,
+        4.0f
     );
 
 
@@ -133,13 +134,25 @@ void InGameLocal::init()
         }
     }*/
 
-    set_tile_terrelevation(_testMapFull[10 + 12 * _testMapWidth], 0);
+    /*
+    for (int y = 0; y < _testMapWidth; ++y)
+    {
+        for (int x = 0; x < _testMapWidth; ++x)
+        {
+            set_tile_thingid(_testMapFull[x+ y * _testMapWidth], 2);
+        }
+    }
+    */
+    set_tile_thingid(_testMapFull[0 + 0 * _testMapWidth], 2);
+    set_tile_thingid(_testMapFull[1 + 0 * _testMapWidth], 2);
+    set_tile_thingid(_testMapFull[0 + 1 * _testMapWidth], 2);
     set_tile_thingid(_testMapFull[1 + 1 * _testMapWidth], 2);
-    set_tile_thingid(_testMapFull[3 + 5 * _testMapWidth], 2);
-    set_tile_thingid(_testMapFull[9 + 10 * _testMapWidth], 2);
-    set_tile_thingid(_testMapFull[12 + 4 * _testMapWidth], 2);
+
+    set_tile_thingid(_testMapFull[2 + 0 * _testMapWidth], 1);
+    set_tile_thingid(_testMapFull[2 + 2 * _testMapWidth], 1);
 
     _testMapLocal.resize(_observeAreaWidth * _observeAreaWidth * sizeof(uint64_t), 0);
+
 
     //get_world_state(0, 0, _observeAreaRadius, _testMapLocal, _testMapFull, _testMapWidth);
     //_pWorld->updateObservedArea(_testMapLocal.data());
@@ -232,7 +245,7 @@ void InGameLocal::update()
     */
 
     // test update tile dir
-    int testTileIndex = 10 + 12 * _testMapWidth;
+    int testTileIndex = 0 + 0 * _testMapWidth;
     if (pInputManager->isKeyDown(InputKeyName::PK_INPUT_KEY_1))
     {
         set_tile_facingdir(
