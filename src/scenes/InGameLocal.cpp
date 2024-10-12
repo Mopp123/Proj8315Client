@@ -115,7 +115,6 @@ void InGameLocal::init()
         4.0f
     );
 
-
     _testMapFull.resize(_testMapWidth * _testMapWidth * sizeof(uint64_t), 0);
 
     /*
@@ -156,53 +155,6 @@ void InGameLocal::init()
 
     //get_world_state(0, 0, _observeAreaRadius, _testMapLocal, _testMapFull, _testMapWidth);
     //_pWorld->updateObservedArea(_testMapLocal.data());
-
-
-    // TESTING ANIM LOADING
-    /*
-    pk::ResourceManager& resourceManager = pk::Application::get()->getResourceManager();
-    pk::ImageData* pTestImg = resourceManager.loadImage("assets/textures/characterTest.png");
-    pk::TextureSampler defaultTexSampler;
-    pk::Texture_new* pTestTexture = resourceManager.createTexture(
-        pTestImg->getResourceID(),
-        defaultTexSampler
-    );
-    pk::Material* pMaterial = resourceManager.createMaterial(
-        { pTestTexture->getResourceID() },
-        0,
-        0.0f,
-        1.0f
-    );
-    Model* pAnimModel = resourceManager.loadModel(
-        "assets/models/characterTest.glb",
-        pMaterial->getResourceID()
-    );
-    Mesh* pAnimMesh = pAnimModel->accessMesh(0);
-    Animation* pTestAnimation = resourceManager.createAnimation(
-        pAnimMesh->accessBindPose(),
-        pAnimMesh->accessAnimPoses()
-    );
-
-    entityID_t animatedEntity = createEntity();
-
-    createTransform(animatedEntity, { 0, 5.0f, 0 }, { 1.0f, 1.0f, 1.0f }, 0.0f, 0.0f);
-
-    _rootJointEntity = createSkeletonEntity(animatedEntity, pAnimMesh->accessBindPose());
-
-    createSkinnedRenderable(
-        animatedEntity,
-        pAnimModel->getResourceID(),
-        pAnimMesh->getResourceID(),
-        _rootJointEntity
-    );
-    createAnimationData(
-        _rootJointEntity,
-        ((Resource*)pTestAnimation)->getResourceID(),
-        AnimationMode::PK_ANIMATION_MODE_REPEAT,
-        s_idleAnimSpeed,
-        s_idleAnimFrames
-    );
-    */
 }
 
 
@@ -214,36 +166,6 @@ void InGameLocal::update()
     _pCamController->update();
 
     InputManager* pInputManager = Application::get()->accessInputManager();
-    // test change animation
-    /*
-    if (pInputManager->isKeyDown(InputKeyName::PK_INPUT_KEY_F))
-    {
-        Scene* pScene = (Scene*)this;
-        AnimationData* pAnimData = (AnimationData*)(pScene->getComponent(
-            _rootJointEntity,
-            ComponentType::PK_ANIMATION_DATA
-        ));
-        pAnimData->set(
-            s_idleAnimFrames,
-            s_idleAnimSpeed,
-            AnimationMode::PK_ANIMATION_MODE_REPEAT
-        );
-    }
-    if (pInputManager->isKeyDown(InputKeyName::PK_INPUT_KEY_G))
-    {
-        Scene* pScene = (Scene*)this;
-        AnimationData* pAnimData = (AnimationData*)(pScene->getComponent(
-            _rootJointEntity,
-            ComponentType::PK_ANIMATION_DATA
-        ));
-        pAnimData->set(
-            s_moveAnimFrames,
-            s_moveAnimSpeed,
-            AnimationMode::PK_ANIMATION_MODE_REPEAT
-        );
-    }
-    */
-
     // test update tile dir
     int testTileIndex = 0 + 0 * _testMapWidth;
     if (pInputManager->isKeyDown(InputKeyName::PK_INPUT_KEY_1))

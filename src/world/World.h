@@ -195,6 +195,8 @@ namespace world
         inline WorldObserver& accessObserver() { return _observer; }
         inline int getTileX() const { return _tileX; }
         inline int getTileY() const { return _tileY; }
+        inline int getPrevTileX() const { return _prevTileX; }
+        inline int getPrevTileY() const { return _prevTileY; }
 
     private:
         //void updateSprites();

@@ -8,6 +8,7 @@
 #include "Tile.h"
 #include "../../Proj8315Common/src/Common.h"
 #include "../../Proj8315Common/src/messages/Message.h"
+#include "../../Proj8315Common/src/messages/WorldMessages.h"
 
 #include <chrono>
 
@@ -38,15 +39,21 @@ namespace world
     // NOTE: This may not even fucking matter?
     static bool s_allowSend = false;
 
+    // NOTE: May fuck up if getting message with outdated received position!
+    // TODO: Skip update if received tile was not current local actual tile? ..or something like that..
+    //  -> or some way to sync local and server position to get the actual correct area state!
     void World::OnMessageWorldState::onMessage(const GC_byte* data, size_t dataSize)
     {
         WorldObserver& observerRef = visualWorldRef._observer;
         const int dataWidth = (observerRef.observeRadius * 2) + 1;
-        const size_t expectedDataSize = MESSAGE_ENTRY_SIZE__header + (dataWidth * dataWidth) * sizeof(uint64_t);
+        const size_t expectedDataSize = MESSAGE_REQUIRED_SIZE__WorldStateMsg;
         if (dataSize == expectedDataSize)
         {
-            observerRef.lastReceivedMapX = visualWorldRef._observer.requestedMapX;
-            observerRef.lastReceivedMapY = visualWorldRef._observer.requestedMapY;
+            const int32_t recvX = (int32_t)*(data + MESSAGE_ENTRY_SIZE__header);
+            const int32_t recvY = (int32_t)*(data + MESSAGE_ENTRY_SIZE__header + sizeof(int32_t));
+            Debug::log("___TEST___recv coords: " + std::to_string(recvX) + ", " + std::to_string(recvY));
+            observerRef.lastReceivedMapX = recvX;
+            observerRef.lastReceivedMapY = recvY;
 
             visualWorldRef.shift(observerRef.lastReceivedMapX, observerRef.lastReceivedMapY);
 
@@ -55,7 +62,7 @@ namespace world
             // Trigger state update on next World::update
             //visualWorldRef.triggerStateUpdate(pReceivedState, receivedStateSize);
 
-            const uint64_t* pReceivedState = (const uint64_t*)(data + MESSAGE_ENTRY_SIZE__header);
+            const uint64_t* pReceivedState = (const uint64_t*)(data + MESSAGE_ENTRY_SIZE__header + sizeof(int32_t) * 2);
             const size_t receivedStateSize = dataSize - MESSAGE_ENTRY_SIZE__header;
             visualWorldRef.updateObservedArea(pReceivedState);
             visualWorldRef.moveTerrain();
