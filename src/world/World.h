@@ -86,28 +86,40 @@ namespace world
         {
         public:
             pk::vec3 pos = pk::vec3(0, 0, 0);
-            //pk::Animation* anim = nullptr;
+            int currentFrame = 0;
+            int nextFrame = 1;
+            float progression = 0.0f;
 
             TileAnimation()
             {}
 
-            TileAnimation(pk::vec3 position/*, pk::Animation* animation*/) :
-                pos(position)
+            TileAnimation(
+                pk::vec3 position,
+                int currentFrame,
+                int nextFrame,
+                float progression
+            ) :
+                pos(position),
+                currentFrame(currentFrame),
+                nextFrame(nextFrame),
+                progression(progression)
             {
-                //anim = animation;
             }
 
             void reset()
             {
                 pos = pk::vec3(0, 0, 0);
-                //anim->reset();
+                currentFrame = 0;
+                nextFrame = 1;
+                progression = 0.0f;
             }
 
             void set(const TileAnimation& other)
             {
                 pos = other.pos;
-                //if (anim)
-                //    anim->copyFrom(*other.anim);
+                currentFrame = other.currentFrame;
+                nextFrame = other.nextFrame;
+                progression = other.progression;
             }
         };
 

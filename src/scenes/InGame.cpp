@@ -103,7 +103,7 @@ void InGame::init()
     pClient->addOnMessageEvent(MESSAGE_TYPE__ObjInfoLibResponse, new OnMessagePostLogin_TEST(*this));
     pClient->addOnMessageEvent(MESSAGE_TYPE__LogoutResponse, new OnMessageLogout);
 
-    _pCamController = new CameraController(activeCamera, 32.0f);
+    _pCamController = new CameraController(activeCamera, 16.0f);
 }
 
 void InGame::update()
