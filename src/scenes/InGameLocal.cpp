@@ -150,6 +150,9 @@ void InGameLocal::init()
     set_tile_thingid(_testMapFull[2 + 0 * _testMapWidth], 1);
     set_tile_thingid(_testMapFull[2 + 2 * _testMapWidth], 1);
 
+    set_tile_terrtype(_testMapFull[1 + 1 * _testMapWidth], 1);
+    set_tile_terrtype(_testMapFull[2 + 4 * _testMapWidth], 1);
+
     _testMapLocal.resize(_observeAreaWidth * _observeAreaWidth * sizeof(uint64_t), 0);
 
 

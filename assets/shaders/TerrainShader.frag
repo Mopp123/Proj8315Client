@@ -36,7 +36,7 @@ void main(void)
     vec4 diffuseColor = diffFactor * var_dirLightColor;
 
     // Need to add displacement since using vertices as tiles
-    float displacement = 1.0 / verticesPerRow * 0.5;
+    float displacement = 1.0 / verticesPerRow; //* 0.5;
     vec2 u = var_uvCoord + displacement;
 
 	vec4 blendmapColor = texture2D(material.blendmapTexSampler, u);

@@ -544,6 +544,7 @@ namespace world
             }
             else
             {
+
                 // Send current observing position if tile had changed
                 std::chrono::time_point<std::chrono::high_resolution_clock> currentTime = std::chrono::high_resolution_clock::now();
                 std::chrono::duration<float> elapsedSinceLastSend = currentTime - s_lastSend;
