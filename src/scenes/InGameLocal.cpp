@@ -60,7 +60,7 @@ void InGameLocal::init()
     // Set clear color
     Application::get()->getMasterRenderer().setClearColor({ 0, 0, 0, 1});
 
-    _pCamController = new CameraController(activeCamera, 10.0f);
+    _pCamController = new CameraController(activeCamera, 30.0f);
     Transform* pCamTransform = (Transform*)getComponent(activeCamera, ComponentType::PK_TRANSFORM);
 
     // Temporarely create ObjInfoLib locally
@@ -111,9 +111,9 @@ void InGameLocal::init()
     _pWorld = new world::World(
         (Scene&)(*this),
         pCamTransform,
-        _observeAreaRadius
+        _observeAreaRadius,
+        4.0f
     );
-
 
     _testMapFull.resize(_testMapWidth * _testMapWidth * sizeof(uint64_t), 0);
 
@@ -133,63 +133,31 @@ void InGameLocal::init()
         }
     }*/
 
-    set_tile_terrelevation(_testMapFull[10 + 12 * _testMapWidth], 0);
-    set_tile_thingid(_testMapFull[10 + 12 * _testMapWidth], 2);
-    set_tile_thingid(_testMapFull[2 + 4 * _testMapWidth], 2);
-    set_tile_thingid(_testMapFull[5 + 10 * _testMapWidth], 2);
-    set_tile_thingid(_testMapFull[12 + 5 * _testMapWidth], 2);
+    /*
+    for (int y = 0; y < _testMapWidth; ++y)
+    {
+        for (int x = 0; x < _testMapWidth; ++x)
+        {
+            set_tile_thingid(_testMapFull[x+ y * _testMapWidth], 2);
+        }
+    }
+    */
+    set_tile_thingid(_testMapFull[0 + 0 * _testMapWidth], 2);
+    set_tile_thingid(_testMapFull[1 + 0 * _testMapWidth], 2);
+    set_tile_thingid(_testMapFull[0 + 1 * _testMapWidth], 2);
+    set_tile_thingid(_testMapFull[1 + 1 * _testMapWidth], 2);
+
+    set_tile_thingid(_testMapFull[2 + 0 * _testMapWidth], 1);
+    set_tile_thingid(_testMapFull[2 + 2 * _testMapWidth], 1);
+
+    set_tile_terrtype(_testMapFull[1 + 1 * _testMapWidth], 1);
+    set_tile_terrtype(_testMapFull[2 + 4 * _testMapWidth], 1);
 
     _testMapLocal.resize(_observeAreaWidth * _observeAreaWidth * sizeof(uint64_t), 0);
 
+
     //get_world_state(0, 0, _observeAreaRadius, _testMapLocal, _testMapFull, _testMapWidth);
     //_pWorld->updateObservedArea(_testMapLocal.data());
-
-
-    // TESTING ANIM LOADING
-    /*
-    pk::ResourceManager& resourceManager = pk::Application::get()->getResourceManager();
-    pk::ImageData* pTestImg = resourceManager.loadImage("assets/textures/characterTest.png");
-    pk::TextureSampler defaultTexSampler;
-    pk::Texture_new* pTestTexture = resourceManager.createTexture(
-        pTestImg->getResourceID(),
-        defaultTexSampler
-    );
-    pk::Material* pMaterial = resourceManager.createMaterial(
-        { pTestTexture->getResourceID() },
-        0,
-        0.0f,
-        1.0f
-    );
-    Model* pAnimModel = resourceManager.loadModel(
-        "assets/models/characterTest.glb",
-        pMaterial->getResourceID()
-    );
-    Mesh* pAnimMesh = pAnimModel->accessMesh(0);
-    Animation* pTestAnimation = resourceManager.createAnimation(
-        pAnimMesh->accessBindPose(),
-        pAnimMesh->accessAnimPoses()
-    );
-
-    entityID_t animatedEntity = createEntity();
-
-    createTransform(animatedEntity, { 0, 5.0f, 0 }, { 1.0f, 1.0f, 1.0f }, 0.0f, 0.0f);
-
-    _rootJointEntity = createSkeletonEntity(animatedEntity, pAnimMesh->accessBindPose());
-
-    createSkinnedRenderable(
-        animatedEntity,
-        pAnimModel->getResourceID(),
-        pAnimMesh->getResourceID(),
-        _rootJointEntity
-    );
-    createAnimationData(
-        _rootJointEntity,
-        ((Resource*)pTestAnimation)->getResourceID(),
-        AnimationMode::PK_ANIMATION_MODE_REPEAT,
-        s_idleAnimSpeed,
-        s_idleAnimFrames
-    );
-    */
 }
 
 
@@ -201,38 +169,8 @@ void InGameLocal::update()
     _pCamController->update();
 
     InputManager* pInputManager = Application::get()->accessInputManager();
-    // test change animation
-    /*
-    if (pInputManager->isKeyDown(InputKeyName::PK_INPUT_KEY_F))
-    {
-        Scene* pScene = (Scene*)this;
-        AnimationData* pAnimData = (AnimationData*)(pScene->getComponent(
-            _rootJointEntity,
-            ComponentType::PK_ANIMATION_DATA
-        ));
-        pAnimData->set(
-            s_idleAnimFrames,
-            s_idleAnimSpeed,
-            AnimationMode::PK_ANIMATION_MODE_REPEAT
-        );
-    }
-    if (pInputManager->isKeyDown(InputKeyName::PK_INPUT_KEY_G))
-    {
-        Scene* pScene = (Scene*)this;
-        AnimationData* pAnimData = (AnimationData*)(pScene->getComponent(
-            _rootJointEntity,
-            ComponentType::PK_ANIMATION_DATA
-        ));
-        pAnimData->set(
-            s_moveAnimFrames,
-            s_moveAnimSpeed,
-            AnimationMode::PK_ANIMATION_MODE_REPEAT
-        );
-    }
-    */
-
     // test update tile dir
-    int testTileIndex = 10 + 12 * _testMapWidth;
+    int testTileIndex = 0 + 0 * _testMapWidth;
     if (pInputManager->isKeyDown(InputKeyName::PK_INPUT_KEY_1))
     {
         set_tile_facingdir(

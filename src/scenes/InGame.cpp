@@ -44,6 +44,7 @@ void InGame::OnMessagePostLogin_TEST::onMessage(const GC_byte* data, size_t data
     _sceneRef.loggedIn = true;
     pClient->user.name = _sceneRef.testUserName;
     pClient->user.isLoggedIn = true;
+    _sceneRef.createWorld();
 }
 
 
@@ -60,6 +61,20 @@ InGame::InGame()
 InGame::~InGame()
 {
     delete _pCamController;
+}
+
+void InGame::createWorld()
+{
+    Debug::log("___TEST___Creating world...");
+    Transform* pCamTransform = (Transform*)getComponent(activeCamera, ComponentType::PK_TRANSFORM);
+
+    _pWorld = new world::World(
+        (Scene&)(*this),
+        pCamTransform,
+        _observeAreaRadius,
+        4.0f
+    );
+    Debug::log("___TEST___Creating world -> SUCCESS");
 }
 
 void InGame::init()
@@ -88,15 +103,7 @@ void InGame::init()
     pClient->addOnMessageEvent(MESSAGE_TYPE__ObjInfoLibResponse, new OnMessagePostLogin_TEST(*this));
     pClient->addOnMessageEvent(MESSAGE_TYPE__LogoutResponse, new OnMessageLogout);
 
-    _pCamController = new CameraController(activeCamera, 6.0f);
-
-    Transform* pCamTransform = (Transform*)getComponent(activeCamera, ComponentType::PK_TRANSFORM);
-
-    _pWorld = new world::World(
-        (Scene&)(*this),
-        pCamTransform,
-        _observeAreaRadius
-    );
+    _pCamController = new CameraController(activeCamera, 16.0f);
 }
 
 void InGame::update()
@@ -144,19 +151,23 @@ void InGame::update()
         }
     }
 
-    _pCamController->update();
+    if (_pWorld)
+    {
+        _pCamController->update();
 
-    vec3 camPivotPoint = _pCamController->getPivotPoint();
-    _pCamController->setPivotPointHeight(_pWorld->getTerrainHeight(camPivotPoint.x, camPivotPoint.z));
-    _pWorld->update(camPivotPoint.x, camPivotPoint.z);
+        vec3 camPivotPoint = _pCamController->getPivotPoint();
+        _pCamController->setPivotPointHeight(_pWorld->getTerrainHeight(camPivotPoint.x, camPivotPoint.z));
+        _pWorld->update(camPivotPoint.x, camPivotPoint.z);
 
-    if (loggedIn && !loggingOut)
-        setInfoText(
-            "Delta: " + std::to_string(Timing::get_delta_time())
-        );
+        if (loggedIn && !loggingOut)
+            setInfoText(
+                "Delta: " + std::to_string(Timing::get_delta_time())
+            );
+    }
 }
 
 void InGame::lateUpdate()
 {
-    _pWorld->updateObjects();
+    if (_pWorld)
+        _pWorld->updateObjects();
 }

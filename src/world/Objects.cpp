@@ -13,6 +13,15 @@ namespace world
 {
     namespace objects
     {
+        static float s_idleAnimSpeed = 0.75f;
+        static std::vector<uint32_t> s_idleAnimFrames = {
+            1, 6
+        };
+        static float s_moveAnimSpeed = 10.0f;
+        static std::vector<uint32_t> s_moveAnimFrames = {
+            11, 16, 21, 26
+        };
+
         VisualObjectInfo::TexturePortraitCropping VisualObjectInfo::s_defaultPortraitCropping;
 
         // Returns "display direction" of a sprite depending ong the camera's direction
@@ -57,14 +66,12 @@ namespace world
         VisualObject::VisualObject(
             World& worldRef,
             entityID_t entity,
-            entityID_t rootJointEntity,
             pk::Static3DRenderable* pStaticRenderable,
             pk::SkinnedRenderable* pSkinnedRenderable,
             pk::vec3 originalGridPos
         ) :
             _worldRef(worldRef),
             _entity(entity),
-            _rootJointEntity(rootJointEntity),
             _pStaticRenderable(pStaticRenderable),
             _pSkinnedRenderable(pSkinnedRenderable),
             _originalPos(originalGridPos)
@@ -73,7 +80,6 @@ namespace world
         VisualObject::VisualObject(const VisualObject& other) :
             _worldRef(other._worldRef),
             _entity(other._entity),
-            _rootJointEntity(other._rootJointEntity),
             _originalPos(other._originalPos)
         {
             // Purposefully copying ptrs here and not their content!
@@ -128,14 +134,16 @@ namespace world
                 _entity,
                 ComponentType::PK_RENDERABLE_SKINNED
             );
+
             // Figure out should we render static or animated renderable
             if (tileObject == 2)
             {
                 pSkinnedRenderable->meshID = visualObjInfo.pModel->getMesh(0)->getResourceID();
                 pSkinnedRenderable->setActive(true);
+                pStaticRenderable->setActive(false);
 
                 AnimationData* pAnimData = (AnimationData*)pScene->getComponent(
-                    _rootJointEntity,
+                    _entity,
                     ComponentType::PK_ANIMATION_DATA
                 );
                 pAnimData->setActive(true);
@@ -144,18 +152,23 @@ namespace world
             {
                 pStaticRenderable->meshID = visualObjInfo.pModel->getMesh(0)->getResourceID();
                 pStaticRenderable->setActive(true);
+                pSkinnedRenderable->setActive(false);
             }
 
-            GC_ubyte speedStat = staticObjInfo.speed;
+            // just testing -> thats why hardcoded here
+            // TODO: Get visual tile size from World
+            const float visualTileSize = 4.0f;
+            const float visualTileSizeModifier = visualTileSize * 0.5f;
+            float speedValue = ((float)staticObjInfo.speed) * visualTileSizeModifier;
             // If action == movement of some kind -> move the sprite
             switch (tileAction)
             {
                 case TileStateAction::TILE_STATE_actionMove:
-                    move(objDir, speedStat, tileMovement);
+                    move(objDir, speedValue, tileMovement);
                     break;
                 case TileStateAction::TILE_STATE_actionMoveVertical:
                     _verticalOffset = 15.0f;
-                    moveVertical(objDir, speedStat * 5, tileMovement);
+                    moveVertical(objDir, speedValue * 5, tileMovement);
                     break;
                 default:
                     break;
@@ -235,7 +248,7 @@ namespace world
                 ComponentType::PK_RENDERABLE_SKINNED
             );
             AnimationData* pAnimData = (AnimationData*)pScene->getComponent(
-                _rootJointEntity,
+                _entity,
                 ComponentType::PK_ANIMATION_DATA
             );
             pTransform->setActive(false);
@@ -282,9 +295,12 @@ namespace world
                     break;
             }
 
-            dirVec.normalize();
-            if (diag)
-                dirVec = dirVec * 1.4f;
+            // Don't know what was the point in below since dirVec already
+            // is "scaled" for moving more diagonally if not normalizing it
+            //  -> atm it seems to work at least almost perfectly
+            //dirVec.normalize();
+            //if (diag)
+            //    dirVec = dirVec * 1.4f;
 
             tileMovement.x += dirVec.x * speed * Timing::get_delta_time();
             tileMovement.z += dirVec.y * speed * Timing::get_delta_time();

@@ -68,7 +68,6 @@ namespace world
         private:
             World& _worldRef;
             entityID_t _entity = NULL_ENTITY_ID;
-            entityID_t _rootJointEntity = NULL_ENTITY_ID;
             pk::Static3DRenderable* _pStaticRenderable = nullptr;
             pk::SkinnedRenderable* _pSkinnedRenderable = nullptr;
             pk::AnimationData* _pAnimData = nullptr;
@@ -87,7 +86,6 @@ namespace world
             VisualObject(
                 World& worldRef,
                 entityID_t entity,
-                entityID_t rootJointEntity,
                 pk::Static3DRenderable* pStaticRenderable,
                 pk::SkinnedRenderable* pSkinnedRenderable,
                 pk::vec3 originalGridPos

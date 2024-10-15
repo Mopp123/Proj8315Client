@@ -8,6 +8,7 @@
 #include "Tile.h"
 #include "../../Proj8315Common/src/Common.h"
 #include "../../Proj8315Common/src/messages/Message.h"
+#include "../../Proj8315Common/src/messages/WorldMessages.h"
 
 #include <chrono>
 
@@ -38,15 +39,21 @@ namespace world
     // NOTE: This may not even fucking matter?
     static bool s_allowSend = false;
 
+    // NOTE: May fuck up if getting message with outdated received position!
+    // TODO: Skip update if received tile was not current local actual tile? ..or something like that..
+    //  -> or some way to sync local and server position to get the actual correct area state!
     void World::OnMessageWorldState::onMessage(const GC_byte* data, size_t dataSize)
     {
         WorldObserver& observerRef = visualWorldRef._observer;
         const int dataWidth = (observerRef.observeRadius * 2) + 1;
-        const size_t expectedDataSize = MESSAGE_ENTRY_SIZE__header + (dataWidth * dataWidth) * sizeof(uint64_t);
+        const size_t expectedDataSize = MESSAGE_REQUIRED_SIZE__WorldStateMsg;
         if (dataSize == expectedDataSize)
         {
-            observerRef.lastReceivedMapX = visualWorldRef._observer.requestedMapX;
-            observerRef.lastReceivedMapY = visualWorldRef._observer.requestedMapY;
+            const int32_t recvX = (int32_t)*(data + MESSAGE_ENTRY_SIZE__header);
+            const int32_t recvY = (int32_t)*(data + MESSAGE_ENTRY_SIZE__header + sizeof(int32_t));
+            Debug::log("___TEST___recv coords: " + std::to_string(recvX) + ", " + std::to_string(recvY));
+            observerRef.lastReceivedMapX = recvX;
+            observerRef.lastReceivedMapY = recvY;
 
             visualWorldRef.shift(observerRef.lastReceivedMapX, observerRef.lastReceivedMapY);
 
@@ -54,8 +61,7 @@ namespace world
             //  -> thats why the whol "triggering" thing isn't used atm
             // Trigger state update on next World::update
             //visualWorldRef.triggerStateUpdate(pReceivedState, receivedStateSize);
-
-            const uint64_t* pReceivedState = (const uint64_t*)(data + MESSAGE_ENTRY_SIZE__header);
+            const uint64_t* pReceivedState = (const uint64_t*)(data + MESSAGE_ENTRY_SIZE__header + sizeof(int32_t) * 2);
             const size_t receivedStateSize = dataSize - MESSAGE_ENTRY_SIZE__header;
             visualWorldRef.updateObservedArea(pReceivedState);
             visualWorldRef.moveTerrain();
@@ -80,9 +86,15 @@ namespace world
     }
 
 
-    World::World(pk::Scene& scene, pk::Transform* pCamTransform, int observeRadius) :
+    World::World(
+        pk::Scene& scene,
+        pk::Transform* pCamTransform,
+        int observeRadius,
+        float tileVisualScale
+    ) :
         _sceneRef(scene),
-        _pCamTransform(pCamTransform)
+        _pCamTransform(pCamTransform),
+        _tileVisualScale(tileVisualScale)
     {
         _observer.observeRadius = observeRadius;
 
@@ -228,31 +240,25 @@ namespace world
                 // NOTE: ISSUE!
                 // This assumes we always use same skeleton
                 // -> requires that the model's skeleton config is also always the same..
-                entityID_t rootJointEntity = _sceneRef.createSkeletonEntity(
-                    visualObjEntity,
-                    pDefaultRiggedMesh->getBindPose()
-                );
                 SkinnedRenderable* pSkinnedRenderable = _sceneRef.createSkinnedRenderable(
                     visualObjEntity,
                     pDefaultRiggedModel->getResourceID(),
-                    pDefaultRiggedMesh->getResourceID(),
-                    rootJointEntity
+                    pDefaultRiggedMesh->getResourceID()
                 );
                 pSkinnedRenderable->setActive(false);
 
                 _sceneRef.createAnimationData(
-                    rootJointEntity,
+                    visualObjEntity,
                     ((Resource*)pDefaultAnimation)->getResourceID(),
                     AnimationMode::PK_ANIMATION_MODE_REPEAT,
-                    s_idleAnimSpeed,
-                    s_idleAnimFrames
+                    s_moveAnimSpeed,
+                    s_moveAnimFrames
                 );
 
 
                 objects::VisualObject visualObj(
                     *this,
                     visualObjEntity,
-                    rootJointEntity,
                     pStaticRenderable,
                     pSkinnedRenderable,
                     originalGridPos
@@ -298,17 +304,9 @@ namespace world
         _tileAnimStates.resize(tileCount);
         for (int i = 0; i < tileCount; ++i)
         {
-            //Animation* anim = new Animation({ 0 }, 4.0f);
-            //anim->enableLooping(true);
-            //anim->play();
-            TileAnimation tileAnim({ 0, 0, 0 }/*, anim*/);
+            TileAnimation tileAnim({ 0, 0, 0 }, 0, 1, 0.0f);
             _tileAnimStates[i] = tileAnim;
-            //scene.addSystem((pk::System*)anim);
         }
-
-        // Add OnMessageEvents
-        // to update world state
-        //Client::get_instance()->addOnMessageEvent(MESSAGE_TYPE__WorldState, new OnMessageWorldState(*this));
     }
 
     World::~World()
@@ -430,64 +428,6 @@ namespace world
                 {
                     obj.hide(&_sceneRef);
                 }
-
-
-                /*
-                // TODO: Delete below
-                //  -> "visual tiles" and "tile renderables" don't exist anymore
-                //VisualTile& visualTile = _tileData[tileIndex].second;
-                //TerrainTileRenderable* tileRenderable = visualTile.renderable_tile;
-
-                // NOTE: May not work if component pools resized
-                Static3DRenderable* pTileObjTransform = _tileObjects[tileIndex];
-
-                const float spriteWorldX = ((float)tileRenderable->worldX + _tileVisualScale * 0.5f);
-                const float spriteWorldZ = ((float)tileRenderable->worldZ + _tileVisualScale * 0.5f);
-
-                Sprite3DRenderable* tileEffectSprite = _tileData[tileIndex].second.renderable_effect;
-                objects::VisualObject& visualObject = _tileData[tileIndex].second.visualObject;
-
-                // * Currently no effects exists yet!
-                tileEffectSprite->setActive(false);
-
-                // Reset movements if no action, even in case we didn't have any object here
-                if (!tileAction)
-                    _tileAnimStates[tileIndex].reset();
-
-                // Set tile object sprite
-                if (tileObject)
-                {
-                    int objDir = (int)get_tile_facingdir(tileState);
-                    if (tileObject < objects::ObjectInfoLib::get_size())
-                    {
-                        visualObject.show(
-                            tileObject,
-                            tileAction,
-                            objDir,
-                            _cameraDirection,
-                            *objects::ObjectInfoLib::get(tileObject),
-                            *objects::ObjectInfoLib::getVisual(tileObject),
-                            spriteWorldX,
-                            spriteWorldZ,
-                            _tileAnimStates[tileIndex].anim,
-                            _tileAnimStates[tileIndex].pos
-                        );
-                    }
-                    else
-                    {
-                        Debug::log(
-                            "Failed to find client side info for object of type: " +
-                            std::to_string(tileObject),
-                            Debug::MessageType::PK_ERROR
-                        );
-                    }
-                }
-                else
-                {
-                    visualObject.hide();
-                    //_tileAnimStates[tileIndex].anim->reset();
-                }
-                */
             }
         }
     }
@@ -511,77 +451,6 @@ namespace world
         tMat[2 + 3 * 4] = terrainWorldZ + halfTileWidth;
     }
 
-    // Updates tile sprites
-    // * Has to be done after updating terrain heights and very frequently to not look funny..
-    /*
-    void World::updateSprites()
-    {
-        const int observeAreaWidth = _observer.observeRadius * 2 + 1;
-        for (int y = 0; y < observeAreaWidth; ++y)
-        {
-            for (int x = 0; x < observeAreaWidth; ++x)
-            {
-                const int tileIndex = x + y * observeAreaWidth;
-                uint64_t tileState = _tileData[tileIndex].first;
-
-                PK_ubyte tileEffect = get_tile_terreffect(tileState);
-                PK_ubyte tileObject = get_tile_thingid(tileState);
-                PK_ubyte tileAction = get_tile_action(tileState);
-
-                VisualTile& visualTile = _tileData[tileIndex].second;
-                TerrainTileRenderable* tileRenderable = visualTile.renderable_tile;
-
-                const float spriteWorldX = ((float)tileRenderable->worldX + _tileVisualScale * 0.5f);
-                const float spriteWorldZ = ((float)tileRenderable->worldZ + _tileVisualScale * 0.5f);
-
-                Sprite3DRenderable* tileEffectSprite = _tileData[tileIndex].second.renderable_effect;
-                objects::VisualObject& visualObject = _tileData[tileIndex].second.visualObject;
-
-                // * Currently no effects exists yet!
-                tileEffectSprite->setActive(false);
-
-                // Reset movements if no action, even in case we didn't have any object here
-                if (!tileAction)
-                    _tileAnimStates[tileIndex].reset();
-
-                // Set tile object sprite
-                if (tileObject)
-                {
-                    int objDir = (int)get_tile_facingdir(tileState);
-                    if (tileObject < objects::ObjectInfoLib::get_size())
-                    {
-                        visualObject.show(
-                            tileObject,
-                            tileAction,
-                            objDir,
-                            _cameraDirection,
-                            *objects::ObjectInfoLib::get(tileObject),
-                            *objects::ObjectInfoLib::getVisual(tileObject),
-                            spriteWorldX,
-                            spriteWorldZ,
-                            _tileAnimStates[tileIndex].anim,
-                            _tileAnimStates[tileIndex].pos
-                        );
-                    }
-                    else
-                    {
-                        Debug::log(
-                            "Failed to find client side info for object of type: " +
-                            std::to_string(tileObject),
-                            Debug::MessageType::PK_ERROR
-                        );
-                    }
-                }
-                else
-                {
-                    visualObject.hide();
-                    //_tileAnimStates[tileIndex].anim->reset();
-                }
-            }
-        }
-    }
-    */
-
     // Shifts "movements"-table, if moved camera, to make it look smooth
     void World::shift(int32_t tileX, int32_t tileY)
     {
@@ -604,20 +473,16 @@ namespace world
             {
                 for (int shiftCount = 0; shiftCount < shiftCountX; shiftCount++)
                 {
-                    pk::vec3 prevPos = _tileAnimStates[0 + y * observeAreaWidth].pos;
-                    //Animation* prevAnim = _tileAnimStates[0 + y * observeAreaWidth].anim;
-                    //prevAnim->reset();
+                    TileAnimation prevAnim = _tileAnimStates[0 + y * observeAreaWidth];
+                    prevAnim.reset();
+
                     for (int x = startX; incrX ? x < observeAreaWidth : x >= 0; incrX ? ++x : --x)
                     {
                         const int tileIndex = x + y * observeAreaWidth;
-                        pk::vec3 currentPos = _tileAnimStates[tileIndex].pos;
-                        //Animation* currentAnim = _tileAnimStates[tileIndex].anim;
-                        //tempAnim->copyStateFrom(*currentAnim);
-                        _tileAnimStates[tileIndex].pos = prevPos;
-                        //_tileAnimStates[tileIndex].anim->copyStateFrom(*prevAnim);
+                        TileAnimation currentAnim = _tileAnimStates[tileIndex];
+                        _tileAnimStates[tileIndex] = prevAnim;
 
-                        prevPos = currentPos;
-                        //prevAnim->copyStateFrom(*tempAnim);
+                        prevAnim = currentAnim;
                     }
                 }
             }
@@ -629,26 +494,19 @@ namespace world
             {
                 for (int shiftCount = 0; shiftCount < shiftCountY; shiftCount++)
                 {
-                    pk::vec3 prevPos = _tileAnimStates[x + 0 * observeAreaWidth].pos;
-                    //Animation* prevAnim = _tileAnimStates[x + 0 * observeAreaWidth].anim;
-                    //prevAnim->reset();
+                    TileAnimation prevAnim = _tileAnimStates[x + 0 * observeAreaWidth];
+                    prevAnim.reset();
                     for (int y = startY; incrY ? y < observeAreaWidth : y >= 0; incrY ? ++y : --y)
                     {
                         const int tileIndex = x + y * observeAreaWidth;
-                        pk::vec3 currentPos = _tileAnimStates[tileIndex].pos;
-                        //Animation* currentAnim = _tileAnimStates[tileIndex].anim;
-                        //tempAnim->copyStateFrom(*currentAnim);
-                        _tileAnimStates[tileIndex].pos = prevPos;
-                        //_tileAnimStates[tileIndex].anim->copyStateFrom(*prevAnim);
+                        TileAnimation currentAnim = _tileAnimStates[tileIndex];
+                        _tileAnimStates[tileIndex] = prevAnim;
 
-                        prevPos = currentPos;
-                        //prevAnim->copyStateFrom(*tempAnim);
+                        prevAnim = currentAnim;
                     }
                 }
             }
         }
-
-        //delete tempAnim;
 
         // Save previous tile pos
         _prevTileX = tileX;
@@ -686,6 +544,7 @@ namespace world
             }
             else
             {
+
                 // Send current observing position if tile had changed
                 std::chrono::time_point<std::chrono::high_resolution_clock> currentTime = std::chrono::high_resolution_clock::now();
                 std::chrono::duration<float> elapsedSinceLastSend = currentTime - s_lastSend;
@@ -732,6 +591,9 @@ namespace world
         }*/
 
         // Update cam facing direction
+        // NOTE: Atm gets fucked since _pCamTransform ptr is out of date
+        // due to propable transform component pool resizing!
+        // TODO: Fix this!
         vec3 camForward = _pCamTransform->forward();
         vec2 camDirVec(camForward.x, camForward.z);
         camDirVec.normalize();

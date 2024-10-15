@@ -72,6 +72,10 @@ public:
     InGame();
     ~InGame();
 
+    // *Can create world only after ObjectInfoLib has been received from server and
+    // created locally
+    void createWorld();
+
     void init();
     void update();
     void lateUpdate();

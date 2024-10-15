@@ -86,28 +86,40 @@ namespace world
         {
         public:
             pk::vec3 pos = pk::vec3(0, 0, 0);
-            //pk::Animation* anim = nullptr;
+            int currentFrame = 0;
+            int nextFrame = 1;
+            float progression = 0.0f;
 
             TileAnimation()
             {}
 
-            TileAnimation(pk::vec3 position/*, pk::Animation* animation*/) :
-                pos(position)
+            TileAnimation(
+                pk::vec3 position,
+                int currentFrame,
+                int nextFrame,
+                float progression
+            ) :
+                pos(position),
+                currentFrame(currentFrame),
+                nextFrame(nextFrame),
+                progression(progression)
             {
-                //anim = animation;
             }
 
             void reset()
             {
                 pos = pk::vec3(0, 0, 0);
-                //anim->reset();
+                currentFrame = 0;
+                nextFrame = 1;
+                progression = 0.0f;
             }
 
             void set(const TileAnimation& other)
             {
                 pos = other.pos;
-                //if (anim)
-                //    anim->copyFrom(*other.anim);
+                currentFrame = other.currentFrame;
+                nextFrame = other.nextFrame;
+                progression = other.progression;
             }
         };
 
@@ -135,8 +147,6 @@ namespace world
         // used for animating movement and sprites of a tile
         std::vector<TileAnimation> _tileAnimStates; // *Previously "tileMovements"
 
-        float _tileVisualScale = 2.0f;
-
         float _worldX = 0.0f;
         float _worldZ = 0.0f;
         int _tileX = 0;
@@ -146,6 +156,9 @@ namespace world
         WorldObserver _observer;
 
         pk::Transform* _pCamTransform = nullptr;
+
+        float _tileVisualScale = 2.0f;
+
         // Facing direction of the camera. In form of TileStateDirection::north, etc..
         int _cameraDirection = 0;
 
@@ -156,7 +169,12 @@ namespace world
 
     public:
 
-        World(pk::Scene& scene, pk::Transform* pCamTransform, int observeRadius);
+        World(
+            pk::Scene& scene,
+            pk::Transform* pCamTransform,
+            int observeRadius,
+            float tileVisualScale = 2.0f
+        );
         ~World();
 
         void updateObservedArea(const uint64_t* mapState);
@@ -189,6 +207,8 @@ namespace world
         inline WorldObserver& accessObserver() { return _observer; }
         inline int getTileX() const { return _tileX; }
         inline int getTileY() const { return _tileY; }
+        inline int getPrevTileX() const { return _prevTileX; }
+        inline int getPrevTileY() const { return _prevTileY; }
 
     private:
         //void updateSprites();
