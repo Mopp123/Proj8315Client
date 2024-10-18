@@ -114,50 +114,14 @@ void InGameLocal::init()
         _observeAreaRadius,
         4.0f
     );
+    _mousePicker.init((Scene*)this, _pWorld);
 
     _testMapFull.resize(_testMapWidth * _testMapWidth * sizeof(uint64_t), 0);
 
-    /*
-    int areaWidth = _testMapWidth;
-    for (int y = 0; y < areaWidth; ++y)
-    {
-        for (int x = 0; x < areaWidth; ++x)
-        {
-            int randTerrainType = std::rand() % 2;
-            set_tile_terrtype(_testMapFull[x + y * _testMapWidth], randTerrainType);
-            int randHeight = std::rand() % 3;
-            set_tile_terrelevation(_testMapFull[x + y * _testMapWidth], 1 + randHeight);
-            bool plantTree = (std::rand() % 4) == 3;
-
-            set_tile_thingid(_testMapFull[x + y * _testMapWidth], (GC_ubyte)plantTree);
-        }
-    }*/
-
-    /*
-    for (int y = 0; y < _testMapWidth; ++y)
-    {
-        for (int x = 0; x < _testMapWidth; ++x)
-        {
-            set_tile_thingid(_testMapFull[x+ y * _testMapWidth], 2);
-        }
-    }
-    */
-    set_tile_thingid(_testMapFull[0 + 0 * _testMapWidth], 2);
-    set_tile_thingid(_testMapFull[1 + 0 * _testMapWidth], 2);
-    set_tile_thingid(_testMapFull[0 + 1 * _testMapWidth], 2);
-    set_tile_thingid(_testMapFull[1 + 1 * _testMapWidth], 2);
-
-    set_tile_thingid(_testMapFull[2 + 0 * _testMapWidth], 1);
-    set_tile_thingid(_testMapFull[2 + 2 * _testMapWidth], 1);
-
-    set_tile_terrtype(_testMapFull[1 + 1 * _testMapWidth], 1);
-    set_tile_terrtype(_testMapFull[2 + 4 * _testMapWidth], 1);
+    set_tile_thingid(_testMapFull[5 + 5 * _testMapWidth], 2);
+    //set_tile_thingid(_testMapFull[0 + 0 * _testMapWidth], 1);
 
     _testMapLocal.resize(_observeAreaWidth * _observeAreaWidth * sizeof(uint64_t), 0);
-
-
-    //get_world_state(0, 0, _observeAreaRadius, _testMapLocal, _testMapFull, _testMapWidth);
-    //_pWorld->updateObservedArea(_testMapLocal.data());
 }
 
 
@@ -170,7 +134,7 @@ void InGameLocal::update()
 
     InputManager* pInputManager = Application::get()->accessInputManager();
     // test update tile dir
-    int testTileIndex = 0 + 0 * _testMapWidth;
+    int testTileIndex = 5 + 5 * _testMapWidth;
     if (pInputManager->isKeyDown(InputKeyName::PK_INPUT_KEY_1))
     {
         set_tile_facingdir(
@@ -267,11 +231,11 @@ void InGameLocal::update()
         _pWorld->shift(obs.lastReceivedMapX, obs.lastReceivedMapY);
         _pWorld->updateObservedArea(_testMapLocal.data());
         _pWorld->moveTerrain();
+        _pWorld->updateObjects();
 
         //_pWorld->triggerStateUpdate((GC_byte*)_testMapLocal.data(), recvSize);
 
         s_updateTimer = 0.0f;
-
     }
     else
     {
@@ -279,7 +243,12 @@ void InGameLocal::update()
     }
 
     vec3 camPivotPoint = _pCamController->getPivotPoint();
+
+    _mousePicker.update(true);
+
     _pWorld->update(camPivotPoint.x, camPivotPoint.z);
+
+
 
     setInfoText(
         "Delta: " + std::to_string(Timing::get_delta_time())

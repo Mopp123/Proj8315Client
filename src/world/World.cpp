@@ -206,6 +206,8 @@ namespace world
 
         // Create tile objects at first as "blank"
         //  -> we configure these eventually, when we fetch world state from server
+        _visibleObjects.reserve(observeAreaWidth * observeAreaWidth);
+
         Model* pDefaultStaticModel = objects::ObjectInfoLib::get_default_static_model();
         Model* pDefaultRiggedModel = objects::ObjectInfoLib::get_default_rigged_model();
         const Mesh* pDefaultRiggedMesh = pDefaultRiggedModel->getMesh(0);
@@ -374,6 +376,21 @@ namespace world
 
                 PK_ubyte tileType = get_tile_terrtype(tileState);
                 updateBlendmapData(tileType, x, y);
+
+                // Also need to update objects' colliders scales depending on obj type here
+                // since "updateObjects()" happens in lateUpdate so.. fucks up if done there...
+                /*
+                PK_ubyte tileObj = get_tile_thingid(tileState);
+                if (tileObj)
+                {
+                    VisualObject& visualObj = _tileObjects[tileIndex];
+                    Transform* pColliderTransform = (Transform*)_sceneRef.getComponent(
+                        visualObj.getColliderEntity(),
+                        ComponentType::PK_TRANSFORM
+                    );
+                    pColliderTransform->setScale(VisualObject::s_colliderSizes[tileObj]);
+                }
+                */
             }
         }
 
@@ -423,6 +440,7 @@ namespace world
                         worldPosZ,
                         _tileAnimStates[tileIndex].pos
                     );
+                    _visibleObjects.emplace_back(tileIndex);
                 }
                 else
                 {
@@ -522,12 +540,7 @@ namespace world
         //int32_t tileX = (int32_t)std::floor((_worldX - (float)_observer.observeRadius * _tileVisualScale) / _tileVisualScale);
         //int32_t tileY = (int32_t)std::floor((_worldZ - (float)_observer.observeRadius * _tileVisualScale) / _tileVisualScale);
 
-        // Need to add little offset cuz using vertices as "tiles"
-        float halfTileWidth = _tileVisualScale * 0.5f;
-        float displacedWorldX = _worldX + halfTileWidth;
-        float displacedWorldZ = _worldZ + halfTileWidth;
-        _tileX = (int)std::floor(displacedWorldX / _tileVisualScale);
-        _tileY = (int)std::floor(displacedWorldZ / _tileVisualScale);
+        worldToTileCoords(_worldX, _worldZ, _tileX, _tileY);
 
 
         // Can receive world state and send location only after logging in
@@ -610,6 +623,8 @@ namespace world
         // has been done by on message event
         //updateObjects();
         //updateSprites();
+
+        _visibleObjects.clear();
     }
 
     void World::addFaction(const Faction& faction)
@@ -731,49 +746,14 @@ namespace world
 		}
 	}
 
-    vec3 World::getMousePickCoords(const pk::mat4& projMat, const pk::mat4& viewMat) const
+    void World::worldToTileCoords(float x, float z, int& outTileX, int& outTileY)
     {
-        int mouseX = Application::get()->accessInputManager()->getMouseX();
-        int mouseY = Application::get()->accessInputManager()->getMouseY();
-
-        vec3 screenToWorldSpace = screen_to_world_space(mouseX, mouseY, projMat, viewMat);
-        screenToWorldSpace.normalize();
-
-        Transform* pCamTransform = (Transform*)_sceneRef.getComponent(_sceneRef.activeCamera, ComponentType::PK_TRANSFORM);
-
-        mat4 camTMat = pCamTransform->getTransformationMatrix();
-        vec3 startPos(camTMat[0 + 3 * 4], camTMat[1 + 3 * 4], camTMat[2 + 3 * 4]);
-
-        const float maxPickingDist = 500.0f;
-        const int maxPickRecursionCount = 500;
-
-
-        return getMidpoint(startPos, screenToWorldSpace * maxPickingDist, maxPickRecursionCount);
-    }
-
-    vec3 World::getMidpoint(vec3 rayStartPos, vec3 ray, int recCount) const
-    {
-        vec3 halfRay = ray * 0.5f;
-        vec3 midPoint = rayStartPos + halfRay;
-
-        if (recCount <= 0)
-        {
-            return midPoint;
-        }
-        else
-        {
-            //float terrHeight = -terrain->getHeightAt(midPoint.x, midPoint.z);
-            //float terrainHeight = getTileVisualHeightAt(midPoint.x, midPoint.z);
-            float terrainHeight = getTerrainHeight(midPoint.x, midPoint.z);
-            if (midPoint.y < terrainHeight)
-            {
-                return getMidpoint(rayStartPos, halfRay, recCount - 1);
-            }
-            else
-            {
-                return getMidpoint(midPoint, halfRay, recCount - 1);
-            }
-        }
+        // Need to add little offset cuz using vertices as "tiles"
+        float halfTileWidth = _tileVisualScale * 0.5f;
+        float displacedWorldX = x + halfTileWidth;
+        float displacedWorldZ = z + halfTileWidth;
+        outTileX = (int)std::floor(displacedWorldX / _tileVisualScale);
+        outTileY = (int)std::floor(displacedWorldZ / _tileVisualScale);
     }
 
     void World::updateBlendmapData(PK_ubyte tileType, int x, int y)
@@ -818,5 +798,15 @@ namespace world
         }
         memcpy(_pTileData, pNewState, _tileDataSize);
         _shouldUpdateLocalState = true;
+    }
+
+    // NOTE: NOT WORKING!!!
+    //  -> need some way to pick in "local observe area coords" instead of "global"
+    PK_ubyte World::getTileObject(int32_t tileX, int32_t tileY) const
+    {
+        uint32_t observeAreaWidth = _observer.observeRadius * 2 + 1;
+        if (tileX < 0 || tileX >= observeAreaWidth || tileY < 0 || tileY >= observeAreaWidth)
+            return 0;
+        return get_tile_thingid(*(_pTileData + (tileX + tileY * observeAreaWidth)));
     }
 }

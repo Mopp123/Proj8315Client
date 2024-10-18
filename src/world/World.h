@@ -130,6 +130,7 @@ namespace world
         size_t _tileDataSize;
 
         std::vector<objects::VisualObject> _tileObjects;
+        std::vector<int> _visibleObjects; // indices to _tileObjects which are visible currently
 
         //PK_ubyte* _pTerrainBlendmapData = nullptr;
         int _blendmapWidth = 0;
@@ -168,7 +169,6 @@ namespace world
         bool _shouldUpdateLocalState = false;
 
     public:
-
         World(
             pk::Scene& scene,
             pk::Transform* pCamTransform,
@@ -191,11 +191,8 @@ namespace world
 
         float getTerrainHeight(float worldX, float worldZ) const;
 
-        pk::vec3 getMousePickCoords(const pk::mat4& projMat, const pk::mat4& viewMat) const;
-
         // Sets tile data to state
         void triggerStateUpdate(const GC_byte* pNewState, size_t stateSize);
-
 
         // Shifts "movements"-table, if moved camera, to make it look smooth
         void shift(int32_t tileX, int32_t tileY);
@@ -204,16 +201,22 @@ namespace world
 
         void moveTerrain();
 
+        void worldToTileCoords(float x, float z, int& outTileX, int& outTileY);
+
+        PK_ubyte getTileObject(int32_t tileX, int32_t tileY) const;
+
+        inline std::vector<objects::VisualObject>& accessVisualObjects() { return _tileObjects; }
+        inline const std::vector<int>& getVisibleObjects() { return _visibleObjects; }
+
         inline WorldObserver& accessObserver() { return _observer; }
         inline int getTileX() const { return _tileX; }
         inline int getTileY() const { return _tileY; }
         inline int getPrevTileX() const { return _prevTileX; }
         inline int getPrevTileY() const { return _prevTileY; }
+        inline float getTileVisualScale() const { return _tileVisualScale; }
 
     private:
         //void updateSprites();
-
-        pk::vec3 getMidpoint(pk::vec3 rayStartPos, pk::vec3 ray, int recCount) const;
 
         void updateBlendmapData(PK_ubyte tileType, int x, int y);
         void updateBlendmapData(PK_ubyte tileType, int pixelIndex);
