@@ -119,7 +119,7 @@ namespace world
         vec3 screenToWorldSpace = screen_to_world_space(mouseX, mouseY, projMat, viewMat);
         screenToWorldSpace.normalize();
 
-        mat4 camTMat = pCamTransform->getTransformationMatrix();
+        const mat4& camTMat = pCamTransform->getTransformationMatrix();
         vec3 startPos(camTMat[0 + 3 * 4], camTMat[1 + 3 * 4], camTMat[2 + 3 * 4]);
 
         const float maxPickingDist = 500.0f;
@@ -166,12 +166,15 @@ namespace world
 
         // Object picking
         // NOTE: Atm just testing here..
-        /*
         std::vector<VisualObject>& tileObjects = _pWorld->accessVisualObjects();
         ResourceManager& resManager = Application::get()->getResourceManager();
+        float prevObjDist = 99999.0f;
+        VisualObject* pPickedObject = nullptr;
         for (int visibleObjIndex : _pWorld->getVisibleObjects())
         {
-            const VisualObject& obj = tileObjects[visibleObjIndex];
+            VisualObject& obj = tileObjects[visibleObjIndex];
+            obj.setColliderVisible(false); // Just testing here to indicate collision with displaying collider..
+
             const Transform* pColliderTransform = (const Transform*)_pScene->getComponent(
                 obj.getColliderEntity(),
                 ComponentType::PK_TRANSFORM
@@ -199,12 +202,19 @@ namespace world
                 intersectionPoint.z
 	        );
 
+            // Prevent picking all in the way of the ray.
+            // Pick only the closest one to camera
             if (collision)
-                pColliderMaterial->setColor({ 0, 1, 0, 1 });
-            else
-                pColliderMaterial->setColor({ 1, 1, 1, 1 });
+            {
+                const mat4& colliderTMat = pColliderTransform->getTransformationMatrix();
+                float dist = std::abs(camTMat[0 + 3 * 4] - colliderTMat[0 + 3 * 4]) + std::abs(camTMat[2 + 3 * 4] - colliderTMat[2 + 3 * 4]);
+                if (dist < prevObjDist)
+                    pPickedObject = &obj;
+                prevObjDist = dist;
+            }
         }
-        */
+        if (pPickedObject)
+            pPickedObject->setColliderVisible(true);
     }
 
     void MousePicker::set3DCursorVisible(bool arg)

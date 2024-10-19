@@ -332,8 +332,9 @@ namespace world
             colliderMatGlobal[1 + 3 * 4] = yPosGlobal;
             colliderMatGlobal[2 + 3 * 4] = zPosGlobal;
 
-            if (tileObject == 2)
-                setColliderVisible(true);
+
+            //setColliderVisible(true);
+            //setColliderVisible(true);
         }
 
         void VisualObject::hide(pk::Scene* pScene)

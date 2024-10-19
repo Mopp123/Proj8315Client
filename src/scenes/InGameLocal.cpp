@@ -119,7 +119,11 @@ void InGameLocal::init()
     _testMapFull.resize(_testMapWidth * _testMapWidth * sizeof(uint64_t), 0);
 
     set_tile_thingid(_testMapFull[5 + 5 * _testMapWidth], 2);
+
+    set_tile_thingid(_testMapFull[5 + 6 * _testMapWidth], 1);
+    set_tile_thingid(_testMapFull[6 + 6 * _testMapWidth], 2);
     //set_tile_thingid(_testMapFull[0 + 0 * _testMapWidth], 1);
+
 
     _testMapLocal.resize(_observeAreaWidth * _observeAreaWidth * sizeof(uint64_t), 0);
 }
