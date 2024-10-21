@@ -12,6 +12,9 @@ uniform sampler2D texSampler;
 void main()
 {
     vec4 texColor = texture2D(texSampler, var_uvCoord);
+    if (texColor.a == 0.0)
+        discard;
+
     if (var_fragPos.x >= var_scale.x - var_borderThickness || var_fragPos.x <= var_borderThickness ||
             var_fragPos.y <= -var_scale.y + var_borderThickness || var_fragPos.y >= -var_borderThickness)
     {

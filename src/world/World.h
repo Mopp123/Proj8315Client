@@ -136,7 +136,7 @@ namespace world
         int _blendmapWidth = 0;
         entityID_t _terrainEntity = NULL_ENTITY_ID;
         pk::ImageData* _pTerrainBlendmapImg = nullptr;
-        pk::Texture_new* _pTerrainBlendmapTexture = nullptr;
+        pk::Texture* _pTerrainBlendmapTexture = nullptr;
         pk::Material* _pTerrainMaterial = nullptr;
         pk::Mesh* _pTerrainMesh = nullptr;
 

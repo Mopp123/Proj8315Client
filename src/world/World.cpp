@@ -155,23 +155,23 @@ namespace world
         ImageData* pImgChannel3 = resourceManager.loadImage("assets/textures/rock.png");
         ImageData* pImgChannel4 = resourceManager.loadImage("assets/textures/grass.png");
 
-        Texture_new* pTerrainTex0 = resourceManager.createTexture(
+        Texture* pTerrainTex0 = resourceManager.createTexture(
             pImgChannel0->getResourceID(),
             channelTexSampler
         );
-        Texture_new* pTerrainTex1 = resourceManager.createTexture(
+        Texture* pTerrainTex1 = resourceManager.createTexture(
             pImgChannel1->getResourceID(),
             channelTexSampler
         );
-        Texture_new* pTerrainTex2 = resourceManager.createTexture(
+        Texture* pTerrainTex2 = resourceManager.createTexture(
             pImgChannel2->getResourceID(),
             channelTexSampler
         );
-        Texture_new* pTerrainTex3 = resourceManager.createTexture(
+        Texture* pTerrainTex3 = resourceManager.createTexture(
             pImgChannel3->getResourceID(),
             channelTexSampler
         );
-        Texture_new* pTerrainTex4 = resourceManager.createTexture(
+        Texture* pTerrainTex4 = resourceManager.createTexture(
             pImgChannel4->getResourceID(),
             channelTexSampler
         );

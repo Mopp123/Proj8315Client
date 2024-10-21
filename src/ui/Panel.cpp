@@ -4,7 +4,7 @@
 using namespace pk;
 
 
-static vec4 s_defaultUIColors[] = {
+static vec4 s_defaultUIColorsLight0[] = {
     { 201, 197, 172, 255 },
     { 215, 209, 185, 255 },
     { 180, 173, 151, 255 },
@@ -17,7 +17,13 @@ static vec4 s_defaultUIColorsMonochrome[] = {
     { 166, 166, 166, 255 },
     { 96, 96, 96, 255 }
 };
-vec4* Panel::s_uiColor = s_defaultUIColors;
+static vec4 s_defaultUIColorsUIDark[] = {
+    { 28, 28, 28, 255 },
+    { 58, 58, 58, 255 },
+    { 48, 48, 48, 255 },
+    { 188, 188, 188, 255 }
+};
+vec4* Panel::s_uiColor = s_defaultUIColorsUIDark;
 
 
 void Panel::create(
@@ -32,7 +38,8 @@ void Panel::create(
     bool drawBorder,
     vec4 borderColor,
     float borderThickness,
-    float slotPadding
+    float slotPadding,
+    vec2 slotScale
 )
 {
     _pScene = pScene;
@@ -53,6 +60,7 @@ void Panel::create(
         _borderColor = { _color.x, _color.y, _color.z, 1.0f };
 
     _slotPadding = slotPadding;
+    _slotScale = slotScale;
 
     _entity = _pScene->createEntity();
     // may not be needed..
@@ -74,7 +82,7 @@ void Panel::create(
     );
 
     GUIRenderable* pBackground = nullptr;
-    Texture_new* pBackgroundTexture = nullptr; // unused atm
+    Texture* pBackgroundTexture = nullptr; // unused atm
     vec4 textureCropping(0, 0, 1, 1);
     if (drawBackground)
     {
@@ -95,7 +103,9 @@ void Panel::createDefault(
     HorizontalConstraintType horizontalType, float horizontalValue,
     VerticalConstraintType verticalType, float verticalValue,
     vec2 scale,
-    LayoutFillType fillType
+    vec2 slotScale,
+    LayoutFillType fillType,
+    int useColorIndex
 )
 {
     create(
@@ -106,12 +116,35 @@ void Panel::createDefault(
         scale,
         fillType,
         true,
-        get_base_ui_color(1).toVec3(),
+        get_base_ui_color(useColorIndex).toVec3(),
         false, // draw border
         { 0, 0, 0, 1 }, // border color
         0, // border thickness
-        4.0f // slot padding
+        4.0f, // slot padding;
+        slotScale
     );
+}
+
+std::pair<entityID_t, pk::TextRenderable*> Panel::addText(
+    std::string txt,
+    pk::HorizontalConstraintType horizontalType, float horizontalValue,
+    pk::VerticalConstraintType verticalType, float verticalValue
+)
+{
+    const vec2 offsetFromPanel(4.0f, 4.0f);
+    std::pair<entityID_t, TextRenderable*> text = pk::ui::create_text(
+        txt, *_pDefaultFont,
+        horizontalType,
+        horizontalValue,
+        verticalType,
+        verticalValue,
+        get_base_ui_color(3).toVec3(),
+        false // bold
+    );
+    _pScene->addChild(_entity, text.first);
+    ++_slotCount;
+
+    return text;
 }
 
 std::pair<entityID_t, TextRenderable*> Panel::addText(std::string txt, vec3 color)
@@ -148,7 +181,7 @@ void Panel::addDefaultButton(
     vec4 borderColor = color;
 
     const float borderThickness = 0.0f;
-    Texture_new* pTexture = nullptr;
+    Texture* pTexture = nullptr;
     vec4 textureCropping(0, 0, 1, 1);
 
     const vec2 offsetFromPanel(4.0f, 4.0f);
@@ -188,7 +221,7 @@ std::pair<entityID_t, pk::TextRenderable*> Panel::addDefaultInputField(
     vec4 color = get_base_ui_color(2);
     const vec2 offsetFromPanel(4.0f, 4.0f);
     vec2 toAdd = calcNewSlotPos();
-    std::pair<entityID_t, pk::TextRenderable*> inputField = pk::ui::create_input_field(
+    std::pair<entityID_t, pk::TextRenderable*> inputField = ui::create_input_field(
         infoTxt, *_pDefaultFont,
         _horizontalConstraint,
         _horizontalConstraintValue + toAdd.x + offsetFromPanel.x,
@@ -199,13 +232,36 @@ std::pair<entityID_t, pk::TextRenderable*> Panel::addDefaultInputField(
         false, // clear on submit
         color.toVec3(), // color
         get_base_ui_color(3).toVec3(), // text color
-        get_base_ui_color(1).toVec3(), // text highlight color
+        get_base_ui_color(3).toVec3(), // text highlight color
         get_base_ui_color(3).toVec3() // background highlight color
     );
     _pScene->addChild(_entity, inputField.first);
     ++_slotCount;
 
     return inputField;
+}
+
+entityID_t Panel::addImage(
+    pk::HorizontalConstraintType horizontalType, float horizontalVal,
+    pk::VerticalConstraintType verticalType, float verticalVal,
+    float width, float height,
+    pk::Texture* pTexture,
+    pk::vec3 color,
+    pk::vec4 textureCropping
+)
+{
+    entityID_t imgEntity = ui::create_image(
+        horizontalType, horizontalVal,
+        verticalType, verticalVal,
+        width, height,
+        color, // color
+        { color.x, color.y, color.z, 1.0f }, // border color
+        0.0f, // border thickness
+        pTexture,
+        textureCropping
+    );
+    // NOTE: Not sure should _slotCount increase when adding img...
+    return imgEntity;
 }
 
 void Panel::setActive(bool arg, entityID_t entity)

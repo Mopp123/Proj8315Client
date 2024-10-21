@@ -60,6 +60,8 @@ void InGameLocal::init()
     // Set clear color
     Application::get()->getMasterRenderer().setClearColor({ 0, 0, 0, 1});
 
+    _inGameUI.create((Scene*)this, _pDefaultFont);
+
     _pCamController = new CameraController(activeCamera, 30.0f);
     Transform* pCamTransform = (Transform*)getComponent(activeCamera, ComponentType::PK_TRANSFORM);
 
@@ -118,10 +120,10 @@ void InGameLocal::init()
 
     _testMapFull.resize(_testMapWidth * _testMapWidth * sizeof(uint64_t), 0);
 
-    set_tile_thingid(_testMapFull[5 + 5 * _testMapWidth], 2);
+    //set_tile_thingid(_testMapFull[5 + 5 * _testMapWidth], 2);
 
     set_tile_thingid(_testMapFull[5 + 6 * _testMapWidth], 1);
-    set_tile_thingid(_testMapFull[6 + 6 * _testMapWidth], 2);
+    //set_tile_thingid(_testMapFull[6 + 6 * _testMapWidth], 2);
     //set_tile_thingid(_testMapFull[0 + 0 * _testMapWidth], 1);
 
 

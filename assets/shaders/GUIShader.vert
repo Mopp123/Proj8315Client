@@ -8,6 +8,7 @@ attribute vec2 scale;
 attribute vec4 color;
 attribute vec4 borderColor;
 attribute float borderThickness;
+attribute vec4 textureCropping;
 
 struct Common
 {
@@ -26,7 +27,10 @@ varying float var_borderThickness;
 void main()
 {
     gl_Position = common.projMat * vec4((vertexPos * scale) + pos, 0, 1.0);
-    var_uvCoord = uvCoord;
+
+    vec2 croppingPos = textureCropping.xy;
+    vec2 croppingScale = textureCropping.zw;
+    var_uvCoord = (uvCoord + croppingPos) * croppingScale;
 
     var_color = color;
     vec4 transformedPos = vec4((vertexPos * scale), 0, 1.0);

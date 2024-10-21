@@ -503,27 +503,30 @@ namespace world
             // Test having just same model for all object types
             ImageData* pDefaultImage = resourceManager.loadImage(
                 "assets/textures/default.jpg",
+                false,
                 true
             );
             ImageData* pTreeImage = resourceManager.loadImage(
                 "assets/textures/tree1.png",
+                false,
                 true
             );
             ImageData* pUnitTexImage = resourceManager.loadImage(
                 "assets/textures/characterTest.png",
+                false,
                 true
             );
-            Texture_new* pDefaultTexture = resourceManager.createTexture(
+            Texture* pDefaultTexture = resourceManager.createTexture(
                 pDefaultImage->getResourceID(),
                 defaultTextureSampler,
                 true
             );
-            Texture_new* pTreeTexture = resourceManager.createTexture(
+            Texture* pTreeTexture = resourceManager.createTexture(
                 pTreeImage->getResourceID(),
                 defaultTextureSampler,
                 true
             );
-            Texture_new* pUnitTexture = resourceManager.createTexture(
+            Texture* pUnitTexture = resourceManager.createTexture(
                 pUnitTexImage->getResourceID(),
                 defaultTextureSampler,
                 true

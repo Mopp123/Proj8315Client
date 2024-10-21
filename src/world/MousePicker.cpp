@@ -52,7 +52,7 @@ namespace world
         ResourceManager& resManager = Application::get()->getResourceManager();
         ImageData* pImgData = resManager.loadImage("assets/textures/Cursor3D.png");
         TextureSampler texSampler;
-        Texture_new* pCursorTexture = resManager.createTexture(
+        Texture* pCursorTexture = resManager.createTexture(
             pImgData->getResourceID(),
             texSampler
         );

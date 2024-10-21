@@ -89,7 +89,8 @@ void InGame::init()
         _pDefaultFont,
         HorizontalConstraintType::PIXEL_RIGHT, 5,
         VerticalConstraintType::PIXEL_TOP, 2,
-        { 120, 25 },
+        { 120, 25 }, // scale
+        { 200, 24 }, // slot scale
         Panel::LayoutFillType::HORIZONTAL
     );
     _mainPanel.addDefaultButton(
