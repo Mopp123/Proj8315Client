@@ -89,7 +89,8 @@ void InGame::init()
         _pDefaultFont,
         HorizontalConstraintType::PIXEL_RIGHT, 5,
         VerticalConstraintType::PIXEL_TOP, 2,
-        { 120, 25 },
+        { 120, 25 }, // scale
+        { 200, 24 }, // slot scale
         Panel::LayoutFillType::HORIZONTAL
     );
     _mainPanel.addDefaultButton(
@@ -104,6 +105,9 @@ void InGame::init()
     pClient->addOnMessageEvent(MESSAGE_TYPE__LogoutResponse, new OnMessageLogout);
 
     _pCamController = new CameraController(activeCamera, 16.0f);
+
+    _mousePicker.init((Scene*)this, _pWorld);
+    _mousePicker.set3DCursorVisible(true);
 }
 
 void InGame::update()
@@ -157,6 +161,9 @@ void InGame::update()
 
         vec3 camPivotPoint = _pCamController->getPivotPoint();
         _pCamController->setPivotPointHeight(_pWorld->getTerrainHeight(camPivotPoint.x, camPivotPoint.z));
+
+        _mousePicker.update(true);
+
         _pWorld->update(camPivotPoint.x, camPivotPoint.z);
 
         if (loggedIn && !loggingOut)

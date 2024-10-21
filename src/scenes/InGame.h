@@ -5,6 +5,7 @@
 #include "CameraUtils.h"
 #include "ui/Panel.h"
 #include "net/Client.h"
+#include "world/MousePicker.h"
 
 
 class InGame : public BaseScene
@@ -57,6 +58,7 @@ private:
 
     world::World* _pWorld = nullptr;
     CameraController* _pCamController = nullptr;
+    world::MousePicker _mousePicker;
 
     const size_t _observeAreaRadius = 15;
     const size_t _observeAreaWidth = _observeAreaRadius * 2 + 1;

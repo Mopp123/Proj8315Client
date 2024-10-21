@@ -72,6 +72,12 @@ namespace world
             pk::SkinnedRenderable* _pSkinnedRenderable = nullptr;
             pk::AnimationData* _pAnimData = nullptr;
 
+            const size_t _colliderVertexCount = 8;
+            pk::vec3 _colliderVertices[8];
+            // Mesh and entity for debugging collision box
+            static PK_id s_colliderModelID;
+            entityID_t _colliderEntity = 0;
+
             // NOTE: Current engine version doesn't support sprite rendering
             // TODO: Add sprite renderer to engine
             pk::Sprite3DRenderable* _pSprite = nullptr;
@@ -83,6 +89,8 @@ namespace world
             // Inner vector[varying] is for each animation of a single direction (as many anims we want)
             //std::vector<std::vector<pk::SpriteAnimator*>> _anims;
         public:
+            static std::vector<pk::vec3> s_colliderSizes;
+
             VisualObject(
                 World& worldRef,
                 entityID_t entity,
@@ -112,7 +120,10 @@ namespace world
             );
             void hide(pk::Scene* pScene);
 
+            void setColliderVisible(bool arg);
+
             inline entityID_t getEntity() const { return _entity; }
+            inline entityID_t getColliderEntity() const { return _colliderEntity; }
             inline const pk::vec3& getOriginalPos() const { return _originalPos;  }
 
         private:

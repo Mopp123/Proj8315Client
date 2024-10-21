@@ -195,7 +195,8 @@ void MainMenu::init()
         _pDefaultFont,
         HorizontalConstraintType::PIXEL_CENTER_HORIZONTAL, -304,
         VerticalConstraintType::PIXEL_CENTER_VERTICAL, 115.0f * 0.5f,
-        { 304, 115 },
+        { 304, 115 }, // scale
+        { 200, 24 }, // slot scale
         Panel::LayoutFillType::VERTICAL
     );
 
@@ -242,7 +243,8 @@ void MainMenu::init()
         _pDefaultFont,
         HorizontalConstraintType::PIXEL_CENTER_HORIZONTAL, -304,
         VerticalConstraintType::PIXEL_CENTER_VERTICAL, 115.0f * 0.5f,
-        { 377, 170 },
+        { 377, 170 }, // scale
+        { 200, 24 }, // slot scale
         Panel::LayoutFillType::VERTICAL
     );
 
@@ -296,7 +298,8 @@ void MainMenu::init()
         _pDefaultFont,
         HorizontalConstraintType::PIXEL_CENTER_HORIZONTAL, 4,
         VerticalConstraintType::PIXEL_CENTER_VERTICAL, 100,
-        { 300, 200 },
+        { 300, 200 }, // scale
+        { 200, 24 }, // slot scale
         Panel::LayoutFillType::VERTICAL
     );
     _serverInfoPanel.addDefaultText(
@@ -310,7 +313,8 @@ void MainMenu::init()
         _pDefaultFont,
         HorizontalConstraintType::PIXEL_CENTER_HORIZONTAL, -100,
         VerticalConstraintType::PIXEL_CENTER_VERTICAL, 115.0f * 0.5f,
-        { 200, 65 },
+        { 200, 65 }, // scale
+        { 200, 24 }, // slot scale
         Panel::LayoutFillType::VERTICAL
     );
     _popupInfoPanel.addDefaultText("Registration success");

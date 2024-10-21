@@ -55,6 +55,13 @@ namespace world
             }
         };
 
+        std::vector<vec3> VisualObject::s_colliderSizes =
+        {
+            { 1, 1, 1 },
+            { 1.5f, 4, 1.5f },
+            { 1, 2, 1 }
+        };
+
 
         static float dir_to_yaw(GC_ubyte dir)
         {
@@ -63,6 +70,7 @@ namespace world
         }
 
 
+        PK_id VisualObject::s_colliderModelID = 0;
         VisualObject::VisualObject(
             World& worldRef,
             entityID_t entity,
@@ -75,21 +83,117 @@ namespace world
             _pStaticRenderable(pStaticRenderable),
             _pSkinnedRenderable(pSkinnedRenderable),
             _originalPos(originalGridPos)
-        {}
+        {
+            if (entity == NULL_ENTITY_ID)
+            {
+                Debug::log(
+                    "@VisualObject::VisualObject "
+                    "Provided entityID was NULL_ENTITY_ID",
+                    Debug::MessageType::PK_FATAL_ERROR
+                );
+                return;
+            }
+
+            const float colliderSize = 2.0f;
+            /*
+            Each face is like this. "Top left" and "bottom right" vertices
+            -----
+            |  /|
+            | / |
+            |/  |
+            -----
+
+            */
+
+            // "front face"
+            // tri 1 (top left)
+            _colliderVertices[0] = { colliderSize, colliderSize, colliderSize };
+            _colliderVertices[1] = { -colliderSize, colliderSize, colliderSize };
+            _colliderVertices[2] = { -colliderSize, -colliderSize, colliderSize };
+            // tri 2 (bottom right)
+            // _colliderVertices[2]
+            _colliderVertices[3] = { colliderSize, -colliderSize, colliderSize };
+            // _colliderVertices[0]
+
+            // "back face" (as like looking straight at it towards +z from -z direction)
+            // tri 1 (top left)
+            _colliderVertices[4] = { -colliderSize, colliderSize, -colliderSize };
+            _colliderVertices[5] = { colliderSize, colliderSize, -colliderSize };
+            _colliderVertices[6] = { colliderSize, -colliderSize, -colliderSize };
+            // tri 2 (bottom right)
+            // _colliderVertices[6]
+            _colliderVertices[7] = { -colliderSize, -colliderSize, -colliderSize };
+            // _colliderVertices[4]
+
+            // "right face"
+            // tri 1
+            // _colliderVertices[6]
+            // _colliderVertices[0]
+            // _colliderVertices[3]
+            // tri 2
+            // _colliderVertices[3]
+            // _colliderVertices[6]
+            // _colliderVertices[5]
+
+            // "left face"
+            // tri 1
+            // _colliderVertices[1]
+            // _colliderVertices[4]
+            // _colliderVertices[7]
+            // tri 2
+            // _colliderVertices[7]
+            // _colliderVertices[2]
+            // _colliderVertices[1]
+
+            ResourceManager& resManager = Application::get()->getResourceManager();
+            const Model* pColliderModel = nullptr;
+            if (s_colliderModelID == 0)
+            {
+                pColliderModel = resManager.loadModel(
+                    "assets/models/UnitCubeOriginBottom.glb",
+                    resManager.getDefaultMaterial()->getResourceID(),
+                    true
+                );
+                s_colliderModelID = pColliderModel->getResourceID();
+            }
+            else
+            {
+                pColliderModel = (const Model*)resManager.getResource(s_colliderModelID);
+            }
+
+            Scene* pScene = Application::get()->accessCurrentScene();
+            _colliderEntity = pScene->createEntity();
+            pScene->createTransform(
+                _colliderEntity,
+                { 0, 0, 0 },
+                { 0, 0, 0, 1 },
+                { colliderSize, colliderSize, colliderSize }
+            );
+            pScene->createStatic3DRenderable(
+                _colliderEntity,
+                pColliderModel->getMesh(0)->getResourceID()
+            );
+            pScene->addChild(_entity, _colliderEntity);
+            setColliderVisible(false);
+        }
 
         VisualObject::VisualObject(const VisualObject& other) :
             _worldRef(other._worldRef),
             _entity(other._entity),
+            _colliderEntity(other._colliderEntity),
             _originalPos(other._originalPos)
         {
             // Purposefully copying ptrs here and not their content!
             _pStaticRenderable = other._pStaticRenderable;
             _pSkinnedRenderable = other._pSkinnedRenderable;
             _pSprite = other._pSprite;
+
+            memcpy(_colliderVertices, other._colliderVertices, sizeof(vec4) * _colliderVertexCount);
         }
 
         VisualObject::~VisualObject()
-        {}
+        {
+        }
 
         /*
         void VisualObject::assignAnimFrames(PK_ubyte tileObject, PK_ubyte tileAction, Animation* anim)
@@ -207,7 +311,6 @@ namespace world
                 xPosGlobal,
                 zPosGlobal
             );// + _verticalOffset + tileMovement.y;
-            //Debug::log("___TEST___SHOW obj height: " + std::to_string(yPos));
 
             // Adjust facing direction.
             // Doing this only on y axis so no matrix multiplications required here
@@ -217,24 +320,25 @@ namespace world
             tMat[2 + 0 * 4] = -std::sin(yaw);
             tMat[2 + 2 * 4] = std::cos(yaw);
 
-            // NOTE: old below when using just sprites..
-            // Animate sprite
-            //_pSprite->textureOffset.x = animation->getCurrentFrame();
+            // Adjust collider transform
+            Transform* pColliderTransform = (Transform*)pScene->getComponent(
+                _colliderEntity,
+                ComponentType::PK_TRANSFORM
+            );
+            pColliderTransform->setScale(VisualObject::s_colliderSizes[tileObject]);
+            mat4& colliderMatGlobal = pColliderTransform->accessTransformationMatrix();
+            mat4& colliderMatLocal = pColliderTransform->accessLocalTransformationMatrix();
+            colliderMatGlobal[0 + 3 * 4] = xPosGlobal;
+            colliderMatGlobal[1 + 3 * 4] = yPosGlobal;
+            colliderMatGlobal[2 + 3 * 4] = zPosGlobal;
 
-            //_pSprite->position.x = worldX + tileMovement.x;
-            //_pSprite->position.z = worldZ + tileMovement.z;
-            // Update sprite's height depending on visual tile terrain
-            // (needs to be done after everything else so we get the "real accurate place"
-            // -> for example all above code might change the sprite's "current visual tile")
-            //_pSprite->position.y = _worldRef.getTileVisualHeightAt(
-            //    _pSprite->position.x,
-            //    _pSprite->position.z
-            //) + _verticalOffset + tileMovement.y;
+
+            //setColliderVisible(true);
+            //setColliderVisible(true);
         }
 
         void VisualObject::hide(pk::Scene* pScene)
         {
-            //_pSprite->setActive(false);
             Transform* pTransform = (Transform*)pScene->getComponent(
                 _entity,
                 ComponentType::PK_TRANSFORM
@@ -255,6 +359,17 @@ namespace world
             pStaticRenderable->setActive(false);
             pSkinnedRenderable->setActive(false);
             pAnimData->setActive(false);
+            setColliderVisible(false);
+        }
+
+        void VisualObject::setColliderVisible(bool arg)
+        {
+            Scene* pScene = Application::get()->accessCurrentScene();
+            Static3DRenderable* pColliderRenderable = (Static3DRenderable*)pScene->getComponent(
+                _colliderEntity,
+                ComponentType::PK_RENDERABLE_STATIC3D
+            );
+            pColliderRenderable->setActive(arg);
         }
 
         void VisualObject::move(int dir, float speed, pk::vec3& tileMovement)
@@ -388,27 +503,30 @@ namespace world
             // Test having just same model for all object types
             ImageData* pDefaultImage = resourceManager.loadImage(
                 "assets/textures/default.jpg",
+                false,
                 true
             );
             ImageData* pTreeImage = resourceManager.loadImage(
                 "assets/textures/tree1.png",
+                false,
                 true
             );
             ImageData* pUnitTexImage = resourceManager.loadImage(
                 "assets/textures/characterTest.png",
+                false,
                 true
             );
-            Texture_new* pDefaultTexture = resourceManager.createTexture(
+            Texture* pDefaultTexture = resourceManager.createTexture(
                 pDefaultImage->getResourceID(),
                 defaultTextureSampler,
                 true
             );
-            Texture_new* pTreeTexture = resourceManager.createTexture(
+            Texture* pTreeTexture = resourceManager.createTexture(
                 pTreeImage->getResourceID(),
                 defaultTextureSampler,
                 true
             );
-            Texture_new* pUnitTexture = resourceManager.createTexture(
+            Texture* pUnitTexture = resourceManager.createTexture(
                 pUnitTexImage->getResourceID(),
                 defaultTextureSampler,
                 true
@@ -419,7 +537,9 @@ namespace world
                 2.0f, // specular strength
                 8.0f, // shininess
                 0, // blendmap texture res id
-                true
+                { 1, 1, 1, 1 }, // color
+                false, // shadeless
+                true // persistent
             );
             Material* pTreeMaterial = resourceManager.createMaterial(
                 {pTreeTexture->getResourceID()},
@@ -427,7 +547,9 @@ namespace world
                 0.0f, // specular strength
                 1.0f, // shininess
                 0, // blendmap texture res id
-                true
+                { 1, 1, 1, 1 }, // color
+                false, // shadeless
+                true // persistent
             );
             Material* pUnitMaterial = resourceManager.createMaterial(
                 {pUnitTexture->getResourceID()},
@@ -435,10 +557,12 @@ namespace world
                 0.0f, // specular strength
                 1.0f, // shininess
                 0, // blendmap texture res id
-                true
+                { 1, 1, 1, 1 }, // color
+                false, // shadeless
+                true // persistent
             );
             Model* pDefaultModel = resourceManager.loadModel(
-                "assets/models/Cube.glb",
+                "assets/models/UnitCube.glb",
                 pDefaultMaterial->getResourceID(),
                 true
             );

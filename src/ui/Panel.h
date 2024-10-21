@@ -30,7 +30,7 @@ private:
     pk::vec2 _scale;
 
     float _slotPadding = 1.0f;
-    pk::vec2 _slotScale = pk::vec2(200.0f, 24.0f);
+    pk::vec2 _slotScale;
     pk::vec3 _color;
     pk::vec4 _borderColor;
 
@@ -54,7 +54,8 @@ public:
         bool drawBorder = false,
         pk::vec4 borderColor = pk::vec4(0, 0, 0, 0), // dont remember why this was vec4 on Scene.create
         float borderThickness = 2.0f,
-        float slotPadding = 1.0f
+        float slotPadding = 1.0f,
+        pk::vec2 slotScale = pk::vec2(200.0f, 24.0f)
     );
 
     void createDefault(
@@ -63,9 +64,27 @@ public:
         pk::HorizontalConstraintType horizontalType, float horizontalValue,
         pk::VerticalConstraintType verticalType, float verticalValue,
         pk::vec2 scale,
-        LayoutFillType fillType = LayoutFillType::VERTICAL
+        pk::vec2 slotScale,
+        LayoutFillType fillType = LayoutFillType::VERTICAL,
+        int useColorIndex = 1
     );
 
+    void createDefault(
+        pk::Scene* pScene,
+        pk::Font* pDefaultFont,
+        pk::HorizontalConstraintType horizontalType, float horizontalValue,
+        pk::VerticalConstraintType verticalType, float verticalValue,
+        pk::vec2 scale,
+        pk::vec2 slotScale,
+        LayoutFillType fillType,
+        pk::vec3 color
+    );
+
+    std::pair<entityID_t, pk::TextRenderable*> addText(
+        std::string txt,
+        pk::HorizontalConstraintType horizontalType, float horizontalValue,
+        pk::VerticalConstraintType verticalType, float verticalValue
+    );
     std::pair<entityID_t, pk::TextRenderable*> addText(std::string txt, pk::vec3 color);
     std::pair<entityID_t, pk::TextRenderable*> addDefaultText(std::string txt);
 
@@ -80,6 +99,15 @@ public:
         int width,
         pk::ui::InputFieldOnSubmitEvent* onSubmitEvent,
         bool clearOnSubmit = false
+    );
+
+    entityID_t addImage(
+        pk::HorizontalConstraintType horizontalType, float horizontalVal,
+        pk::VerticalConstraintType verticalType, float verticalVal,
+        float width, float height,
+        pk::Texture* pTexture,
+        pk::vec3 color,
+        pk::vec4 textureCropping = pk::vec4(0, 0, 1, 1)
     );
 
     void setActive(bool arg, entityID_t entity = 0);

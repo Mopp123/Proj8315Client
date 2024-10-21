@@ -4,12 +4,16 @@
 #include "world/World.h"
 #include "CameraUtils.h"
 #include "ui/Panel.h"
-#include "net/Client.h"
+#include "ui/InGameUI.h"
+
+#include "world/MousePicker.h"
 
 
 class InGameLocal : public BaseScene
 {
 private:
+    InGameUI _inGameUI;
+
     world::World* _pWorld = nullptr;
     CameraController* _pCamController = nullptr;
 
@@ -18,6 +22,8 @@ private:
     const size_t _observeAreaWidth = _observeAreaRadius * 2 + 1;
     std::vector<uint64_t> _testMapFull;
     std::vector<uint64_t> _testMapLocal;
+
+    world::MousePicker _mousePicker;
 
 
 public:
