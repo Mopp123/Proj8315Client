@@ -105,7 +105,7 @@ void InGameLocal::init()
             movingObj
         }
     );
-    Debug::log("___TEST___created obj info lib:\n" + world::objects::ObjectInfoLib::toString());
+    Debug::log("___TEST___created obj info lib:\n" + world::objects::ObjectInfoLib::to_string());
 
     world::objects::ObjectInfoLib::create_object_visuals();
 
@@ -120,11 +120,16 @@ void InGameLocal::init()
 
     _testMapFull.resize(_testMapWidth * _testMapWidth * sizeof(uint64_t), 0);
 
-    //set_tile_thingid(_testMapFull[5 + 5 * _testMapWidth], 2);
+    set_tile_thingid(_testMapFull[5 + 5 * _testMapWidth], 2);
+    set_tile_terrtype(_testMapFull[5 + 5 * _testMapWidth], 2);
 
     set_tile_thingid(_testMapFull[5 + 6 * _testMapWidth], 1);
-    //set_tile_thingid(_testMapFull[6 + 6 * _testMapWidth], 2);
-    //set_tile_thingid(_testMapFull[0 + 0 * _testMapWidth], 1);
+    set_tile_thingid(_testMapFull[6 + 6 * _testMapWidth], 2);
+    set_tile_terrtype(_testMapFull[6 + 6 * _testMapWidth], 3);
+
+    set_tile_thingid(_testMapFull[0 + 0 * _testMapWidth], 1);
+    set_tile_terrelevation(_testMapFull[0 + 0 * _testMapWidth], 1);
+    set_tile_terrtype(_testMapFull[0 + 0 * _testMapWidth], 1);
 
 
     _testMapLocal.resize(_observeAreaWidth * _observeAreaWidth * sizeof(uint64_t), 0);
@@ -251,9 +256,11 @@ void InGameLocal::update()
     vec3 camPivotPoint = _pCamController->getPivotPoint();
 
     _mousePicker.update(true);
+    // Test change selected obj info
+    // TODO: Maybe do this in mouse picker's OnMouseButton event?
+    _inGameUI.setSelectedInfo(_mousePicker.getSelectedTile());
 
     _pWorld->update(camPivotPoint.x, camPivotPoint.z);
-
 
 
     setInfoText(

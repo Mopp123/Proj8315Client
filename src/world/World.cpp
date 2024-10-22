@@ -49,8 +49,8 @@ namespace world
         const size_t expectedDataSize = MESSAGE_REQUIRED_SIZE__WorldStateMsg;
         if (dataSize == expectedDataSize)
         {
-            const int32_t recvX = (int32_t)*(data + MESSAGE_ENTRY_SIZE__header);
-            const int32_t recvY = (int32_t)*(data + MESSAGE_ENTRY_SIZE__header + sizeof(int32_t));
+            int32_t recvX = *(int32_t*)(data + MESSAGE_ENTRY_SIZE__header);
+            int32_t recvY = *(int32_t*)(data + MESSAGE_ENTRY_SIZE__header + sizeof(int32_t));
             Debug::log("___TEST___recv coords: " + std::to_string(recvX) + ", " + std::to_string(recvY));
             observerRef.lastReceivedMapX = recvX;
             observerRef.lastReceivedMapY = recvY;
@@ -334,10 +334,6 @@ namespace world
 
                 // Set vertex pos.y (height)
                 float height = (float)(get_tile_terrelevation(tileState));
-                // No idea wtf is this..
-                //const float max = 15.0f;
-                //if (height - max >= 0.0f)
-                //    height -= max;
 
                 size_t vertexYBufPos = sizeof(float) + (x + y * observeAreaWidth) * (sizeof(float) * 8);
                 pBuffer->update(
@@ -435,7 +431,7 @@ namespace world
                         tileAction,
                         tileFacingDirection,
                         *objects::ObjectInfoLib::get(tileObject),
-                        *objects::ObjectInfoLib::getVisual(tileObject),
+                        *objects::ObjectInfoLib::get_visual(tileObject),
                         worldPosX,
                         worldPosZ,
                         _tileAnimStates[tileIndex].pos
@@ -800,13 +796,11 @@ namespace world
         _shouldUpdateLocalState = true;
     }
 
-    // NOTE: NOT WORKING!!!
-    //  -> need some way to pick in "local observe area coords" instead of "global"
-    PK_ubyte World::getTileObject(int32_t tileX, int32_t tileY) const
+    uint64_t World::getTile(int32_t tileX, int32_t tileY) const
     {
         uint32_t observeAreaWidth = _observer.observeRadius * 2 + 1;
         if (tileX < 0 || tileX >= observeAreaWidth || tileY < 0 || tileY >= observeAreaWidth)
             return 0;
-        return get_tile_thingid(*(_pTileData + (tileX + tileY * observeAreaWidth)));
+        return *(_pTileData + (tileX + tileY * observeAreaWidth));
     }
 }

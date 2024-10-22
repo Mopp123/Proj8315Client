@@ -35,9 +35,11 @@ void main(void)
     float diffFactor = max(dot(normal, -lightDir), 0.0);
     vec4 diffuseColor = diffFactor * var_dirLightColor;
 
+    // NOTE: Update to below! Seems that we don't need to add any displacement to the texture after all
+    // ..a bit wonky tho when moving from tile to another..
     // Need to add displacement since using vertices as tiles
-    float displacement = 1.0 / verticesPerRow; //* 0.5;
-    vec2 u = var_uvCoord + displacement;
+    //float displacement = 1.0 / verticesPerRow * 0.125;
+    vec2 u = var_uvCoord;
 
 	vec4 blendmapColor = texture2D(material.blendmapTexSampler, u);
 	float blackAmount = 1.0 - (blendmapColor.r + blendmapColor.g + blendmapColor.b + blendmapColor.a);

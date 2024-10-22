@@ -449,7 +449,7 @@ namespace world
             return &s_objects[index];
         }
 
-        VisualObjectInfo* ObjectInfoLib::getVisual(int index)
+        VisualObjectInfo* ObjectInfoLib::get_visual(int index)
         {
             if (index < 0 || index >= s_objectVisuals.size())
             {
@@ -633,7 +633,7 @@ namespace world
             s_objects = objects;
         }
 
-        std::string ObjectInfoLib::toString()
+        std::string ObjectInfoLib::to_string()
         {
             std::string output = "Object Info Library(" + std::to_string(s_objects.size()) + ")\n";
             for (int i = 0; i < s_objects.size(); ++i)

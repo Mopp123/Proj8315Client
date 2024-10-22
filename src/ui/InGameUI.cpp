@@ -1,15 +1,21 @@
 #include "InGameUI.h"
+#include "../../Proj8315Common/src/Common.h"
+#include "../../Proj8315Common/src/Tile.h"
+#include "Object.h"
+#include "world/Objects.h"
 
 
 using namespace pk;
+using namespace world;
 
 
 // TODO:
 // * Some func to add and store status and attribute strings/values more clearly
 // * Display "really" selected object's info
-
 void InGameUI::create(pk::Scene* pScene, pk::Font* pFont)
 {
+    _pScene = pScene;
+
     const vec2 settingsPanelScale(212, 25);
     const vec2 settingsPanelSlotScale(100, 24);
     _settingsPanel.createDefault(
@@ -33,7 +39,7 @@ void InGameUI::create(pk::Scene* pScene, pk::Font* pFont)
         100
     );
 
-    const vec2 selectedPanelScale(420, 140);
+    const vec2 selectedPanelScale(600, 140);
     const vec2 selectedPanelSlotScale(200, 30);
     _selectedPanel.createDefault(
         pScene,
@@ -84,67 +90,121 @@ void InGameUI::create(pk::Scene* pScene, pk::Font* pFont)
         { 0, 15, portraitCroppingScale, portraitCroppingScale } // texture cropping
     );
 
-    _selectedPanel.addText(
+    _objectNameEntity = _selectedPanel.addText(
         "Rifleman",
         HorizontalConstraintType::PIXEL_LEFT, 32.0f,
         VerticalConstraintType::PIXEL_BOTTOM, 42.0f + portraitHeight
-    );
+    ).first;
     const float textHeight = 20.0f; // can be found from BaseScene TODO: make that variable!
     const float propertiesTxtPaddingY = 4.0f;
-    _selectedPanel.addText(
-        "Status",
-        HorizontalConstraintType::PIXEL_LEFT, 32.0f + portraitWidth + 8.0f,
-        VerticalConstraintType::PIXEL_BOTTOM, 42.0f + portraitHeight - propertiesTxtPaddingY -textHeight
-    );
-    // Draw line under "Status"
+    const float infoColumnWidth = 140.0f;
+
+    // Draw line under "Status" and "Attributes"
     _selectedPanel.addImage(
         HorizontalConstraintType::PIXEL_LEFT, 32.0f + portraitWidth + 8.0f,
         VerticalConstraintType::PIXEL_BOTTOM, 42.0f + portraitHeight - propertiesTxtPaddingY - textHeight - 2,
-        240, 1,
+        infoColumnWidth * 3, 1,
         nullptr, // texture
         Panel::get_base_ui_color(3).toVec3(),
         { 0, 0, 1, 1 } // texture cropping
     );
 
-    _selectedPanel.addText(
-        "Health: 12",
-        HorizontalConstraintType::PIXEL_LEFT, 32.0f + portraitWidth + 8.0f,
-        VerticalConstraintType::PIXEL_BOTTOM, 42.0f + portraitHeight - propertiesTxtPaddingY - (textHeight * 2 + propertiesTxtPaddingY)
-    );
-    _selectedPanel.addText(
-        "Stamina: 5",
-        HorizontalConstraintType::PIXEL_LEFT, 32.0f + portraitWidth + 8.0f,
-        VerticalConstraintType::PIXEL_BOTTOM, 42.0f + portraitHeight - propertiesTxtPaddingY - (textHeight * 3 + propertiesTxtPaddingY)
-    );
-    _selectedPanel.addText(
-        "Mental: 8",
-        HorizontalConstraintType::PIXEL_LEFT, 32.0f + portraitWidth + 8.0f,
-        VerticalConstraintType::PIXEL_BOTTOM, 42.0f + portraitHeight - propertiesTxtPaddingY - (textHeight * 4 + propertiesTxtPaddingY)
+    vec2 infoTxtPos(32.0f + portraitWidth + 8.0f, 42.0f + portraitHeight);
+
+    _statusInfoEntities = addInfoColumn(
+        0,
+        infoColumnWidth,
+        infoTxtPos,
+        propertiesTxtPaddingY,
+        textHeight,
+        "Status",
+        {
+            "Health: 10",
+            "Stamina: 2",
+            "Mental: 8"
+        }
     );
 
-    _selectedPanel.addText(
+    _attributeInfoEntities = addInfoColumn(
+        1,
+        infoColumnWidth,
+        infoTxtPos,
+        propertiesTxtPaddingY,
+        textHeight,
         "Attributes",
-        HorizontalConstraintType::PIXEL_LEFT, 32.0f + portraitWidth + 8.0f + 120.0f,
-        VerticalConstraintType::PIXEL_BOTTOM, 42.0f + portraitHeight - propertiesTxtPaddingY - textHeight
+        {
+            "Speed: 4",
+            "Strength: 5",
+            "Accuracy: 2",
+            "Armor: 3"
+        }
     );
+
+    // Draw line before "terrain data"
+    _selectedPanel.addImage(
+        HorizontalConstraintType::PIXEL_LEFT, 32.0f + portraitWidth + 8.0f + infoColumnWidth * 2 + 2.0f,
+        VerticalConstraintType::PIXEL_BOTTOM, 42.0f + portraitHeight - propertiesTxtPaddingY - 105,
+        1, 105,
+        nullptr, // texture
+        Panel::get_base_ui_color(3).toVec3(),
+        { 0, 0, 1, 1 } // texture cropping
+    );
+
+    _tileInfoEntities = addInfoColumn(
+        2,
+        infoColumnWidth,
+        infoTxtPos,
+        propertiesTxtPaddingY,
+        textHeight,
+        "Environment",
+        {
+            "Type: Barren",
+            "Elevation: 1",
+            "Effect: None"
+        }
+    );
+}
+
+void InGameUI::setSelectedInfo(uint64_t tile)
+{
+    GC_ubyte object = gamecommon::get_tile_thingid(tile);
+    gamecommon::ObjectInfo* pObjectInfo = objects::ObjectInfoLib::get(object);
+    std::string objNameStr(pObjectInfo->name, OBJECT_DATA_STRLEN_NAME);
+
+    // Set obj name txt
+    TextRenderable* pObjNameTxt = (TextRenderable*)_pScene->getComponent(
+        _objectNameEntity,
+        ComponentType::PK_RENDERABLE_TEXT
+    );
+
+    pObjNameTxt->accessStr() = objNameStr;
+}
+
+// Returns created info txt entities (doesn't include the title)
+std::vector<entityID_t> InGameUI::addInfoColumn(
+    int columnIndex,
+    float columnWidth,
+    const pk::vec2& pos,
+    float txtPaddingY,
+    float txtHeight,
+    const std::string& title,
+    const std::vector<std::string>& infos
+)
+{
+    std::vector<entityID_t> infoTxtEntities(infos.size());
     _selectedPanel.addText(
-        "Speed: 4",
-        HorizontalConstraintType::PIXEL_LEFT, 32.0f + portraitWidth + 8.0f + 120.0f,
-        VerticalConstraintType::PIXEL_BOTTOM, 42.0f + portraitHeight - propertiesTxtPaddingY - (textHeight * 2 + propertiesTxtPaddingY)
+        title,
+        HorizontalConstraintType::PIXEL_LEFT, pos.x + 8.0f + columnWidth * columnIndex,
+        VerticalConstraintType::PIXEL_BOTTOM, pos.y - txtPaddingY - txtHeight
     );
-    _selectedPanel.addText(
-        "Strength: 2",
-        HorizontalConstraintType::PIXEL_LEFT, 32.0f + portraitWidth + 8.0f + 120.0f,
-        VerticalConstraintType::PIXEL_BOTTOM, 42.0f + portraitHeight - propertiesTxtPaddingY - (textHeight * 3 + propertiesTxtPaddingY)
-    );
-    _selectedPanel.addText(
-        "Accuracy: 10",
-        HorizontalConstraintType::PIXEL_LEFT, 32.0f + portraitWidth + 8.0f + 120.0f,
-        VerticalConstraintType::PIXEL_BOTTOM, 42.0f + portraitHeight - propertiesTxtPaddingY - (textHeight * 4 + propertiesTxtPaddingY)
-    );
-    _selectedPanel.addText(
-        "Armor: 5",
-        HorizontalConstraintType::PIXEL_LEFT, 32.0f + portraitWidth + 8.0f + 120.0f,
-        VerticalConstraintType::PIXEL_BOTTOM, 42.0f + portraitHeight - propertiesTxtPaddingY - (textHeight * 5 + propertiesTxtPaddingY)
-    );
+
+    for (int i = 0; i < infos.size(); ++i)
+    {
+        infoTxtEntities[i] = _selectedPanel.addText(
+            infos[i],
+            HorizontalConstraintType::PIXEL_LEFT, pos.x + 8.0f + columnWidth * columnIndex,
+            VerticalConstraintType::PIXEL_BOTTOM, pos.y - txtPaddingY - (txtHeight * (i + 2) + txtPaddingY)
+        ).first;
+    }
+    return infoTxtEntities;
 }

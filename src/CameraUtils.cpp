@@ -78,14 +78,6 @@ void CameraController::CameraScrollEvent::func(double dx, double dy)
         camZoom += addZoom;
     else if (addZoom > 0.0f && camZoom + addZoom <= pController->_maxDistToPivotPoint)
         camZoom += addZoom;
-    Debug::log("___TEST___zoom set to: " + std::to_string(camZoom));
-
-    /*
-    if (camZoom + addZoom >= pController->_minDistToPivotPoint && camZoom + addZoom <= pController->_maxDistToPivotPoint)
-        camZoom += addZoom;
-    else
-        Debug::log("___TEST___attempted to set scroll: " + std::to_string(camZoom + addZoom));
-    */
 }
 
 

@@ -75,6 +75,8 @@ void InGame::createWorld()
         4.0f
     );
     Debug::log("___TEST___Creating world -> SUCCESS");
+    // Can create mousepicker only when the "world" is available
+    _mousePicker.init(this, _pWorld);
 }
 
 void InGame::init()
@@ -104,10 +106,7 @@ void InGame::init()
     pClient->addOnMessageEvent(MESSAGE_TYPE__ObjInfoLibResponse, new OnMessagePostLogin_TEST(*this));
     pClient->addOnMessageEvent(MESSAGE_TYPE__LogoutResponse, new OnMessageLogout);
 
-    _pCamController = new CameraController(activeCamera, 16.0f);
-
-    _mousePicker.init((Scene*)this, _pWorld);
-    _mousePicker.set3DCursorVisible(true);
+    _pCamController = new CameraController(activeCamera, 32.0f);
 }
 
 void InGame::update()
@@ -163,7 +162,6 @@ void InGame::update()
         _pCamController->setPivotPointHeight(_pWorld->getTerrainHeight(camPivotPoint.x, camPivotPoint.z));
 
         _mousePicker.update(true);
-
         _pWorld->update(camPivotPoint.x, camPivotPoint.z);
 
         if (loggedIn && !loggingOut)
@@ -176,5 +174,7 @@ void InGame::update()
 void InGame::lateUpdate()
 {
     if (_pWorld)
+    {
         _pWorld->updateObjects();
+    }
 }

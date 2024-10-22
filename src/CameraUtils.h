@@ -70,7 +70,7 @@ private:
     pk::vec3 _pivotPoint;
     float _distToPivotPoint = 20.0f;
     const float _minDistToPivotPoint = 2.0f;
-    const float _maxDistToPivotPoint = 40.0f;
+    const float _maxDistToPivotPoint = 100.0f;
     float _yaw = 0.0f;
     const float _minPitch = M_PI * 0.1f;
     const float _maxPitch = M_PI * 0.5f;

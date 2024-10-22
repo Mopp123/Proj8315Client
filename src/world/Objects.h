@@ -148,7 +148,7 @@ namespace world
 
         public:
             static gamecommon::ObjectInfo* get(int index);
-            static VisualObjectInfo* getVisual(int index);
+            static VisualObjectInfo* get_visual(int index);
             static size_t get_size();
             static void create(const PK_byte* pData, size_t dataSize);
             static void create_object_visuals();
@@ -156,7 +156,7 @@ namespace world
 
             static void set_objects_TESTING(const std::vector<gamecommon::ObjectInfo>& objects);
 
-            static std::string toString();
+            static std::string to_string();
 
             static pk::Model* get_default_static_model();
             // TODO: better way to specify default models

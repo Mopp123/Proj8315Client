@@ -37,8 +37,53 @@ namespace world
     }
 
 
+	void MousePicker::PickerMouseButtonEvent::func(
+        InputMouseButtonName button,
+        InputAction action,
+        int mods
+    )
+    {
+        if (button == InputMouseButtonName::PK_INPUT_MOUSE_LEFT)
+        {
+            if (action == InputAction::PK_INPUT_PRESS && _clickState == 0)
+            {
+                int32_t obsSpaceX = 0;
+                int32_t obsSpaceY = 0;
+                _pMousePicker->getPickedObserveSpaceCoords(obsSpaceX, obsSpaceY);
+                uint64_t tile = _pMousePicker->_pWorld->getTile(obsSpaceX, obsSpaceY);
+                _pMousePicker->setSelectedTile(tile);
+                _clickState += 1;
+            }
+            else if (action == InputAction::PK_INPUT_RELEASE)
+            {
+                _clickState = 0;
+            }
+        }
+    }
+
+
     void MousePicker::init(pk::Scene* pScene, World* pWorld)
     {
+        if (!pScene)
+        {
+            Debug::log(
+                "@MousePicker::init "
+                "Attempted to init mousepicker but pScene was nullptr! ",
+                Debug::MessageType::PK_FATAL_ERROR
+            );
+            return;
+        }
+        if (!pWorld)
+        {
+            Debug::log(
+                "@MousePicker::init "
+                "Attempted to init mousepicker but pWorld was nullptr! "
+                "Make sure you have created World before calling this and make sure you provide valid pWorld",
+                Debug::MessageType::PK_FATAL_ERROR
+            );
+            return;
+        }
+
         _pScene = pScene;
         _pWorld = pWorld;
 
@@ -103,6 +148,9 @@ namespace world
             _cursorEntity,
             pCursorMesh->getResourceID()
         );
+
+        InputManager* pInputManager = Application::get()->accessInputManager();
+        pInputManager->addMouseButtonEvent(new PickerMouseButtonEvent(this));
     }
 
     void MousePicker::update(bool clampToTile)
@@ -113,6 +161,7 @@ namespace world
         mat4 viewMat = pCamTransform->getTransformationMatrix();
         viewMat.inverse();
 
+        // NOTE: Below could be done rather with CursorPosEvent?
         int mouseX = Application::get()->accessInputManager()->getMouseX();
         int mouseY = Application::get()->accessInputManager()->getMouseY();
 
@@ -134,10 +183,6 @@ namespace world
         );
 
         _pWorld->worldToTileCoords(_worldCoords.x, _worldCoords.z, _tileX, _tileY);
-        // Picked coords in "observed area space" where coords are always between 0 to observeAreaWidth - 1
-        const int observeAreaRadius = _pWorld->accessObserver().observeRadius;
-        int obsSpaceX = _tileX - _pWorld->getTileX() + observeAreaRadius;
-        int obsSpaceY = _tileY - _pWorld->getTileY() + observeAreaRadius;
 
         if (clampToTile)
         {
@@ -153,19 +198,9 @@ namespace world
 
         pCursorTransform->setPos({ _worldCoords.x, _worldCoords.y + 0.25f, _worldCoords.z });
 
-        // Test print picked tile object when press enter
-        InputManager* pInputManager = Application::get()->accessInputManager();
-        if (pInputManager->isKeyDown(pk::PK_INPUT_KEY_ENTER))
-        {
-            PK_ubyte tileObj = _pWorld->getTileObject(obsSpaceX, obsSpaceY);
-            Debug::log(
-                "___TEST___Picked tile at: " + std::to_string(obsSpaceX) + ", " + std::to_string(obsSpaceY) + "\n" +
-                "   Object: " + std::to_string(tileObj)
-            );
-        }
-
         // Object picking
         // NOTE: Atm just testing here..
+        // TODO: Finalize how this should be handled...
         std::vector<VisualObject>& tileObjects = _pWorld->accessVisualObjects();
         ResourceManager& resManager = Application::get()->getResourceManager();
         float prevObjDist = 99999.0f;
@@ -224,5 +259,12 @@ namespace world
             ComponentType::PK_RENDERABLE_STATIC3D
         );
         pRenderable->setActive(arg);
+    }
+
+    void MousePicker::getPickedObserveSpaceCoords(int32_t& outX, int32_t& outY) const
+    {
+        const int observeAreaRadius = _pWorld->accessObserver().observeRadius;
+        outX = _tileX - _pWorld->getTileX() + observeAreaRadius;
+        outY = _tileY - _pWorld->getTileY() + observeAreaRadius;
     }
 }

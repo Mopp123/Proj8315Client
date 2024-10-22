@@ -203,7 +203,8 @@ namespace world
 
         void worldToTileCoords(float x, float z, int& outTileX, int& outTileY);
 
-        PK_ubyte getTileObject(int32_t tileX, int32_t tileY) const;
+        // Returns tile at inputted observe space coordinates
+        uint64_t getTile(int32_t tileX, int32_t tileY) const;
 
         inline std::vector<objects::VisualObject>& accessVisualObjects() { return _tileObjects; }
         inline const std::vector<int>& getVisibleObjects() { return _visibleObjects; }

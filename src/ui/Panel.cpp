@@ -184,7 +184,11 @@ void Panel::addDefaultButton(
     Texture* pTexture = nullptr;
     vec4 textureCropping(0, 0, 1, 1);
 
-    const vec2 offsetFromPanel(4.0f, 4.0f);
+    vec2 offsetFromPanel(4.0f, 4.0f);
+    // offsetting depends which constraint type we are using
+    if (_verticalConstraint == VerticalConstraintType::PIXEL_TOP)
+        offsetFromPanel.y *= -1.0f;
+
     vec2 toAdd = calcNewSlotPos();
     uint32_t buttonEntity = create_button(
         txt,
