@@ -160,14 +160,16 @@ void InGameUI::create(pk::Scene* pScene, pk::Font* pFont)
         {
             "Type: Barren",
             "Elevation: 1",
-            "Effect: None"
+            "Effect: None",
+            "Position: 0, 0"
         }
     );
 }
 
-void InGameUI::setSelectedInfo(uint64_t tile)
+void InGameUI::setSelectedInfo(uint64_t tile, int tileX, int tileY)
 {
     GC_ubyte object = gamecommon::get_tile_thingid(tile);
+    GC_ubyte tileElevation = gamecommon::get_tile_terrelevation(tile);
     gamecommon::ObjectInfo* pObjectInfo = objects::ObjectInfoLib::get(object);
     std::string objNameStr(pObjectInfo->name, OBJECT_DATA_STRLEN_NAME);
 
@@ -176,8 +178,20 @@ void InGameUI::setSelectedInfo(uint64_t tile)
         _objectNameEntity,
         ComponentType::PK_RENDERABLE_TEXT
     );
-
     pObjNameTxt->accessStr() = objNameStr;
+
+    // Tile info
+    TextRenderable* pTileInfoElevationTxt = (TextRenderable*)_pScene->getComponent(
+        _tileInfoEntities[TileInfoSlotIndex::elevation],
+        ComponentType::PK_RENDERABLE_TEXT
+    );
+    pTileInfoElevationTxt->accessStr() = "Elevation: " + std::to_string(tileElevation);
+
+    TextRenderable* pTileInfoPosTxt = (TextRenderable*)_pScene->getComponent(
+        _tileInfoEntities[TileInfoSlotIndex::position],
+        ComponentType::PK_RENDERABLE_TEXT
+    );
+    pTileInfoPosTxt->accessStr() = "Location: " + std::to_string(tileX) + ", " + std::to_string(tileY);
 }
 
 // Returns created info txt entities (doesn't include the title)

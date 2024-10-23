@@ -51,7 +51,12 @@ namespace world
                 int32_t obsSpaceY = 0;
                 _pMousePicker->getPickedObserveSpaceCoords(obsSpaceX, obsSpaceY);
                 uint64_t tile = _pMousePicker->_pWorld->getTile(obsSpaceX, obsSpaceY);
-                _pMousePicker->setSelectedTile(tile);
+                _pMousePicker->setSelectedTile(
+                    tile,
+                    _pMousePicker->_tileX,
+                    _pMousePicker->_tileY
+                );
+
                 _clickState += 1;
             }
             else if (action == InputAction::PK_INPUT_RELEASE)
@@ -183,11 +188,16 @@ namespace world
         );
 
         _pWorld->worldToTileCoords(_worldCoords.x, _worldCoords.z, _tileX, _tileY);
+        int observeSpaceTileX = 0;
+        int observeSpaceTileY = 0;
+        getPickedObserveSpaceCoords(observeSpaceTileX, observeSpaceTileY);
 
         if (clampToTile)
         {
             const float tileVisualScale = _pWorld->getTileVisualScale();
             _worldCoords.x = _tileX * tileVisualScale;
+            uint64_t t = _pWorld->getTile(observeSpaceTileX, observeSpaceTileY);
+            _worldCoords.y = ((float)gamecommon::get_tile_terrelevation(t)) + 0.125f;
             _worldCoords.z = _tileY * tileVisualScale;
         }
 
@@ -266,5 +276,12 @@ namespace world
         const int observeAreaRadius = _pWorld->accessObserver().observeRadius;
         outX = _tileX - _pWorld->getTileX() + observeAreaRadius;
         outY = _tileY - _pWorld->getTileY() + observeAreaRadius;
+    }
+
+    void MousePicker::setSelectedTile(uint64_t tile, int tileX, int tileY)
+    {
+        _selectedTile = tile;
+        _selectedTileX = tileX;
+        _selectedTileY = tileY;
     }
 }

@@ -45,6 +45,174 @@ static void get_world_state(int xPos, int zPos, int observeRadius, std::vector<u
 }
 
 
+static void create_ramp(
+    std::vector<uint64_t>& mapData,
+    int mapWidth,
+    int posX,
+    int posY,
+    int rampWidth
+)
+{
+    GC_ubyte rampBeginHeight = get_tile_terrelevation(mapData[posX + posY * mapWidth]);
+    int jCount = rampBeginHeight;
+    int iCount = rampWidth;
+
+    TileStateDirection direction = TileStateDirection::TILE_STATE_dirN;
+
+    // Figure out which direction ramp should descent
+    int rampBuildThreshold = 2;
+    int dirWeights[8];
+    memset(dirWeights, 0, sizeof(int) * 8);
+    // Also keep track of the adjacent tile heights to figure out what our target height should be
+    // after direction has been figured
+    GC_ubyte dirHeights[8];
+    memset(dirHeights, 0, 8);
+    int dirHeightsIndex = 0;
+    for (int y = posY - 1; y <= posY + 1; ++y)
+    {
+        for (int x = posX - 1; x <= posX + 1; ++x)
+        {
+            if (x < 0 || x >= mapWidth || y < 0 || y >= mapWidth || (x == posX && y == posY))
+                continue;
+
+            GC_ubyte adjacentElevation = get_tile_terrelevation(mapData[x + y * mapWidth]);
+
+            dirHeights[dirHeightsIndex] = adjacentElevation;
+            ++dirHeightsIndex;
+
+            if ((int)rampBeginHeight -  (int)adjacentElevation >= rampBuildThreshold)
+            {
+                // north weight
+                if (y == posY - 1)
+                    dirWeights[TileStateDirection::TILE_STATE_dirN] += 1 +dirWeights[TileStateDirection::TILE_STATE_dirN];
+                // south weight
+                else if (y == posY + 1)
+                    dirWeights[TileStateDirection::TILE_STATE_dirS] += 1 + dirWeights[TileStateDirection::TILE_STATE_dirS];
+
+                // east weight
+                if (x == posX + 1)
+                    dirWeights[TileStateDirection::TILE_STATE_dirE] += 1 + dirWeights[TileStateDirection::TILE_STATE_dirE];
+                // west weight
+                if (x == posX - 1)
+                    dirWeights[TileStateDirection::TILE_STATE_dirW] += 1 + dirWeights[TileStateDirection::TILE_STATE_dirW];
+            }
+        }
+    }
+    // sort dirHeights to mach direction indexing
+    GC_ubyte swapTarget[8] = { 1, 2, 4, 7, 6, 5, 3, 0 };
+    GC_ubyte sortedDirHeights[8];
+    for (int i = 0; i < 8; ++i)
+        sortedDirHeights[i] = dirHeights[swapTarget[i]];
+
+    // calc diagonal dir weights
+    dirWeights[TileStateDirection::TILE_STATE_dirNE] = (dirWeights[TileStateDirection::TILE_STATE_dirN] + dirWeights[TileStateDirection::TILE_STATE_dirE]) / 2;
+    dirWeights[TileStateDirection::TILE_STATE_dirSE] = (dirWeights[TileStateDirection::TILE_STATE_dirS] + dirWeights[TileStateDirection::TILE_STATE_dirE]) / 2;
+    dirWeights[TileStateDirection::TILE_STATE_dirSW] = (dirWeights[TileStateDirection::TILE_STATE_dirS] + dirWeights[TileStateDirection::TILE_STATE_dirW]) / 2;
+    dirWeights[TileStateDirection::TILE_STATE_dirNW] = (dirWeights[TileStateDirection::TILE_STATE_dirN] + dirWeights[TileStateDirection::TILE_STATE_dirW]) / 2;
+    // Prioritize diagonal by adding 1 to non zeros
+    for (int i = 1; i <= 7; i += 2)
+        dirWeights[i] = dirWeights[i] > 0 ? dirWeights[i] + 1 : dirWeights[i];
+
+    int highestVal = 0;
+    int highestDir = 0;
+    for (int i = 0; i < 8; ++i)
+    {
+        int val = dirWeights[i];
+        if (val > highestVal)
+        {
+            highestVal = val;
+            highestDir = i;
+        }
+    }
+    direction = (TileStateDirection)highestDir;
+
+    // Figure out what the target height should be
+    GC_ubyte targetHeight = sortedDirHeights[highestDir];
+
+    bool diagonal = direction == TileStateDirection::TILE_STATE_dirNE ||
+        direction == TileStateDirection::TILE_STATE_dirSE ||
+        direction == TileStateDirection::TILE_STATE_dirSW ||
+        direction == TileStateDirection::TILE_STATE_dirNW;
+
+    // Need to make a bit wider if diagonal..
+    if (diagonal)
+    {
+        iCount += 1;
+        rampWidth += 1;
+    }
+
+    // Center the ramp little better in following cases.. looks better..
+    if (direction == TileStateDirection::TILE_STATE_dirN || direction == TileStateDirection::TILE_STATE_dirS)
+        posX -= rampWidth / 2;
+    if (direction == TileStateDirection::TILE_STATE_dirE || direction == TileStateDirection::TILE_STATE_dirW)
+        posY -= rampWidth / 2;
+
+    for (int j = 0; j < jCount; ++j)
+    {
+        for (int i = 0; i < iCount; ++i)
+        {
+            int tileY = posY + j;
+            int tileX = posX + i;
+            int steepnessModifier = j * 2;
+
+            if (direction == TileStateDirection::TILE_STATE_dirN)
+            {
+                tileY = posY - j;
+            }
+            else if (direction == TileStateDirection::TILE_STATE_dirW)
+            {
+                tileY = posY + i;
+                tileX = posX - j;
+            }
+            else if (direction == TileStateDirection::TILE_STATE_dirE)
+            {
+                tileY = posY + i;
+                tileX = posX + j;
+            }
+            // Diagonal cases are a bit.. special..
+            else if (direction == TileStateDirection::TILE_STATE_dirNE)
+            {
+                tileY = posY - j;
+                tileX = posX + (i + j) - (std::ceil(rampWidth / 2));
+                steepnessModifier = j * 2 + i;
+            }
+            else if (direction == TileStateDirection::TILE_STATE_dirSE)
+            {
+                tileY = posY + j;
+                tileX = posX + (i + j) - (std::ceil(rampWidth / 2));
+                steepnessModifier = j * 2 + i;
+            }
+            else if (direction == TileStateDirection::TILE_STATE_dirSW)
+            {
+                tileY = posY + j;
+                tileX = posX - ((rampWidth - 1) - i) - j + (std::ceil(rampWidth / 2));
+                steepnessModifier = j * 2 + ((rampWidth - 1) - i);
+            }
+            else if (direction == TileStateDirection::TILE_STATE_dirNW)
+            {
+                tileY = posY - j;
+                tileX = posX - (i + j) + (std::ceil(rampWidth / 2));
+                steepnessModifier = j * 2 + i;
+            }
+
+            if (tileX < 0 || tileX >= mapWidth || tileY < 0 || tileY >= mapWidth)
+            {
+                continue;
+            }
+
+            int finalHeight = (int)rampBeginHeight - steepnessModifier;
+
+            if (finalHeight >= targetHeight)
+            {
+                GC_ubyte h = (GC_ubyte)finalHeight;
+                set_tile_terrelevation(mapData[tileX + tileY * mapWidth], h);
+                set_tile_terrtype(mapData[tileX + tileY * mapWidth], 4);
+            }
+        }
+    }
+}
+
+
 InGameLocal::InGameLocal()
 {}
 
@@ -121,23 +289,114 @@ void InGameLocal::init()
     _testMapFull.resize(_testMapWidth * _testMapWidth * sizeof(uint64_t), 0);
 
     set_tile_thingid(_testMapFull[5 + 5 * _testMapWidth], 2);
-    set_tile_terrtype(_testMapFull[5 + 5 * _testMapWidth], 2);
-
-    set_tile_thingid(_testMapFull[5 + 6 * _testMapWidth], 1);
-    set_tile_thingid(_testMapFull[6 + 6 * _testMapWidth], 2);
-    set_tile_terrtype(_testMapFull[6 + 6 * _testMapWidth], 3);
-
-    set_tile_thingid(_testMapFull[0 + 0 * _testMapWidth], 1);
-    set_tile_terrelevation(_testMapFull[0 + 0 * _testMapWidth], 1);
-    set_tile_terrtype(_testMapFull[0 + 0 * _testMapWidth], 1);
 
 
+    int sx = 10;
+    int sy = 10;
+    int area = 12;
+    int cliffHeight = 15;
+    for (int y = sy; y < sy + area; ++y)
+    {
+        for (int x = sx; x < sx + area; ++x)
+        {
+            set_tile_terrelevation(_testMapFull[x + y * _testMapWidth], cliffHeight);
+            set_tile_terrtype(_testMapFull[x + y * _testMapWidth], 4);
+        }
+    }
+
+    int sx2 = 15;
+    int sy2 = 15;
+    int area2 = 8;
+    int cliffHeight2 = 4;
+    for (int y = sy2; y < sy2 + area2; ++y)
+    {
+        for (int x = sx2; x < sx2 + area2; ++x)
+        {
+            set_tile_terrelevation(_testMapFull[x + y * _testMapWidth], cliffHeight2);
+            set_tile_terrtype(_testMapFull[x + y * _testMapWidth], 4);
+        }
+    }
+/*
+    create_ramp(
+        _testMapFull,
+        _testMapWidth,
+        10,
+        12,
+        3,
+        0
+    );
+
+    create_ramp(
+        _testMapFull,
+        _testMapWidth,
+        12,
+        10,
+        3,
+        0
+    );
+
+    create_ramp(
+        _testMapFull,
+        _testMapWidth,
+        13,
+        17,
+        3,
+        0
+    );
+
+    create_ramp(
+        _testMapFull,
+        _testMapWidth,
+        17,
+        12,
+        3,
+        0
+    );
+
+    // test diagonal ramps
+    create_ramp(
+        _testMapFull,
+        _testMapWidth,
+        10,
+        10,
+        3,
+        0
+    );
+
+    create_ramp(
+        _testMapFull,
+        _testMapWidth,
+        17,
+        10,
+        3,
+        0
+    );
+
+    create_ramp(
+        _testMapFull,
+        _testMapWidth,
+        17,
+        17,
+        3,
+        0
+    );
+
+    create_ramp(
+        _testMapFull,
+        _testMapWidth,
+        10,
+        17,
+        3,
+        0
+    );
+    */
     _testMapLocal.resize(_observeAreaWidth * _observeAreaWidth * sizeof(uint64_t), 0);
 }
 
 
 static float s_updateTimer = 0.0f;
 static float s_maxUpdateTimer = 0.5f;
+static int s_TEST_clickState = 0;
 
 void InGameLocal::update()
 {
@@ -256,9 +515,31 @@ void InGameLocal::update()
     vec3 camPivotPoint = _pCamController->getPivotPoint();
 
     _mousePicker.update(true);
+
     // Test change selected obj info
     // TODO: Maybe do this in mouse picker's OnMouseButton event?
-    _inGameUI.setSelectedInfo(_mousePicker.getSelectedTile());
+    _inGameUI.setSelectedInfo(
+        _mousePicker.getSelectedTile(),
+        _mousePicker.getSelectedTileX(),
+        _mousePicker.getSelectedTileY()
+    );
+
+    // Test put ramp on mouse click
+    if (pInputManager->isMouseButtonDown(InputMouseButtonName::PK_INPUT_MOUSE_RIGHT))
+        s_TEST_clickState += 1;
+    else
+        s_TEST_clickState = 0;
+
+    if (s_TEST_clickState == 1)
+    {
+        create_ramp(
+            _testMapFull,
+            _testMapWidth,
+            _mousePicker.getPickedTileX(),
+            _mousePicker.getPickedTileY(),
+            3
+        );
+    }
 
     _pWorld->update(camPivotPoint.x, camPivotPoint.z);
 

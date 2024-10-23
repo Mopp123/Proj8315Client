@@ -8,6 +8,14 @@
 class InGameUI
 {
 private:
+    enum TileInfoSlotIndex
+    {
+        type = 0,
+        elevation,
+        effect,
+        position
+    };
+
     pk::Scene* _pScene = nullptr;
 
     // Panel containing stuff like, logout, settings/preferences, etc..
@@ -34,7 +42,7 @@ public:
 
     void create(pk::Scene* pScene, pk::Font* pFont);
 
-    void setSelectedInfo(uint64_t tile);
+    void setSelectedInfo(uint64_t tile, int tileX, int tileY);
 
 private:
     // Returns created info txt entities (doesn't include the title)

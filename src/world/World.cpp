@@ -360,7 +360,7 @@ namespace world
 				if (y - 1 >= 0)
                     down = (float)(get_tile_terrelevation(mapState[x + (y-1) * observeAreaWidth]));
 
-				vec3 normal((left - right), 1.0f, (down - up)); // this is fucking dumb...
+				vec3 normal((left - right), 15.0f, (down - up)); // this is fucking dumb...
 				normal = normal.normalize();
 
                 size_t normalBufPos = sizeof(float) * 3 + (x + y * observeAreaWidth) * (sizeof(float) * 8);
