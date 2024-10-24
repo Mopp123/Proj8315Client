@@ -1,13 +1,33 @@
 #pragma once
 
 #include "Panel.h"
+#include "net/Client.h"
 #include <vector>
 #include <string>
 
 
+class InGame;
+
 class InGameUI
 {
 private:
+    class OnClickLogout : public pk::ui::OnClickEvent
+    {
+    private:
+        InGame* _pInGameScene = nullptr;
+
+    public:
+        OnClickLogout(InGame* pInGameScene) :_pInGameScene(pInGameScene) {}
+        virtual void onClick(pk::InputMouseButtonName button);
+    };
+
+    class OnMessageLogout : public net::OnMessageEvent
+    {
+    public:
+        OnMessageLogout() {}
+        virtual void onMessage(const GC_byte* data, size_t dataSize);
+    };
+
     enum TileInfoSlotIndex
     {
         type = 0,
@@ -16,6 +36,8 @@ private:
         position
     };
 
+    InGame* _pInGameScene = nullptr;
+    // Just quick hack to be able to use "InGameLocal" scene for testing..
     pk::Scene* _pScene = nullptr;
 
     // Panel containing stuff like, logout, settings/preferences, etc..
@@ -40,7 +62,10 @@ public:
     InGameUI() {};
     ~InGameUI() {};
 
-    void create(pk::Scene* pScene, pk::Font* pFont);
+    // NOTE:
+    // *If testing locally give pInGameScene as nullptr
+    // *pScene is required to be the current scene casted to "raw scene"
+    void create(InGame* pInGameScene, pk::Scene* pScene, pk::Font* pFont);
 
     void setSelectedInfo(uint64_t tile, int tileX, int tileY);
 

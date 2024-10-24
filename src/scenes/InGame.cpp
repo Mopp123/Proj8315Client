@@ -13,20 +13,6 @@ using namespace net;
 using namespace gamecommon;
 
 
-void InGame::OnClickLogout::onClick(pk::InputMouseButtonName button)
-{
-    Client::get_instance()->send((int32_t)MESSAGE_TYPE__LogoutRequest, {});
-    _sceneRef.loggingOut = true;
-    _sceneRef.setInfoText(
-        "Logging out...",
-        { 1, 1, 0 },
-        0, 0,
-        HorizontalConstraintType::PIXEL_CENTER_HORIZONTAL,
-        VerticalConstraintType::PIXEL_CENTER_VERTICAL
-    );
-}
-
-
 void InGame::OnMessageLogin_TEST::onMessage(const GC_byte* data, size_t dataSize)
 {
     Debug::log("___TEST___recv login response");
@@ -45,13 +31,6 @@ void InGame::OnMessagePostLogin_TEST::onMessage(const GC_byte* data, size_t data
     pClient->user.name = _sceneRef.testUserName;
     pClient->user.isLoggedIn = true;
     _sceneRef.createWorld();
-}
-
-
-void InGame::OnMessageLogout::onMessage(const GC_byte* data, size_t dataSize)
-{
-    Client::get_instance()->user.isLoggedIn = false;
-    Application::get()->switchScene(new MainMenu);
 }
 
 
@@ -76,7 +55,10 @@ void InGame::createWorld()
     );
     Debug::log("___TEST___Creating world -> SUCCESS");
     // Can create mousepicker only when the "world" is available
-    _mousePicker.init(this, _pWorld);
+    _mousePicker.init((Scene*)this, _pWorld);
+
+    // Just to be safe create/init inGameUI here as well..
+    _inGameUI.create(this, (Scene*)this, _pDefaultFont);
 }
 
 void InGame::init()
@@ -86,25 +68,9 @@ void InGame::init()
     // Set clear color
     Application::get()->getMasterRenderer().setClearColor({ 0, 0, 0, 1});
 
-    _mainPanel.createDefault(
-        (Scene*)this,
-        _pDefaultFont,
-        HorizontalConstraintType::PIXEL_RIGHT, 5,
-        VerticalConstraintType::PIXEL_TOP, 2,
-        { 120, 25 }, // scale
-        { 200, 24 }, // slot scale
-        Panel::LayoutFillType::HORIZONTAL
-    );
-    _mainPanel.addDefaultButton(
-        "Logout",
-        new OnClickLogout(*this),
-        100
-    );
-
     Client* pClient = Client::get_instance();
     pClient->addOnMessageEvent(MESSAGE_TYPE__LoginResponse, new OnMessageLogin_TEST(*this));
     pClient->addOnMessageEvent(MESSAGE_TYPE__ObjInfoLibResponse, new OnMessagePostLogin_TEST(*this));
-    pClient->addOnMessageEvent(MESSAGE_TYPE__LogoutResponse, new OnMessageLogout);
 
     _pCamController = new CameraController(activeCamera, 32.0f);
 }
@@ -162,6 +128,13 @@ void InGame::update()
         _pCamController->setPivotPointHeight(_pWorld->getTerrainHeight(camPivotPoint.x, camPivotPoint.z));
 
         _mousePicker.update(true);
+        // TODO: Maybe do this in mouse picker's OnMouseButton event?
+        _inGameUI.setSelectedInfo(
+            _mousePicker.getSelectedTile(),
+            _mousePicker.getSelectedTileX(),
+            _mousePicker.getSelectedTileY()
+        );
+
         _pWorld->update(camPivotPoint.x, camPivotPoint.z);
 
         if (loggedIn && !loggingOut)

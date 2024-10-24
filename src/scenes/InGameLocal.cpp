@@ -46,14 +46,14 @@ static void get_world_state(int xPos, int zPos, int observeRadius, std::vector<u
 
 
 static void create_ramp(
-    std::vector<uint64_t>& mapData,
-    int mapWidth,
+    uint64_t* pWorld,
+    int worldWidth,
     int posX,
     int posY,
     int rampWidth
 )
 {
-    GC_ubyte rampBeginHeight = get_tile_terrelevation(mapData[posX + posY * mapWidth]);
+    GC_ubyte rampBeginHeight = get_tile_terrelevation(*(pWorld + (posX + posY * worldWidth)));
     int jCount = rampBeginHeight;
     int iCount = rampWidth;
 
@@ -72,10 +72,10 @@ static void create_ramp(
     {
         for (int x = posX - 1; x <= posX + 1; ++x)
         {
-            if (x < 0 || x >= mapWidth || y < 0 || y >= mapWidth || (x == posX && y == posY))
+            if (x < 0 || x >= worldWidth || y < 0 || y >= worldWidth || (x == posX && y == posY))
                 continue;
 
-            GC_ubyte adjacentElevation = get_tile_terrelevation(mapData[x + y * mapWidth]);
+            GC_ubyte adjacentElevation = get_tile_terrelevation(*(pWorld + (x + y * worldWidth)));
 
             dirHeights[dirHeightsIndex] = adjacentElevation;
             ++dirHeightsIndex;
@@ -195,7 +195,7 @@ static void create_ramp(
                 steepnessModifier = j * 2 + i;
             }
 
-            if (tileX < 0 || tileX >= mapWidth || tileY < 0 || tileY >= mapWidth)
+            if (tileX < 0 || tileX >= worldWidth || tileY < 0 || tileY >= worldWidth)
             {
                 continue;
             }
@@ -204,9 +204,10 @@ static void create_ramp(
 
             if (finalHeight >= targetHeight)
             {
-                GC_ubyte h = (GC_ubyte)finalHeight;
-                set_tile_terrelevation(mapData[tileX + tileY * mapWidth], h);
-                set_tile_terrtype(mapData[tileX + tileY * mapWidth], 4);
+                const GC_ubyte h = (GC_ubyte)finalHeight;
+                uint64_t& targetTile = *(pWorld + (tileX + tileY * worldWidth));
+                set_tile_terrelevation(targetTile, h);
+                set_tile_terrtype(targetTile, 4);
             }
         }
     }
@@ -228,7 +229,7 @@ void InGameLocal::init()
     // Set clear color
     Application::get()->getMasterRenderer().setClearColor({ 0, 0, 0, 1});
 
-    _inGameUI.create((Scene*)this, _pDefaultFont);
+    _inGameUI.create(nullptr, (Scene*)this, _pDefaultFont);
 
     _pCamController = new CameraController(activeCamera, 30.0f);
     Transform* pCamTransform = (Transform*)getComponent(activeCamera, ComponentType::PK_TRANSFORM);
@@ -290,11 +291,11 @@ void InGameLocal::init()
 
     set_tile_thingid(_testMapFull[5 + 5 * _testMapWidth], 2);
 
-
+    /*
     int sx = 10;
     int sy = 10;
-    int area = 12;
-    int cliffHeight = 15;
+    int area = 16;
+    int cliffHeight = 4;
     for (int y = sy; y < sy + area; ++y)
     {
         for (int x = sx; x < sx + area; ++x)
@@ -303,19 +304,7 @@ void InGameLocal::init()
             set_tile_terrtype(_testMapFull[x + y * _testMapWidth], 4);
         }
     }
-
-    int sx2 = 15;
-    int sy2 = 15;
-    int area2 = 8;
-    int cliffHeight2 = 4;
-    for (int y = sy2; y < sy2 + area2; ++y)
-    {
-        for (int x = sx2; x < sx2 + area2; ++x)
-        {
-            set_tile_terrelevation(_testMapFull[x + y * _testMapWidth], cliffHeight2);
-            set_tile_terrtype(_testMapFull[x + y * _testMapWidth], 4);
-        }
-    }
+    */
 /*
     create_ramp(
         _testMapFull,
@@ -397,6 +386,8 @@ void InGameLocal::init()
 static float s_updateTimer = 0.0f;
 static float s_maxUpdateTimer = 0.5f;
 static int s_TEST_clickState = 0;
+static int s_TEST_keyStateJ = 0;
+static int s_TEST_keyStateK = 0;
 
 void InGameLocal::update()
 {
@@ -530,16 +521,55 @@ void InGameLocal::update()
     else
         s_TEST_clickState = 0;
 
+    int pickedTileX = _mousePicker.getPickedTileX();
+    int pickedTileY = _mousePicker.getPickedTileY();
     if (s_TEST_clickState == 1)
     {
         create_ramp(
-            _testMapFull,
+            _testMapFull.data(),
             _testMapWidth,
-            _mousePicker.getPickedTileX(),
-            _mousePicker.getPickedTileY(),
+            pickedTileX,
+            pickedTileY,
             3
         );
     }
+    // Test incr height with "k" and decr with "j" keys
+    if (pInputManager->isKeyDown(InputKeyName::PK_INPUT_KEY_J))
+        s_TEST_keyStateJ += 1;
+    else
+        s_TEST_keyStateJ = 0;
+
+    if (pInputManager->isKeyDown(InputKeyName::PK_INPUT_KEY_K))
+        s_TEST_keyStateK += 1;
+    else
+        s_TEST_keyStateK = 0;
+
+    if (s_TEST_keyStateJ == 1 || s_TEST_keyStateK == 1)
+    {
+        int radius = 3;
+        int elevationIncr = 4;
+        if (s_TEST_keyStateJ)
+            elevationIncr = -4;
+
+        int currentHeight = (int)get_tile_terrelevation(_testMapFull[pickedTileX + pickedTileY * _testMapWidth]);
+        for (int y = pickedTileY - radius; y <= pickedTileY + radius; ++y)
+        {
+            for (int x = pickedTileX - radius; x <= pickedTileX + radius; ++x)
+            {
+                int tileIndex = x + y * _testMapWidth;
+                if (tileIndex >= 0 && tileIndex < (_testMapWidth * _testMapWidth))
+                {
+                    int newHeight = currentHeight + elevationIncr;
+                    if (newHeight >= 0 && newHeight <= 31)
+                    {
+                        set_tile_terrelevation(_testMapFull[x + y * _testMapWidth], currentHeight + elevationIncr);
+                        set_tile_terrtype(_testMapFull[x + y * _testMapWidth], 4);
+                    }
+                }
+            }
+        }
+    }
+
 
     _pWorld->update(camPivotPoint.x, camPivotPoint.z);
 

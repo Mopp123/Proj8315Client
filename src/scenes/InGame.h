@@ -3,24 +3,15 @@
 #include "BaseScene.h"
 #include "world/World.h"
 #include "CameraUtils.h"
-#include "ui/Panel.h"
 #include "net/Client.h"
 #include "world/MousePicker.h"
+#include "ui/Panel.h"
+#include "ui/InGameUI.h"
 
 
 class InGame : public BaseScene
 {
 private:
-    class OnClickLogout : public pk::ui::OnClickEvent
-    {
-    private:
-        InGame& _sceneRef;
-
-    public:
-        OnClickLogout(InGame& sceneRef) :_sceneRef(sceneRef) {}
-        virtual void onClick(pk::InputMouseButtonName button);
-    };
-
     // Used atm temporarely to test world broadcasting!
     class OnMessageLogin_TEST : public net::OnMessageEvent
     {
@@ -47,21 +38,14 @@ private:
         virtual void onMessage(const GC_byte* data, size_t dataSize);
     };
 
-    class OnMessageLogout : public net::OnMessageEvent
-    {
-    public:
-        OnMessageLogout() {}
-        virtual void onMessage(const GC_byte* data, size_t dataSize);
-    };
-
-    Panel _mainPanel;
-
     world::World* _pWorld = nullptr;
     CameraController* _pCamController = nullptr;
     world::MousePicker _mousePicker;
 
     const size_t _observeAreaRadius = 15;
     const size_t _observeAreaWidth = _observeAreaRadius * 2 + 1;
+
+    InGameUI _inGameUI;
 
 public:
     std::string testUserName = "asd";

@@ -1,25 +1,54 @@
 #include "InGameUI.h"
 #include "../../Proj8315Common/src/Common.h"
 #include "../../Proj8315Common/src/Tile.h"
+#include "../../Proj8315Common/src/messages/Message.h"
 #include "Object.h"
 #include "world/Objects.h"
+#include "scenes/InGame.h"
+#include "scenes/MainMenu.h"
 
 
 using namespace pk;
 using namespace world;
+using namespace net;
+
+
+void InGameUI::OnClickLogout::onClick(pk::InputMouseButtonName button)
+{
+    if (_pInGameScene)
+    {
+        Client::get_instance()->send((int32_t)MESSAGE_TYPE__LogoutRequest, {});
+        _pInGameScene->loggingOut = true;
+        _pInGameScene->setInfoText(
+            "Logging out...",
+            { 1, 1, 0 },
+            0, 0,
+            HorizontalConstraintType::PIXEL_CENTER_HORIZONTAL,
+            VerticalConstraintType::PIXEL_CENTER_VERTICAL
+        );
+    }
+}
+
+
+void InGameUI::OnMessageLogout::onMessage(const GC_byte* data, size_t dataSize)
+{
+    Client::get_instance()->user.isLoggedIn = false;
+    Application::get()->switchScene(new MainMenu);
+}
 
 
 // TODO:
 // * Some func to add and store status and attribute strings/values more clearly
 // * Display "really" selected object's info
-void InGameUI::create(pk::Scene* pScene, pk::Font* pFont)
+void InGameUI::create(InGame* pInGameScene, Scene* pScene, pk::Font* pFont)
 {
+    _pInGameScene = pInGameScene;
     _pScene = pScene;
 
     const vec2 settingsPanelScale(212, 25);
     const vec2 settingsPanelSlotScale(100, 24);
     _settingsPanel.createDefault(
-        pScene,
+        _pScene,
         pFont,
         HorizontalConstraintType::PIXEL_RIGHT, 0.0f,
         VerticalConstraintType::PIXEL_TOP, 0.0f,
@@ -29,7 +58,7 @@ void InGameUI::create(pk::Scene* pScene, pk::Font* pFont)
     );
     _settingsPanel.addDefaultButton(
         "Logout",
-        nullptr,
+        new OnClickLogout(_pInGameScene),
         100
     );
 
@@ -42,7 +71,7 @@ void InGameUI::create(pk::Scene* pScene, pk::Font* pFont)
     const vec2 selectedPanelScale(600, 140);
     const vec2 selectedPanelSlotScale(200, 30);
     _selectedPanel.createDefault(
-        pScene,
+        _pScene,
         pFont,
         HorizontalConstraintType::PIXEL_LEFT, 0.0f,
         VerticalConstraintType::PIXEL_BOTTOM, 0.0f,
@@ -164,6 +193,10 @@ void InGameUI::create(pk::Scene* pScene, pk::Font* pFont)
             "Position: 0, 0"
         }
     );
+
+    Client* pClient = Client::get_instance();
+    if (pClient)
+        pClient->addOnMessageEvent(MESSAGE_TYPE__LogoutResponse, new OnMessageLogout);
 }
 
 void InGameUI::setSelectedInfo(uint64_t tile, int tileX, int tileY)
