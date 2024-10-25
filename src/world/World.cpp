@@ -151,9 +151,9 @@ namespace world
         // Terrain channel textures
         ImageData* pImgChannel0 = resourceManager.loadImage("assets/textures/deadland.png");
         ImageData* pImgChannel1 = resourceManager.loadImage("assets/textures/water.png");
-        ImageData* pImgChannel2 = resourceManager.loadImage("assets/textures/snow.png");
-        ImageData* pImgChannel3 = resourceManager.loadImage("assets/textures/rock.png");
-        ImageData* pImgChannel4 = resourceManager.loadImage("assets/textures/grass.png");
+        ImageData* pImgChannel2 = resourceManager.loadImage("assets/textures/rock.png");
+        ImageData* pImgChannel3 = resourceManager.loadImage("assets/textures/grass.png");
+        ImageData* pImgChannel4 = resourceManager.loadImage("assets/textures/snow.png");
 
         Texture* pTerrainTex0 = resourceManager.createTexture(
             pImgChannel0->getResourceID(),
@@ -371,7 +371,8 @@ namespace world
                 );
 
                 PK_ubyte tileType = get_tile_terrtype(tileState);
-                updateBlendmapData(tileType, x, y);
+                PK_ubyte tileTemperature = get_tile_temperature(tileState);
+                updateBlendmapData(tileType, x, y, tileTemperature);
 
                 // Also need to update objects' colliders scales depending on obj type here
                 // since "updateObjects()" happens in lateUpdate so.. fucks up if done there...
@@ -389,7 +390,6 @@ namespace world
                 */
             }
         }
-
         _pTerrainBlendmapTexture->update(
             (void*)_pTerrainBlendmapImg->getData(),
             _pTerrainBlendmapImg->getSize(),
@@ -409,7 +409,7 @@ namespace world
                 const int tileIndex = x + y * observeAreaWidth;
                 uint64_t tileState = _pTileData[tileIndex];
 
-                PK_ubyte tileEffect = get_tile_terreffect(tileState);
+                PK_ubyte tileEffect = get_tile_effect(tileState);
                 PK_ubyte tileObject = get_tile_thingid(tileState);
                 PK_ubyte tileAction = get_tile_action(tileState);
                 PK_ubyte tileFacingDirection = get_tile_facingdir(tileState);
@@ -752,20 +752,48 @@ namespace world
         outTileY = (int)std::floor(displacedWorldZ / _tileVisualScale);
     }
 
-    void World::updateBlendmapData(PK_ubyte tileType, int x, int y)
+    void World::updateBlendmapData(PK_ubyte tileType, int x, int y, GC_ubyte temperature)
     {
+        // channels follow TileStateTerrType enum in following order
+        // black =  0
+        // red =    1
+        // green =  2
+        // blue =   3
+        // alpha =  4
+        vec4 totalColor;
+
+        // test mix snow(alpha channel) with other textures depending on tile temperature
+        // -> don't put snow on cliffs tho (rock terrain type..)
+        // *Cold temperature ranges are specified in Tile.h
+        if (temperature >= TileStateTemperature::TILE_STATE_chilly && temperature <= TileStateTemperature::TILE_STATE_freezing)
+        {
+            if (tileType != TileStateTerrType::TILE_STATE_terrTypeRock)
+                totalColor.w = 0.75f;
+        }
+
         // First channel using "black" so need do a bit differently
         if (tileType == 0)
         {
-            _pTerrainBlendmapImg->setColorAt_UNSAFE(x, y, 0, 0, 0, 0);
+            //_pTerrainBlendmapImg->setColorAt_UNSAFE(x, y, 0, 0, 0, a);
+            _pTerrainBlendmapImg->setColorAt_UNSAFE(x, y, 0, 0, 0, (int)(totalColor.w * 255.0f));
         }
         else
         {
+            /*
             const int r = tileType == 1 ? 255 : 0;
             const int g = tileType == 2 ? 255 : 0;
             const int b = tileType == 3 ? 255 : 0;
-            const int a = tileType == 4 ? 255 : 0;
+            */
+            //const int a = tileType == 4 ? 255 : 0;
 
+            totalColor.x = tileType == 1 ? 1.0f - totalColor.w : 0;
+            totalColor.y = tileType == 2 ? 1.0f - totalColor.w : 0;
+            totalColor.z = tileType == 3 ? 1.0f - totalColor.w : 0;
+            totalColor = totalColor *  255.0f;
+            int r = totalColor.x;
+            int g = totalColor.y;
+            int b = totalColor.z;
+            int a = totalColor.w;
             _pTerrainBlendmapImg->setColorAt_UNSAFE(x, y, r, g, b, a);
         }
     }

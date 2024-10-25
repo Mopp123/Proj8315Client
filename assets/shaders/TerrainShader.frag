@@ -53,6 +53,11 @@ void main(void)
 
 	vec4 blendedColor = diffuseColorBlack + diffuseColorRed + diffuseColorGreen + diffuseColorBlue + diffuseColorAlpha;
 
+    float rMul = blendmapColor.r;
+    float aMul = blendmapColor.a;
+    if (rMul > 0.75 && aMul == 0.0)
+        blendedColor = texture2D(material.channelTexSampler1, tiledUv);
+
     vec4 finalColor = (var_ambientColor + diffuseColor) * blendedColor;
     gl_FragColor = finalColor;
 }

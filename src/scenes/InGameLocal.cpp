@@ -507,6 +507,7 @@ void InGameLocal::update()
 
     _mousePicker.update(true);
 
+
     // Test change selected obj info
     // TODO: Maybe do this in mouse picker's OnMouseButton event?
     _inGameUI.setSelectedInfo(

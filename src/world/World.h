@@ -219,7 +219,7 @@ namespace world
     private:
         //void updateSprites();
 
-        void updateBlendmapData(PK_ubyte tileType, int x, int y);
+        void updateBlendmapData(PK_ubyte tileType, int x, int y, GC_ubyte temperature);
         void updateBlendmapData(PK_ubyte tileType, int pixelIndex);
     };
 }
