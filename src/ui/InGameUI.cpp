@@ -12,6 +12,23 @@ using namespace pk;
 using namespace world;
 using namespace net;
 
+using namespace gamecommon;
+
+
+static std::string temperature_value_to_string(TileStateTemperature value)
+{
+    switch (value)
+    {
+        case TileStateTemperature::TILE_STATE_mild : return "Mild";
+        case TileStateTemperature::TILE_STATE_warm : return "Warm";
+        case TileStateTemperature::TILE_STATE_hot : return "Hot";
+        case TileStateTemperature::TILE_STATE_burning : return "Burning hot";
+        case TileStateTemperature::TILE_STATE_chilly : return "Chilly";
+        case TileStateTemperature::TILE_STATE_cold : return "Cold";
+        case TileStateTemperature::TILE_STATE_freezing : return "Freezing";
+        default : return "Invalid temperature value";
+    }
+}
 
 void InGameUI::OnClickLogout::onClick(pk::InputMouseButtonName button)
 {
@@ -189,6 +206,7 @@ void InGameUI::create(InGame* pInGameScene, Scene* pScene, pk::Font* pFont)
         {
             "Type: Barren",
             "Elevation: 1",
+            "Temperature:",
             "Effect: None",
             "Position: 0, 0"
         }
@@ -203,6 +221,7 @@ void InGameUI::setSelectedInfo(uint64_t tile, int tileX, int tileY)
 {
     GC_ubyte object = gamecommon::get_tile_thingid(tile);
     GC_ubyte tileElevation = gamecommon::get_tile_terrelevation(tile);
+    GC_ubyte tileTemperature = gamecommon::get_tile_temperature(tile);
     gamecommon::ObjectInfo* pObjectInfo = objects::ObjectInfoLib::get(object);
     std::string objNameStr(pObjectInfo->name, OBJECT_DATA_STRLEN_NAME);
 
@@ -219,6 +238,12 @@ void InGameUI::setSelectedInfo(uint64_t tile, int tileX, int tileY)
         ComponentType::PK_RENDERABLE_TEXT
     );
     pTileInfoElevationTxt->accessStr() = "Elevation: " + std::to_string(tileElevation);
+
+    TextRenderable* pTileInfoTemperatureTxt = (TextRenderable*)_pScene->getComponent(
+        _tileInfoEntities[TileInfoSlotIndex::temperature],
+        ComponentType::PK_RENDERABLE_TEXT
+    );
+    pTileInfoTemperatureTxt->accessStr() = "Temperature: " + temperature_value_to_string((TileStateTemperature)tileTemperature);
 
     TextRenderable* pTileInfoPosTxt = (TextRenderable*)_pScene->getComponent(
         _tileInfoEntities[TileInfoSlotIndex::position],

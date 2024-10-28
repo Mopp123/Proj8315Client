@@ -83,6 +83,7 @@ public:
 
     pk::Transform* getCameraTransform();
 
+    inline void setPivotPoint(const pk::vec3& pos) { _pivotPoint = pos; }
     inline void setPivotPointHeight(float height) { _pivotPoint.y = height;}
     inline const pk::vec3& getPivotPoint() const { return _pivotPoint; }
 

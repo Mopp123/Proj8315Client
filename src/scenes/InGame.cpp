@@ -73,6 +73,8 @@ void InGame::init()
     pClient->addOnMessageEvent(MESSAGE_TYPE__ObjInfoLibResponse, new OnMessagePostLogin_TEST(*this));
 
     _pCamController = new CameraController(activeCamera, 32.0f);
+    // test setting cam pos initially to "server side equator" (worldPos * tileVisualScale)
+    _pCamController->setPivotPoint({ 128, 0, 4.0f * 128.0f });
 }
 
 void InGame::update()

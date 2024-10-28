@@ -17,6 +17,7 @@ struct Material
     sampler2D channelTexSampler2;
     sampler2D channelTexSampler3;
     sampler2D channelTexSampler4;
+    sampler2D channelTexSampler5;
     sampler2D blendmapTexSampler;
 };
 uniform Material material;
@@ -45,18 +46,34 @@ void main(void)
 	float blackAmount = 1.0 - (blendmapColor.r + blendmapColor.g + blendmapColor.b + blendmapColor.a);
 	vec2 tiledUv = u * verticesPerRow;
 
-	vec4 diffuseColorBlack =		texture2D(material.channelTexSampler0, tiledUv) * blackAmount;
-	vec4 diffuseColorRed =			texture2D(material.channelTexSampler1, tiledUv) * blendmapColor.r;
-	vec4 diffuseColorGreen =		texture2D(material.channelTexSampler2, tiledUv) * blendmapColor.g;
-	vec4 diffuseColorBlue =			texture2D(material.channelTexSampler3, tiledUv) * blendmapColor.b;
-	vec4 diffuseColorAlpha =		texture2D(material.channelTexSampler4, tiledUv) * blendmapColor.a;
+    float yellowAmount = 0.0;
+    if (blendmapColor.r > 0.0 && blendmapColor.g > 0.0)
+    {
+        if (blendmapColor.r > blendmapColor.g)
+            yellowAmount = blendmapColor.g;
+        else
+            yellowAmount = blendmapColor.r;
+    }
 
-	vec4 blendedColor = diffuseColorBlack + diffuseColorRed + diffuseColorGreen + diffuseColorBlue + diffuseColorAlpha;
+    float barrenTextureAmount = blackAmount;
 
-    float rMul = blendmapColor.r;
-    float aMul = blendmapColor.a;
-    if (rMul > 0.75 && aMul == 0.0)
-        blendedColor = texture2D(material.channelTexSampler1, tiledUv);
+    float waterTextureAmount = blendmapColor.r - yellowAmount;
+    float rockTextureAmount = blendmapColor.g - yellowAmount;
+
+
+    float fertileTextureAmount = blendmapColor.b;
+    float coldTextureAmount = blendmapColor.a;
+
+	vec4 diffuseColorBlack =		texture2D(material.channelTexSampler0, tiledUv) * barrenTextureAmount;
+	vec4 diffuseColorRed =			texture2D(material.channelTexSampler1, tiledUv) * waterTextureAmount;
+	vec4 diffuseColorGreen =		texture2D(material.channelTexSampler2, tiledUv) * rockTextureAmount;
+	vec4 diffuseColorBlue =			texture2D(material.channelTexSampler3, tiledUv) * fertileTextureAmount;
+	vec4 diffuseColorAlpha =		texture2D(material.channelTexSampler4, tiledUv) * coldTextureAmount;
+    // TESTING
+	vec4 diffuseColorYellow =		texture2D(material.channelTexSampler5, tiledUv) * yellowAmount;
+
+
+	vec4 blendedColor = diffuseColorBlack + diffuseColorRed + diffuseColorGreen + diffuseColorBlue + diffuseColorAlpha + diffuseColorYellow;
 
     vec4 finalColor = (var_ambientColor + diffuseColor) * blendedColor;
     gl_FragColor = finalColor;

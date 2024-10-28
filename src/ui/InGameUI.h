@@ -32,6 +32,7 @@ private:
     {
         type = 0,
         elevation,
+        temperature,
         effect,
         position
     };

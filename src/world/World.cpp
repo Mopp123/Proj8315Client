@@ -34,6 +34,14 @@ namespace world
     };
 
 
+    static std::vector<float> s_coldTextureStrength = {
+        0.0f, // mild
+        0.125f,
+        0.5f,
+        0.75f
+    };
+
+
     static std::chrono::time_point<std::chrono::high_resolution_clock> s_lastSend;
     // Used to start sending in sync with receiving world state
     // NOTE: This may not even fucking matter?
@@ -154,6 +162,7 @@ namespace world
         ImageData* pImgChannel2 = resourceManager.loadImage("assets/textures/rock.png");
         ImageData* pImgChannel3 = resourceManager.loadImage("assets/textures/grass.png");
         ImageData* pImgChannel4 = resourceManager.loadImage("assets/textures/snow.png");
+        ImageData* pImgChannel5_TEST = resourceManager.loadImage("assets/textures/channelTest.png");
 
         Texture* pTerrainTex0 = resourceManager.createTexture(
             pImgChannel0->getResourceID(),
@@ -175,13 +184,18 @@ namespace world
             pImgChannel4->getResourceID(),
             channelTexSampler
         );
+        Texture* pTerrainTex5_TEST = resourceManager.createTexture(
+            pImgChannel5_TEST->getResourceID(),
+            channelTexSampler
+        );
         Material* pTerrainMaterial = resourceManager.createMaterial(
             {
                 pTerrainTex0->getResourceID(),
                 pTerrainTex1->getResourceID(),
                 pTerrainTex2->getResourceID(),
                 pTerrainTex3->getResourceID(),
-                pTerrainTex4->getResourceID()
+                pTerrainTex4->getResourceID(),
+                pTerrainTex5_TEST->getResourceID()
             },
             0,
             0.0f,
@@ -754,46 +768,33 @@ namespace world
 
     void World::updateBlendmapData(PK_ubyte tileType, int x, int y, GC_ubyte temperature)
     {
+        /*
+        int test = std::rand() % 10;
+        if (test == 1)
+        {
+            _pTerrainBlendmapImg->setColorAt_UNSAFE(x, y, 255, 255, 0, 0);
+            return;
+        }*/
+
         // channels follow TileStateTerrType enum in following order
         // black =  0
         // red =    1
         // green =  2
         // blue =   3
         // alpha =  4
-        vec4 totalColor;
-
-        // test mix snow(alpha channel) with other textures depending on tile temperature
-        // -> don't put snow on cliffs tho (rock terrain type..)
-        // *Cold temperature ranges are specified in Tile.h
-        if (temperature >= TileStateTemperature::TILE_STATE_chilly && temperature <= TileStateTemperature::TILE_STATE_freezing)
-        {
-            if (tileType != TileStateTerrType::TILE_STATE_terrTypeRock)
-                totalColor.w = 0.75f;
-        }
-
         // First channel using "black" so need do a bit differently
         if (tileType == 0)
         {
-            //_pTerrainBlendmapImg->setColorAt_UNSAFE(x, y, 0, 0, 0, a);
-            _pTerrainBlendmapImg->setColorAt_UNSAFE(x, y, 0, 0, 0, (int)(totalColor.w * 255.0f));
+
+
+            _pTerrainBlendmapImg->setColorAt_UNSAFE(x, y, 0, 0, 0, 0);
         }
         else
         {
-            /*
             const int r = tileType == 1 ? 255 : 0;
             const int g = tileType == 2 ? 255 : 0;
             const int b = tileType == 3 ? 255 : 0;
-            */
-            //const int a = tileType == 4 ? 255 : 0;
-
-            totalColor.x = tileType == 1 ? 1.0f - totalColor.w : 0;
-            totalColor.y = tileType == 2 ? 1.0f - totalColor.w : 0;
-            totalColor.z = tileType == 3 ? 1.0f - totalColor.w : 0;
-            totalColor = totalColor *  255.0f;
-            int r = totalColor.x;
-            int g = totalColor.y;
-            int b = totalColor.z;
-            int a = totalColor.w;
+            const int a = tileType == 4 ? 255 : 0;
             _pTerrainBlendmapImg->setColorAt_UNSAFE(x, y, r, g, b, a);
         }
     }
