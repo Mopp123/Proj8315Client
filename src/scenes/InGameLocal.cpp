@@ -291,6 +291,11 @@ void InGameLocal::init()
 
     set_tile_thingid(_testMapFull[5 + 5 * _testMapWidth], 2);
 
+    // Test CMY channels
+    set_tile_terrtype(_testMapFull[1 + 1 * _testMapWidth], TileStateTerrType::TILE_STATE_terrTypeWater);
+    set_tile_terrtype(_testMapFull[2 + 1 * _testMapWidth], TileStateTerrType::TILE_STATE_terrTypePending1);
+    set_tile_terrtype(_testMapFull[3 + 1 * _testMapWidth], TileStateTerrType::TILE_STATE_terrTypePending2);
+
     /*
     int sx = 10;
     int sy = 10;

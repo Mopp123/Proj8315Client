@@ -162,7 +162,9 @@ namespace world
         ImageData* pImgChannel2 = resourceManager.loadImage("assets/textures/rock.png");
         ImageData* pImgChannel3 = resourceManager.loadImage("assets/textures/grass.png");
         ImageData* pImgChannel4 = resourceManager.loadImage("assets/textures/snow.png");
-        ImageData* pImgChannel5_TEST = resourceManager.loadImage("assets/textures/channelTest.png");
+        ImageData* pImgChannel5_TEST = resourceManager.loadImage("assets/textures/channelTest5.png");
+        ImageData* pImgChannel6_TEST = resourceManager.loadImage("assets/textures/channelTest6.png");
+        ImageData* pImgChannel7_TEST = resourceManager.loadImage("assets/textures/channelTest7.png");
 
         Texture* pTerrainTex0 = resourceManager.createTexture(
             pImgChannel0->getResourceID(),
@@ -188,18 +190,25 @@ namespace world
             pImgChannel5_TEST->getResourceID(),
             channelTexSampler
         );
-        Material* pTerrainMaterial = resourceManager.createMaterial(
+        Texture* pTerrainTex6_TEST = resourceManager.createTexture(
+            pImgChannel6_TEST->getResourceID(),
+            channelTexSampler
+        );
+        Texture* pTerrainTex7_TEST = resourceManager.createTexture(
+            pImgChannel7_TEST->getResourceID(),
+            channelTexSampler
+        );
+        TerrainMaterial* pTerrainMaterial = resourceManager.createTerrainMaterial(
             {
                 pTerrainTex0->getResourceID(),
                 pTerrainTex1->getResourceID(),
                 pTerrainTex2->getResourceID(),
                 pTerrainTex3->getResourceID(),
                 pTerrainTex4->getResourceID(),
-                pTerrainTex5_TEST->getResourceID()
+                pTerrainTex5_TEST->getResourceID(),
+                pTerrainTex6_TEST->getResourceID(),
+                pTerrainTex7_TEST->getResourceID()
             },
-            0,
-            0.0f,
-            0.0f,
             _pTerrainBlendmapTexture->getResourceID()
         );
 
@@ -337,7 +346,7 @@ namespace world
         const int observeAreaWidth = _observer.observeRadius * 2 + 1;
 
         // Update terrain heights and blendmap
-        Buffer* pBuffer = _pTerrainMesh->accessVertexBuffer_DANGER(0);
+        Buffer* pBuffer = _pTerrainMesh->accessVertexBuffer();
         for (int y = 0; y < observeAreaWidth; ++y)
         {
             for (int x = 0; x < observeAreaWidth; ++x)

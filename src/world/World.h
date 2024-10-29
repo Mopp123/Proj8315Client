@@ -137,8 +137,7 @@ namespace world
         entityID_t _terrainEntity = NULL_ENTITY_ID;
         pk::ImageData* _pTerrainBlendmapImg = nullptr;
         pk::Texture* _pTerrainBlendmapTexture = nullptr;
-        pk::Material* _pTerrainMaterial = nullptr;
-        pk::Mesh* _pTerrainMesh = nullptr;
+        pk::TerrainMesh* _pTerrainMesh = nullptr;
 
         // NOTE: old way below
         //  First = the actual tile data

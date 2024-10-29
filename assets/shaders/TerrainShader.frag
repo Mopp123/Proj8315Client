@@ -17,7 +17,11 @@ struct Material
     sampler2D channelTexSampler2;
     sampler2D channelTexSampler3;
     sampler2D channelTexSampler4;
+
     sampler2D channelTexSampler5;
+    sampler2D channelTexSampler6;
+    sampler2D channelTexSampler7;
+
     sampler2D blendmapTexSampler;
 };
 uniform Material material;
