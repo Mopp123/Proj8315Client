@@ -161,10 +161,7 @@ namespace world
         ImageData* pImgChannel1 = resourceManager.loadImage("assets/textures/water.png");
         ImageData* pImgChannel2 = resourceManager.loadImage("assets/textures/rock.png");
         ImageData* pImgChannel3 = resourceManager.loadImage("assets/textures/grass.png");
-        ImageData* pImgChannel4 = resourceManager.loadImage("assets/textures/snow.png");
-        ImageData* pImgChannel5_TEST = resourceManager.loadImage("assets/textures/channelTest5.png");
-        ImageData* pImgChannel6_TEST = resourceManager.loadImage("assets/textures/channelTest6.png");
-        ImageData* pImgChannel7_TEST = resourceManager.loadImage("assets/textures/channelTest7.png");
+        ImageData* pImgChannel4 = resourceManager.loadImage("assets/textures/dunes.png");
 
         Texture* pTerrainTex0 = resourceManager.createTexture(
             pImgChannel0->getResourceID(),
@@ -186,28 +183,13 @@ namespace world
             pImgChannel4->getResourceID(),
             channelTexSampler
         );
-        Texture* pTerrainTex5_TEST = resourceManager.createTexture(
-            pImgChannel5_TEST->getResourceID(),
-            channelTexSampler
-        );
-        Texture* pTerrainTex6_TEST = resourceManager.createTexture(
-            pImgChannel6_TEST->getResourceID(),
-            channelTexSampler
-        );
-        Texture* pTerrainTex7_TEST = resourceManager.createTexture(
-            pImgChannel7_TEST->getResourceID(),
-            channelTexSampler
-        );
         TerrainMaterial* pTerrainMaterial = resourceManager.createTerrainMaterial(
             {
                 pTerrainTex0->getResourceID(),
                 pTerrainTex1->getResourceID(),
                 pTerrainTex2->getResourceID(),
                 pTerrainTex3->getResourceID(),
-                pTerrainTex4->getResourceID(),
-                pTerrainTex5_TEST->getResourceID(),
-                pTerrainTex6_TEST->getResourceID(),
-                pTerrainTex7_TEST->getResourceID()
+                pTerrainTex4->getResourceID()
             },
             _pTerrainBlendmapTexture->getResourceID()
         );
@@ -346,6 +328,7 @@ namespace world
         const int observeAreaWidth = _observer.observeRadius * 2 + 1;
 
         // Update terrain heights and blendmap
+        const size_t bufferStride = sizeof(float) * 10; // pos(3) + normal(3) + uv(2) + customUserData(2) = 10 floats
         Buffer* pBuffer = _pTerrainMesh->accessVertexBuffer();
         for (int y = 0; y < observeAreaWidth; ++y)
         {
@@ -355,10 +338,11 @@ namespace world
                 _pTileData[tileIndex] = mapState[tileIndex];
                 uint64_t tileState = mapState[tileIndex];
 
-                // Set vertex pos.y (height)
                 float height = (float)(get_tile_terrelevation(tileState));
+                PK_ubyte tileType = get_tile_terrtype(tileState);
+                PK_ubyte tileTemperature = get_tile_temperature(tileState);
 
-                size_t vertexYBufPos = sizeof(float) + (x + y * observeAreaWidth) * (sizeof(float) * 8);
+                size_t vertexYBufPos = sizeof(float) + (x + y * observeAreaWidth) * bufferStride;
                 pBuffer->update(
                     &height,
                     vertexYBufPos,
@@ -386,17 +370,26 @@ namespace world
 				vec3 normal((left - right), 15.0f, (down - up)); // this is fucking dumb...
 				normal = normal.normalize();
 
-                size_t normalBufPos = sizeof(float) * 3 + (x + y * observeAreaWidth) * (sizeof(float) * 8);
+                size_t normalBufPos = sizeof(float) * 3 + (x + y * observeAreaWidth) * bufferStride;
                 pBuffer->update(
                     &normal,
                     normalBufPos,
                     sizeof(vec3)
                 );
 
-                PK_ubyte tileType = get_tile_terrtype(tileState);
-                PK_ubyte tileTemperature = get_tile_temperature(tileState);
+                // TESTING
+                size_t customDataBufPos = sizeof(float) * 8 + (x + y * observeAreaWidth) * bufferStride;
+                vec2 customData(tileTemperature == TileStateTemperature::TILE_STATE_burning ? 1.0f : 0.48f, 0);
+                pBuffer->update(
+                    &customData,
+                    customDataBufPos,
+                    sizeof(vec2)
+                );
+
                 updateBlendmapData(tileType, x, y, tileTemperature);
 
+                // NOTE: Deprecated below?
+                // TODO: look how thats done atm!
                 // Also need to update objects' colliders scales depending on obj type here
                 // since "updateObjects()" happens in lateUpdate so.. fucks up if done there...
                 /*
@@ -777,14 +770,6 @@ namespace world
 
     void World::updateBlendmapData(PK_ubyte tileType, int x, int y, GC_ubyte temperature)
     {
-        /*
-        int test = std::rand() % 10;
-        if (test == 1)
-        {
-            _pTerrainBlendmapImg->setColorAt_UNSAFE(x, y, 255, 255, 0, 0);
-            return;
-        }*/
-
         // channels follow TileStateTerrType enum in following order
         // black =  0
         // red =    1
@@ -792,10 +777,8 @@ namespace world
         // blue =   3
         // alpha =  4
         // First channel using "black" so need do a bit differently
-        if (tileType == 0)
+        if (tileType == 0 && temperature != TileStateTemperature::TILE_STATE_freezing)
         {
-
-
             _pTerrainBlendmapImg->setColorAt_UNSAFE(x, y, 0, 0, 0, 0);
         }
         else

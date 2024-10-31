@@ -287,29 +287,28 @@ void InGameLocal::init()
     );
     _mousePicker.init((Scene*)this, _pWorld);
 
-    _testMapFull.resize(_testMapWidth * _testMapWidth * sizeof(uint64_t), 0);
+
+    uint64_t initialTileState = 0;
+    set_tile_terrtype(initialTileState, TileStateTerrType::TILE_STATE_terrTypeDirt);
+    _testMapFull.resize(_testMapWidth * _testMapWidth * sizeof(uint64_t), initialTileState);
 
     set_tile_thingid(_testMapFull[5 + 5 * _testMapWidth], 2);
 
-    // Test CMY channels
-    set_tile_terrtype(_testMapFull[1 + 1 * _testMapWidth], TileStateTerrType::TILE_STATE_terrTypeWater);
-    set_tile_terrtype(_testMapFull[2 + 1 * _testMapWidth], TileStateTerrType::TILE_STATE_terrTypePending1);
-    set_tile_terrtype(_testMapFull[3 + 1 * _testMapWidth], TileStateTerrType::TILE_STATE_terrTypePending2);
 
-    /*
-    int sx = 10;
-    int sy = 10;
-    int area = 16;
-    int cliffHeight = 4;
-    for (int y = sy; y < sy + area; ++y)
-    {
-        for (int x = sx; x < sx + area; ++x)
-        {
-            set_tile_terrelevation(_testMapFull[x + y * _testMapWidth], cliffHeight);
-            set_tile_terrtype(_testMapFull[x + y * _testMapWidth], 4);
-        }
-    }
-    */
+    set_tile_terrtype(_testMapFull[1 + 1 * _testMapWidth], TileStateTerrType::TILE_STATE_terrTypeFertile);
+
+    set_tile_terrtype(_testMapFull[2 + 1 * _testMapWidth], TileStateTerrType::TILE_STATE_terrTypeRock);
+
+    // sand dunes
+    set_tile_terrtype(_testMapFull[3 + 1 * _testMapWidth], TileStateTerrType::TILE_STATE_terrTypeDunes);
+    set_tile_temperature(_testMapFull[3 + 1 * _testMapWidth], TileStateTemperature::TILE_STATE_burning);
+
+    // snow dunes
+    set_tile_terrtype(_testMapFull[4 + 1 * _testMapWidth], TileStateTerrType::TILE_STATE_terrTypeDunes);
+    set_tile_temperature(_testMapFull[4 + 1 * _testMapWidth], TileStateTemperature::TILE_STATE_freezing);
+
+    set_tile_terrtype(_testMapFull[5 + 1 * _testMapWidth], TileStateTerrType::TILE_STATE_terrTypeWater);
+
 /*
     create_ramp(
         _testMapFull,
@@ -399,79 +398,6 @@ void InGameLocal::update()
     _pCamController->update();
 
     InputManager* pInputManager = Application::get()->accessInputManager();
-    // test update tile dir
-    int testTileIndex = 5 + 5 * _testMapWidth;
-    if (pInputManager->isKeyDown(InputKeyName::PK_INPUT_KEY_1))
-    {
-        set_tile_facingdir(
-            _testMapFull[testTileIndex],
-            TileStateDirection::TILE_STATE_dirN
-        );
-    }
-    if (pInputManager->isKeyDown(InputKeyName::PK_INPUT_KEY_2))
-    {
-        set_tile_facingdir(
-            _testMapFull[testTileIndex],
-            TileStateDirection::TILE_STATE_dirNE
-        );
-    }
-    if (pInputManager->isKeyDown(InputKeyName::PK_INPUT_KEY_3))
-    {
-        set_tile_facingdir(
-            _testMapFull[testTileIndex],
-            TileStateDirection::TILE_STATE_dirE
-        );
-    }
-    if (pInputManager->isKeyDown(InputKeyName::PK_INPUT_KEY_4))
-    {
-        set_tile_facingdir(
-            _testMapFull[testTileIndex],
-            TileStateDirection::TILE_STATE_dirSE
-        );
-    }
-    if (pInputManager->isKeyDown(InputKeyName::PK_INPUT_KEY_5))
-    {
-        set_tile_facingdir(
-            _testMapFull[testTileIndex],
-            TileStateDirection::TILE_STATE_dirS
-        );
-    }
-    if (pInputManager->isKeyDown(InputKeyName::PK_INPUT_KEY_6))
-    {
-        set_tile_facingdir(
-            _testMapFull[testTileIndex],
-            TileStateDirection::TILE_STATE_dirSW
-        );
-    }
-    if (pInputManager->isKeyDown(InputKeyName::PK_INPUT_KEY_7))
-    {
-        set_tile_facingdir(
-            _testMapFull[testTileIndex],
-            TileStateDirection::TILE_STATE_dirW
-        );
-    }
-    if (pInputManager->isKeyDown(InputKeyName::PK_INPUT_KEY_8))
-    {
-        set_tile_facingdir(
-            _testMapFull[testTileIndex],
-            TileStateDirection::TILE_STATE_dirNW
-        );
-    }
-    // test trigger moving
-    if (pInputManager->isKeyDown(InputKeyName::PK_INPUT_KEY_E))
-    {
-        set_tile_action(
-            _testMapFull[testTileIndex],
-            TileStateAction::TILE_STATE_actionMove
-        );
-    }
-    if (pInputManager->isKeyDown(InputKeyName::PK_INPUT_KEY_R))
-    {
-        set_tile_action(
-            _testMapFull[testTileIndex],
-            TileStateAction::TILE_STATE_actionIdle
-        );
-    }
 
     // Simulate as if we got updated area from server
     world::WorldObserver& obs = _pWorld->accessObserver();

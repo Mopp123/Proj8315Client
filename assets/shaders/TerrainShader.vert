@@ -3,6 +3,11 @@ precision mediump float;
 attribute vec3 vertexPos;
 attribute vec3 normal;
 attribute vec2 uvCoord;
+// Had to put some weird userVertexData to accomplish having "temperature effect"
+// This needs to be between 0 and 1 and used to mix "cold" and "hot" color effects
+// where towards 0 colder -> towards 1 hotter
+attribute vec2 userVertexData;
+
 
 struct Common3D
 {
@@ -37,6 +42,8 @@ varying vec3 var_camPos;
 varying vec4 var_dirLightDir;
 varying vec4 var_dirLightColor;
 
+varying vec2 var_userVertexData;
+
 
 void main()
 {
@@ -54,4 +61,6 @@ void main()
 
     var_dirLightDir = directionalLight.direction;
     var_dirLightColor = directionalLight.color;
+
+    var_userVertexData = userVertexData;
 }
