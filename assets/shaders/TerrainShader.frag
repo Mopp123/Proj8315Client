@@ -9,8 +9,6 @@ varying vec3 var_camPos;
 varying vec4 var_dirLightDir;
 varying vec4 var_dirLightColor;
 
-varying vec2 var_userVertexData;
-
 
 struct Material
 {
@@ -21,6 +19,8 @@ struct Material
     sampler2D channelTexSampler4;
 
     sampler2D blendmapTexSampler;
+
+    sampler2D customDataTexSampler;
 };
 uniform Material material;
 
@@ -44,43 +44,38 @@ void main(void)
     //float displacement = 1.0 / verticesPerRow * 0.125;
     vec2 u = var_uvCoord;
 
-	vec4 blendmapColor = texture2D(material.blendmapTexSampler, u);
-	float blackAmount = 1.0 - (blendmapColor.r + blendmapColor.g + blendmapColor.b + blendmapColor.a);
-	vec2 tiledUv = u * verticesPerRow;
+    // moves on oppo dir when divide
+    // moves on move dir when mul
 
-    // quickly fix "dune" texture -> looks too small with regular tiling
-    vec2 duneTiledUv = u * (verticesPerRow * 0.5);
+	vec4 blendmapColor = texture2D(material.blendmapTexSampler, u);
+	float blackAmount = max(1.0 - (blendmapColor.r + blendmapColor.g + blendmapColor.b + blendmapColor.a), 0.0);
+
+	vec2 tiledUv = u * verticesPerRow;
+	vec2 tiledDuneUv = u * 12.0; // make look dunes bigger... TODO: better dune texture
 
 	vec4 diffuseColorBlack =	texture2D(material.channelTexSampler0, tiledUv) * blackAmount;
 	vec4 diffuseColorRed =		texture2D(material.channelTexSampler1, tiledUv) * blendmapColor.r;
 	vec4 diffuseColorGreen =	texture2D(material.channelTexSampler2, tiledUv) * blendmapColor.g;
 	vec4 diffuseColorBlue =		texture2D(material.channelTexSampler3, tiledUv) * blendmapColor.b;
-	vec4 diffuseColorAlpha =	texture2D(material.channelTexSampler4, duneTiledUv) * blendmapColor.a;
+	vec4 diffuseColorAlpha =	texture2D(material.channelTexSampler4, tiledDuneUv) * blendmapColor.a;
 
 	vec4 blendedColor = diffuseColorBlack + diffuseColorRed + diffuseColorGreen + diffuseColorBlue + diffuseColorAlpha;
 
 
-    // atm just testing userVertexData
-    vec4 coldColor = vec4(0.75, 0.75, 0.85, 1.0);
-    vec4 mildColor = vec4(0, 0, 0, 0);
-    vec4 hotColor = vec4(0.75, 0.65, 0.0, 1.0);
+    // Test temperature effect
+    vec4 coldColor = vec4(0.1, 0.2, 0.55, 1.0);
+    vec4 hotColor = vec4(1.0, 0.75, 0.0, 1.0);
 
-    vec4 mixColor = mildColor;
+    vec4 customDataBuffer = texture2D(material.customDataTexSampler, var_uvCoord);
 
-    float m = 0.0;
+    float temperatureMultiplier = mod(customDataBuffer.a, 0.5) * 2.0;
+    if (customDataBuffer.a < 0.5)
+        temperatureMultiplier = 1.0 - temperatureMultiplier;
 
-    if (var_userVertexData.x < 0.5)
-    {
-        m = 1.0 - mod(var_userVertexData.x, 0.5);
-        mixColor = coldColor;
-    }
-    else if (var_userVertexData.x >= 0.5)
-    {
-        m = mod(var_userVertexData.x, 0.5);
-        mixColor = hotColor;
-    }
-    blendedColor = mix(blendedColor, mixColor, 0.04);
+    float coldnessVal = 1.0 - customDataBuffer.a;
+    float hotnessVal = customDataBuffer.a;
 
-    vec4 finalColor = (var_ambientColor + diffuseColor) * blendedColor;
-    gl_FragColor = finalColor;
+    vec4 temperatureColor = (hotColor * hotnessVal + coldColor * coldnessVal) * temperatureMultiplier;
+
+    gl_FragColor = (var_ambientColor + diffuseColor) * (blendedColor + temperatureColor);
 }

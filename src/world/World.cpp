@@ -34,11 +34,17 @@ namespace world
     };
 
 
-    static std::vector<float> s_coldTextureStrength = {
-        0.0f, // mild
-        0.125f,
-        0.5f,
-        0.75f
+    // Mapping for what pixel value to use depending on tile's temperature
+    // *These go in order of the TileStateTemperature enum
+    // NOTE: May need some adjustment at some point...
+    static std::vector<PK_ubyte> s_tileTemperatureTexValues = {
+        126, // mild
+        91, // chilly
+        55, // cold
+        19, // freezing
+        163, // warm
+        199, // hot
+        235 // burning
     };
 
 
@@ -156,6 +162,26 @@ namespace world
             _pTerrainBlendmapImg->getResourceID(),
             blendmapTexSampler
         );
+
+        // Create terrain "temperature texture" (single channel grayscale)
+        size_t temperatureDataSize = _blendmapWidth * _blendmapWidth;
+        PK_ubyte* pInitTemperatureData = new PK_ubyte[temperatureDataSize];
+        memset(pInitTemperatureData, 0, temperatureDataSize);
+
+        _pTerrainTemperatureImg = resourceManager.createImage(
+            pInitTemperatureData,
+            _blendmapWidth,
+            _blendmapWidth,
+            1
+        );
+        delete[] pInitTemperatureData;
+
+        _pTerrainTemperatureTexture = resourceManager.createTexture(
+            _pTerrainTemperatureImg->getResourceID(),
+            blendmapTexSampler
+        );
+
+
         // Terrain channel textures
         ImageData* pImgChannel0 = resourceManager.loadImage("assets/textures/deadland.png");
         ImageData* pImgChannel1 = resourceManager.loadImage("assets/textures/water.png");
@@ -191,7 +217,8 @@ namespace world
                 pTerrainTex3->getResourceID(),
                 pTerrainTex4->getResourceID()
             },
-            _pTerrainBlendmapTexture->getResourceID()
+            _pTerrainBlendmapTexture->getResourceID(),
+            _pTerrainTemperatureTexture->getResourceID()
         );
 
         std::vector<float> initialHeightmap(observeAreaWidth * observeAreaWidth, 0.0f);
@@ -328,7 +355,7 @@ namespace world
         const int observeAreaWidth = _observer.observeRadius * 2 + 1;
 
         // Update terrain heights and blendmap
-        const size_t bufferStride = sizeof(float) * 10; // pos(3) + normal(3) + uv(2) + customUserData(2) = 10 floats
+        const size_t bufferStride = sizeof(float) * 8; // pos(3) + normal(3) + uv(2) = 8 floats
         Buffer* pBuffer = _pTerrainMesh->accessVertexBuffer();
         for (int y = 0; y < observeAreaWidth; ++y)
         {
@@ -377,14 +404,6 @@ namespace world
                     sizeof(vec3)
                 );
 
-                // TESTING
-                size_t customDataBufPos = sizeof(float) * 8 + (x + y * observeAreaWidth) * bufferStride;
-                vec2 customData(tileTemperature == TileStateTemperature::TILE_STATE_burning ? 1.0f : 0.48f, 0);
-                pBuffer->update(
-                    &customData,
-                    customDataBufPos,
-                    sizeof(vec2)
-                );
 
                 updateBlendmapData(tileType, x, y, tileTemperature);
 
@@ -412,6 +431,13 @@ namespace world
             _pTerrainBlendmapImg->getWidth(),
             _pTerrainBlendmapImg->getHeight(),
             4 // atm needed for gl fuckery..
+        );
+        _pTerrainTemperatureTexture->update(
+            (void*)_pTerrainTemperatureImg->getData(),
+            _pTerrainTemperatureImg->getSize(),
+            _pTerrainTemperatureImg->getWidth(),
+            _pTerrainTemperatureImg->getHeight(),
+            5 // atm needed for gl fuckery..
         );
     }
 
@@ -777,7 +803,7 @@ namespace world
         // blue =   3
         // alpha =  4
         // First channel using "black" so need do a bit differently
-        if (tileType == 0 && temperature != TileStateTemperature::TILE_STATE_freezing)
+        if (tileType == 0)
         {
             _pTerrainBlendmapImg->setColorAt_UNSAFE(x, y, 0, 0, 0, 0);
         }
@@ -789,6 +815,11 @@ namespace world
             const int a = tileType == 4 ? 255 : 0;
             _pTerrainBlendmapImg->setColorAt_UNSAFE(x, y, r, g, b, a);
         }
+
+
+        // atm just testing temperature data thing...
+        const PK_ubyte temperatureTexValue = s_tileTemperatureTexValues[temperature];
+        _pTerrainTemperatureImg->setColorAt_UNSAFE(x, y, temperatureTexValue);
     }
 
     void World::updateBlendmapData(PK_ubyte tileType, int pixelIndex)

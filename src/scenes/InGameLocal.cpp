@@ -214,6 +214,38 @@ static void create_ramp(
 }
 
 
+static void test_area(
+    std::vector<uint64_t>& mapData,
+    int mapWidth,
+    int startX,
+    int startY,
+    TileStateTerrType backgroundType,
+    TileStateTemperature backgroundTemp,
+    TileStateTerrType foregroundType,
+    TileStateTemperature foregroundTemp
+)
+{
+    const int width = 5;
+    for (int y = 0; y < width; ++y)
+    {
+        for (int x = 0; x < width; ++x)
+        {
+            int xPos = startX + x;
+            int yPos = startY + y;
+            if (x < 2 && y < 2)
+            {
+                set_tile_terrtype(mapData[xPos + yPos * mapWidth], foregroundType);
+                set_tile_temperature(mapData[xPos + yPos * mapWidth], foregroundTemp);
+            }
+            else
+            {
+                set_tile_terrtype(mapData[xPos + yPos * mapWidth], backgroundType);
+                set_tile_temperature(mapData[xPos + yPos * mapWidth], backgroundTemp);
+            }
+        }
+    }
+}
+
 InGameLocal::InGameLocal()
 {}
 
@@ -294,95 +326,18 @@ void InGameLocal::init()
 
     set_tile_thingid(_testMapFull[5 + 5 * _testMapWidth], 2);
 
-
-    set_tile_terrtype(_testMapFull[1 + 1 * _testMapWidth], TileStateTerrType::TILE_STATE_terrTypeFertile);
-
-    set_tile_terrtype(_testMapFull[2 + 1 * _testMapWidth], TileStateTerrType::TILE_STATE_terrTypeRock);
-
-    // sand dunes
-    set_tile_terrtype(_testMapFull[3 + 1 * _testMapWidth], TileStateTerrType::TILE_STATE_terrTypeDunes);
-    set_tile_temperature(_testMapFull[3 + 1 * _testMapWidth], TileStateTemperature::TILE_STATE_burning);
-
-    // snow dunes
-    set_tile_terrtype(_testMapFull[4 + 1 * _testMapWidth], TileStateTerrType::TILE_STATE_terrTypeDunes);
-    set_tile_temperature(_testMapFull[4 + 1 * _testMapWidth], TileStateTemperature::TILE_STATE_freezing);
-
-    set_tile_terrtype(_testMapFull[5 + 1 * _testMapWidth], TileStateTerrType::TILE_STATE_terrTypeWater);
-
-/*
-    create_ramp(
+    const int testAreaWidth = 5;
+    test_area(
         _testMapFull,
         _testMapWidth,
-        10,
-        12,
-        3,
-        0
+        0,
+        0,
+        TileStateTerrType::TILE_STATE_terrTypeDirt,
+        TileStateTemperature::TILE_STATE_mild,
+        TileStateTerrType::TILE_STATE_terrTypeDunes,
+        TileStateTemperature::TILE_STATE_freezing
     );
 
-    create_ramp(
-        _testMapFull,
-        _testMapWidth,
-        12,
-        10,
-        3,
-        0
-    );
-
-    create_ramp(
-        _testMapFull,
-        _testMapWidth,
-        13,
-        17,
-        3,
-        0
-    );
-
-    create_ramp(
-        _testMapFull,
-        _testMapWidth,
-        17,
-        12,
-        3,
-        0
-    );
-
-    // test diagonal ramps
-    create_ramp(
-        _testMapFull,
-        _testMapWidth,
-        10,
-        10,
-        3,
-        0
-    );
-
-    create_ramp(
-        _testMapFull,
-        _testMapWidth,
-        17,
-        10,
-        3,
-        0
-    );
-
-    create_ramp(
-        _testMapFull,
-        _testMapWidth,
-        17,
-        17,
-        3,
-        0
-    );
-
-    create_ramp(
-        _testMapFull,
-        _testMapWidth,
-        10,
-        17,
-        3,
-        0
-    );
-    */
     _testMapLocal.resize(_observeAreaWidth * _observeAreaWidth * sizeof(uint64_t), 0);
 }
 

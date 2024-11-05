@@ -42,8 +42,6 @@ varying vec3 var_camPos;
 varying vec4 var_dirLightDir;
 varying vec4 var_dirLightColor;
 
-varying vec2 var_userVertexData;
-
 
 void main()
 {
@@ -61,6 +59,4 @@ void main()
 
     var_dirLightDir = directionalLight.direction;
     var_dirLightColor = directionalLight.color;
-
-    var_userVertexData = userVertexData;
 }
