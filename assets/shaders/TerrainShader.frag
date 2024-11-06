@@ -30,6 +30,15 @@ const float verticesPerRow = 31.0;
 //const float tileWidthPow2 = 32.0;
 
 //const float textureTiling = 20.0;
+
+
+vec4 alter_brightness_contrast(vec4 color, float brightness, float contrast)
+{
+    vec4 averageLuminance = vec4(1, 1, 1, 1);
+    return mix(color * brightness, mix(averageLuminance, color, contrast), 0.5);
+}
+
+
 void main(void)
 {
     vec3 normal = normalize(var_normal);
@@ -59,12 +68,11 @@ void main(void)
 	vec4 diffuseColorBlue =		texture2D(material.channelTexSampler3, tiledUv) * blendmapColor.b;
 	vec4 diffuseColorAlpha =	texture2D(material.channelTexSampler4, tiledDuneUv) * blendmapColor.a;
 
-	vec4 blendedColor = diffuseColorBlack + diffuseColorRed + diffuseColorGreen + diffuseColorBlue + diffuseColorAlpha;
 
 
     // Test temperature effect
     vec4 coldColor = vec4(0.1, 0.2, 0.55, 1.0);
-    vec4 hotColor = vec4(1.0, 0.75, 0.0, 1.0);
+    vec4 hotColor = vec4(0.70, 0.36, 0.0, 1.0);
 
     vec4 customDataBuffer = texture2D(material.customDataTexSampler, var_uvCoord);
 
@@ -77,5 +85,12 @@ void main(void)
 
     vec4 temperatureColor = (hotColor * hotnessVal + coldColor * coldnessVal) * temperatureMultiplier;
 
+    // test some special cases...
+    // Make water discard the temperature color
+    // TODO: Make water look frozen in cold temperature
+    if (blendmapColor.r > 0.5)
+        temperatureColor = temperatureColor * (1.0 - blendmapColor.r);
+
+	vec4 blendedColor = diffuseColorBlack + diffuseColorRed + diffuseColorGreen + diffuseColorBlue + diffuseColorAlpha;
     gl_FragColor = (var_ambientColor + diffuseColor) * (blendedColor + temperatureColor);
 }

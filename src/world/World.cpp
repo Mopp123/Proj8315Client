@@ -816,7 +816,6 @@ namespace world
             _pTerrainBlendmapImg->setColorAt_UNSAFE(x, y, r, g, b, a);
         }
 
-
         // atm just testing temperature data thing...
         const PK_ubyte temperatureTexValue = s_tileTemperatureTexValues[temperature];
         _pTerrainTemperatureImg->setColorAt_UNSAFE(x, y, temperatureTexValue);
