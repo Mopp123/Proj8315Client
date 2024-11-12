@@ -37,6 +37,8 @@ private:
         position
     };
 
+    const int _portraitTextureRows = 16;
+
     InGame* _pInGameScene = nullptr;
     // Just quick hack to be able to use "InGameLocal" scene for testing..
     pk::Scene* _pScene = nullptr;
@@ -58,6 +60,8 @@ private:
     std::vector<entityID_t> _statusInfoEntities;
     std::vector<entityID_t> _attributeInfoEntities;
     std::vector<entityID_t> _tileInfoEntities;
+
+    entityID_t _selectedPortraitEntity = 0;
 
 public:
     InGameUI() {};

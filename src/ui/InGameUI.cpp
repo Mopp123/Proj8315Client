@@ -22,7 +22,7 @@ static std::string temperature_value_to_string(TileStateTemperature value)
         case TileStateTemperature::TILE_STATE_mild : return "Mild";
         case TileStateTemperature::TILE_STATE_warm : return "Warm";
         case TileStateTemperature::TILE_STATE_hot : return "Hot";
-        case TileStateTemperature::TILE_STATE_burning : return "Burning hot";
+        case TileStateTemperature::TILE_STATE_burning : return "Burning";
         case TileStateTemperature::TILE_STATE_chilly : return "Chilly";
         case TileStateTemperature::TILE_STATE_cold : return "Cold";
         case TileStateTemperature::TILE_STATE_freezing : return "Freezing";
@@ -85,7 +85,7 @@ void InGameUI::create(InGame* pInGameScene, Scene* pScene, pk::Font* pFont)
         100
     );
 
-    const vec2 selectedPanelScale(600, 140);
+    const vec2 selectedPanelScale(630, 140);
     const vec2 selectedPanelSlotScale(200, 30);
     _selectedPanel.createDefault(
         _pScene,
@@ -125,9 +125,8 @@ void InGameUI::create(InGame* pInGameScene, Scene* pScene, pk::Font* pFont)
     );
     const float portraitWidth = 100;
     const float portraitHeight = 100;
-    const int portraitTextureRows = 16;
-    const float portraitCroppingScale = 1.0f / (float)portraitTextureRows;
-    entityID_t selectedPortraitEntity = _selectedPanel.addImage(
+    const float portraitCroppingScale = 1.0f / (float)_portraitTextureRows;
+    _selectedPortraitEntity = _selectedPanel.addImage(
         HorizontalConstraintType::PIXEL_LEFT, 32.0f,
         VerticalConstraintType::PIXEL_BOTTOM, 42.0f,
         portraitWidth, portraitHeight,
@@ -137,7 +136,7 @@ void InGameUI::create(InGame* pInGameScene, Scene* pScene, pk::Font* pFont)
     );
 
     _objectNameEntity = _selectedPanel.addText(
-        "Rifleman",
+        "",
         HorizontalConstraintType::PIXEL_LEFT, 32.0f,
         VerticalConstraintType::PIXEL_BOTTOM, 42.0f + portraitHeight
     ).first;
@@ -157,6 +156,7 @@ void InGameUI::create(InGame* pInGameScene, Scene* pScene, pk::Font* pFont)
 
     vec2 infoTxtPos(32.0f + portraitWidth + 8.0f, 42.0f + portraitHeight);
 
+    // TODO: Object stat system
     _statusInfoEntities = addInfoColumn(
         0,
         infoColumnWidth,
@@ -165,12 +165,15 @@ void InGameUI::create(InGame* pInGameScene, Scene* pScene, pk::Font* pFont)
         textHeight,
         "Status",
         {
+        /*
             "Health: 10",
             "Stamina: 2",
             "Mental: 8"
+        */
         }
     );
 
+    // TODO: Object attribute system
     _attributeInfoEntities = addInfoColumn(
         1,
         infoColumnWidth,
@@ -179,10 +182,12 @@ void InGameUI::create(InGame* pInGameScene, Scene* pScene, pk::Font* pFont)
         textHeight,
         "Attributes",
         {
+        /*
             "Speed: 4",
             "Strength: 5",
             "Accuracy: 2",
             "Armor: 3"
+        */
         }
     );
 
@@ -231,6 +236,30 @@ void InGameUI::setSelectedInfo(uint64_t tile, int tileX, int tileY)
         ComponentType::PK_RENDERABLE_TEXT
     );
     pObjNameTxt->accessStr() = objNameStr;
+
+    // Set portrait
+    // NOTE: Atm assuming object ordering matches the "portraits texture atlas"
+    GUIRenderable* pPortraitImg = (GUIRenderable*)_pScene->getComponent(
+        _selectedPortraitEntity,
+        ComponentType::PK_RENDERABLE_GUI
+    );
+    // Break down the objectID/index into x and y components in the "portraits img grid"
+    int portraitX = (int)object % _portraitTextureRows;
+    // *also make first row be the top row...
+    int portraitY = (_portraitTextureRows - 1) - ((int)object / _portraitTextureRows);
+    if (portraitX >= _portraitTextureRows || portraitY >= _portraitTextureRows)
+    {
+        Debug::log(
+            "@InGameUI::setSelectedInfo "
+            "Not enough portraint slots for object: " + objNameStr + " (" + std::to_string(object) + ") "
+            "Requested slot coords were: " + std::to_string(portraitX) + ", " + std::to_string(portraitY) + " "
+            "Current available slots: " + std::to_string(_portraitTextureRows),
+            Debug::MessageType::PK_ERROR
+        );
+    }
+    pPortraitImg->textureCropping.x = portraitX;
+    pPortraitImg->textureCropping.y = portraitY;
+
 
     // Tile info
     TextRenderable* pTileInfoElevationTxt = (TextRenderable*)_pScene->getComponent(

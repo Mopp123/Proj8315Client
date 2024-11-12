@@ -352,6 +352,17 @@ void InGameLocal::init()
         TileStateTemperature::TILE_STATE_freezing
     );
 
+    test_area(
+        _testMapFull,
+        _testMapWidth,
+        15,
+        15,
+        TileStateTerrType::TILE_STATE_terrTypeDirt,
+        TileStateTemperature::TILE_STATE_mild,
+        TileStateTerrType::TILE_STATE_terrTypeDunes,
+        TileStateTemperature::TILE_STATE_burning
+    );
+
     _testMapLocal.resize(_observeAreaWidth * _observeAreaWidth * sizeof(uint64_t), 0);
 }
 
