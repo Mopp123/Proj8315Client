@@ -21,8 +21,12 @@ namespace world
         {
         public:
             // NOTE: atm using models for all objects instead of sprites
-            pk::Model* pModel = nullptr; // *Not owned by VisualObjectInfo!
-            //pk::Texture_new* pTexture = nullptr; // *NOTE! ObjectInfo doesn't own its' texture
+            // *Not owned by VisualObjectInfo!
+            pk::Model* pModel = nullptr;
+            // *Atm shit gets fucked if changing scale of the actual model, since modifying
+            // y axis rotation directly from its' transformationMatrix
+            // TODO: Maybe fix that?
+            pk::vec3 colliderScale = pk::vec3(1, 1, 1);
 
             // How to crop texture to display portrait in ui
             class TexturePortraitCropping
@@ -47,12 +51,10 @@ namespace world
             TexturePortraitCropping portraitCropping;
             bool rotateableSprite = false;
 
-            static TexturePortraitCropping s_defaultPortraitCropping;
-
             VisualObjectInfo() {}
             VisualObjectInfo(const VisualObjectInfo& other):
                 pModel(other.pModel),
-                //pTexture(other.pTexture),
+                colliderScale(other.colliderScale),
                 portraitCropping(other.portraitCropping),
                 rotateableSprite(other.rotateableSprite)
             {
@@ -72,8 +74,6 @@ namespace world
             pk::SkinnedRenderable* _pSkinnedRenderable = nullptr;
             pk::AnimationData* _pAnimData = nullptr;
 
-            const size_t _colliderVertexCount = 8;
-            pk::vec3 _colliderVertices[8];
             // Mesh and entity for debugging collision box
             static PK_id s_colliderModelID;
             entityID_t _colliderEntity = 0;
@@ -107,6 +107,7 @@ namespace world
 
             void show(
                 pk::Scene* pScene,
+                const float tileVisualScale,
                 GC_ubyte tileObject,
                 GC_ubyte tileAction,
                 GC_ubyte objDir,
@@ -136,22 +137,23 @@ namespace world
         {
         private:
             static bool s_initialized;
-            // For now all objects are 3d models..
-            //static std::vector<pk::Texture_new*> s_pTextures;
             static std::vector<pk::Model*> s_models;
-
 
             // TODO: Unify object(properties) and visuals somehow together
             // *to prevent searching both separately..
             static std::vector<gamecommon::ObjectInfo> s_objects;
             static std::vector<VisualObjectInfo> s_objectVisuals;
 
+            static pk::Model* s_defaultStaticModel;
+            static pk::Model* s_defaultRiggedModel;
+
         public:
             static gamecommon::ObjectInfo* get(int index);
             static VisualObjectInfo* get_visual(int index);
             static size_t get_size();
             static void create(const PK_byte* pData, size_t dataSize);
-            static void create_object_visuals();
+            // Loads models, textures and other properties to display objects
+            static bool load_object_visuals();
             static void destroy();
 
             static void set_objects_TESTING(const std::vector<gamecommon::ObjectInfo>& objects);

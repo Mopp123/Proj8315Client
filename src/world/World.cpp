@@ -469,6 +469,7 @@ namespace world
                     const float worldPosZ = y * _tileVisualScale;
                     obj.show(
                         &_sceneRef,
+                        _tileVisualScale,
                         tileObject,
                         tileAction,
                         tileFacingDirection,

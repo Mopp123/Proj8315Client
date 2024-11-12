@@ -276,19 +276,30 @@ void InGameLocal::init()
         0,
         0
     );
-    uint64_t staticObjState = 0;
-    set_tile_thingid(staticObjState, 1);
-    gamecommon::ObjectInfo staticObj(
-        "Static Object",
+    uint64_t treeObjState = 0;
+    set_tile_thingid(treeObjState, 1);
+    gamecommon::ObjectInfo treeObj(
+        "Tree",
         "Doesn't do anything",
         {
             "Idle"
         },
         0,
-        staticObjState
+        treeObjState
+    );
+    uint64_t palmTreeObjState = 0;
+    set_tile_thingid(palmTreeObjState, 2);
+    gamecommon::ObjectInfo palmTreeObj(
+        "Palm Tree",
+        "Doesn't do anything2",
+        {
+            "Idle"
+        },
+        0,
+        palmTreeObjState
     );
     uint64_t movingObjState = 0;
-    set_tile_thingid(movingObjState, 2);
+    set_tile_thingid(movingObjState, 3);
     gamecommon::ObjectInfo movingObj(
         "Moving Object",
         "Capable of moving",
@@ -302,13 +313,14 @@ void InGameLocal::init()
     world::objects::ObjectInfoLib::set_objects_TESTING(
         {
             emptyObj,
-            staticObj,
+            treeObj,
+            palmTreeObj,
             movingObj
         }
     );
     Debug::log("___TEST___created obj info lib:\n" + world::objects::ObjectInfoLib::to_string());
 
-    world::objects::ObjectInfoLib::create_object_visuals();
+    world::objects::ObjectInfoLib::load_object_visuals();
 
     // World can be created only after object info lib creation
     _pWorld = new world::World(
@@ -324,7 +336,9 @@ void InGameLocal::init()
     set_tile_terrtype(initialTileState, TileStateTerrType::TILE_STATE_terrTypeDirt);
     _testMapFull.resize(_testMapWidth * _testMapWidth * sizeof(uint64_t), initialTileState);
 
-    set_tile_thingid(_testMapFull[5 + 5 * _testMapWidth], 2);
+    set_tile_thingid(_testMapFull[5 + 5 * _testMapWidth], 3);
+    set_tile_thingid(_testMapFull[6 + 7 * _testMapWidth], 1);
+    set_tile_thingid(_testMapFull[5 + 8 * _testMapWidth], 2);
 
     const int testAreaWidth = 5;
     test_area(

@@ -3,6 +3,8 @@
 #include "World.h"
 #include <string>
 #include "../../Proj8315Common/src/messages/ObjMessages.h"
+#include "../PortablePesukarhu/json.hpp"
+#include <fstream>
 
 
 using namespace pk;
@@ -13,17 +15,6 @@ namespace world
 {
     namespace objects
     {
-        static float s_idleAnimSpeed = 0.75f;
-        static std::vector<uint32_t> s_idleAnimFrames = {
-            1, 6
-        };
-        static float s_moveAnimSpeed = 10.0f;
-        static std::vector<uint32_t> s_moveAnimFrames = {
-            11, 16, 21, 26
-        };
-
-        VisualObjectInfo::TexturePortraitCropping VisualObjectInfo::s_defaultPortraitCropping;
-
         // Returns "display direction" of a sprite depending ong the camera's direction
         static int get_display_dir(int objDir, int camDir)
         {
@@ -34,34 +25,6 @@ namespace world
             else
                 return directionCount - dist;
         }
-
-        // indexes: [objectType][action][animFrames]
-        static std::vector<std::vector<std::vector<int>>> s_animationFrames =
-        {
-            {
-                { 2 }
-            },
-            {
-                { 0 }
-            },
-            {
-                { 0 },
-                { 1, 2 }
-            },
-            {
-                { 3 },
-                { 0 },
-                { 0, 1, 2, 3 }
-            }
-        };
-
-        std::vector<vec3> VisualObject::s_colliderSizes =
-        {
-            { 1, 1, 1 },
-            { 1.5f, 4, 1.5f },
-            { 1, 2, 1 }
-        };
-
 
         static float dir_to_yaw(GC_ubyte dir)
         {
@@ -94,56 +57,8 @@ namespace world
                 return;
             }
 
-            const float colliderSize = 2.0f;
-            /*
-            Each face is like this. "Top left" and "bottom right" vertices
-            -----
-            |  /|
-            | / |
-            |/  |
-            -----
-
-            */
-
-            // "front face"
-            // tri 1 (top left)
-            _colliderVertices[0] = { colliderSize, colliderSize, colliderSize };
-            _colliderVertices[1] = { -colliderSize, colliderSize, colliderSize };
-            _colliderVertices[2] = { -colliderSize, -colliderSize, colliderSize };
-            // tri 2 (bottom right)
-            // _colliderVertices[2]
-            _colliderVertices[3] = { colliderSize, -colliderSize, colliderSize };
-            // _colliderVertices[0]
-
-            // "back face" (as like looking straight at it towards +z from -z direction)
-            // tri 1 (top left)
-            _colliderVertices[4] = { -colliderSize, colliderSize, -colliderSize };
-            _colliderVertices[5] = { colliderSize, colliderSize, -colliderSize };
-            _colliderVertices[6] = { colliderSize, -colliderSize, -colliderSize };
-            // tri 2 (bottom right)
-            // _colliderVertices[6]
-            _colliderVertices[7] = { -colliderSize, -colliderSize, -colliderSize };
-            // _colliderVertices[4]
-
-            // "right face"
-            // tri 1
-            // _colliderVertices[6]
-            // _colliderVertices[0]
-            // _colliderVertices[3]
-            // tri 2
-            // _colliderVertices[3]
-            // _colliderVertices[6]
-            // _colliderVertices[5]
-
-            // "left face"
-            // tri 1
-            // _colliderVertices[1]
-            // _colliderVertices[4]
-            // _colliderVertices[7]
-            // tri 2
-            // _colliderVertices[7]
-            // _colliderVertices[2]
-            // _colliderVertices[1]
+            // Size is eventually determined by object type
+            const float defaultColliderSize = 2.0f;
 
             ResourceManager& resManager = Application::get()->getResourceManager();
             const Model* pColliderModel = nullptr;
@@ -167,7 +82,7 @@ namespace world
                 _colliderEntity,
                 { 0, 0, 0 },
                 { 0, 0, 0, 1 },
-                { colliderSize, colliderSize, colliderSize }
+                { defaultColliderSize, defaultColliderSize, defaultColliderSize }
             );
             pScene->createStatic3DRenderable(
                 _colliderEntity,
@@ -187,30 +102,18 @@ namespace world
             _pStaticRenderable = other._pStaticRenderable;
             _pSkinnedRenderable = other._pSkinnedRenderable;
             _pSprite = other._pSprite;
-
-            memcpy(_colliderVertices, other._colliderVertices, sizeof(vec4) * _colliderVertexCount);
         }
 
         VisualObject::~VisualObject()
         {
         }
 
-        /*
-        void VisualObject::assignAnimFrames(PK_ubyte tileObject, PK_ubyte tileAction, Animation* anim)
-        {
-            if (tileObject < s_animationFrames.size())
-            {
-                if (tileAction < s_animationFrames[tileObject].size())
-                    anim->setFrames(s_animationFrames[tileObject][tileAction]);
-            }
-        }
-        */
-
         // TODO: Determine which sprite to show, depending on the "tileObject"
         // TODO: Sprite animating
         // TODO: Object speeds and stats
         void VisualObject::show(
             Scene* pScene,
+            const float tileVisualScale,
             GC_ubyte tileObject,
             GC_ubyte tileAction,
             GC_ubyte objDir,
@@ -223,13 +126,19 @@ namespace world
             pk::vec3& tileMovement
         )
         {
-            // Display correct model
-            // TODO: Make this shit better..
             Transform* pTransform = (Transform*)pScene->getComponent(
                 _entity,
                 ComponentType::PK_TRANSFORM
             );
             pTransform->setActive(true);
+
+            const Mesh* pUseMesh = visualObjInfo.pModel->getMesh(0);
+            // figure out which renderable to use...
+            // atm quite shitty way...
+            bool useRiggedMesh = !pUseMesh->getBindPose().joints.empty();
+
+            // Display correct model
+            // TODO: Make this shit better..
             Static3DRenderable* pStaticRenderable = (Static3DRenderable*)pScene->getComponent(
                 _entity,
                 ComponentType::PK_RENDERABLE_STATIC3D
@@ -239,10 +148,9 @@ namespace world
                 ComponentType::PK_RENDERABLE_SKINNED
             );
 
-            // Figure out should we render static or animated renderable
-            if (tileObject == 2)
+            if (useRiggedMesh)
             {
-                pSkinnedRenderable->meshID = visualObjInfo.pModel->getMesh(0)->getResourceID();
+                pSkinnedRenderable->meshID = pUseMesh->getResourceID();
                 pSkinnedRenderable->setActive(true);
                 pStaticRenderable->setActive(false);
 
@@ -254,15 +162,12 @@ namespace world
             }
             else
             {
-                pStaticRenderable->meshID = visualObjInfo.pModel->getMesh(0)->getResourceID();
+                pStaticRenderable->meshID = pUseMesh->getResourceID();
                 pStaticRenderable->setActive(true);
                 pSkinnedRenderable->setActive(false);
             }
 
-            // just testing -> thats why hardcoded here
-            // TODO: Get visual tile size from World
-            const float visualTileSize = 4.0f;
-            const float visualTileSizeModifier = visualTileSize * 0.5f;
+            const float visualTileSizeModifier = tileVisualScale * 0.5f;
             float speedValue = ((float)staticObjInfo.speed) * visualTileSizeModifier;
             // If action == movement of some kind -> move the sprite
             switch (tileAction)
@@ -325,15 +230,13 @@ namespace world
                 _colliderEntity,
                 ComponentType::PK_TRANSFORM
             );
-            pColliderTransform->setScale(VisualObject::s_colliderSizes[tileObject]);
+            pColliderTransform->setScale(visualObjInfo.colliderScale);
             mat4& colliderMatGlobal = pColliderTransform->accessTransformationMatrix();
             mat4& colliderMatLocal = pColliderTransform->accessLocalTransformationMatrix();
             colliderMatGlobal[0 + 3 * 4] = xPosGlobal;
             colliderMatGlobal[1 + 3 * 4] = yPosGlobal;
             colliderMatGlobal[2 + 3 * 4] = zPosGlobal;
 
-
-            //setColliderVisible(true);
             //setColliderVisible(true);
         }
 
@@ -433,9 +336,10 @@ namespace world
 
 
         bool ObjectInfoLib::s_initialized = false;
-        //std::vector<Texture_new*> ObjectInfoLib::s_pTextures;
         std::vector<ObjectInfo> ObjectInfoLib::s_objects;
         std::vector<VisualObjectInfo> ObjectInfoLib::s_objectVisuals;
+        Model* ObjectInfoLib::s_defaultStaticModel = nullptr;
+        Model* ObjectInfoLib::s_defaultRiggedModel = nullptr;
 
         ObjectInfo* ObjectInfoLib::get(int index)
         {
@@ -454,7 +358,7 @@ namespace world
             if (index < 0 || index >= s_objectVisuals.size())
             {
                 Debug::log(
-                    "Attempted to access invalid index of Object Info lib (Object visuals). Index: " + std::to_string(index) + " Info lib size was: " + std::to_string(s_objects.size()),
+                    "Attempted to access invalid index of Object Info lib (Object visuals). Index: " + std::to_string(index) + " Info lib size was: " + std::to_string(s_objectVisuals.size()),
                     Debug::MessageType::PK_ERROR);
                 return nullptr;
             }
@@ -482,11 +386,6 @@ namespace world
             ObjInfoLibResponse objInfoMsg(pData, dataSize);
             s_objects = objInfoMsg.getObjects();
 
-            create_object_visuals();
-        }
-
-        void ObjectInfoLib::create_object_visuals()
-        {
             if (s_objects.empty())
             {
                 Debug::log(
@@ -496,128 +395,198 @@ namespace world
                 );
                 return;
             }
+            load_object_visuals();
+        }
+
+
+        // Loads models, textures and other properties to display objects
+        // TODO: Evantually make filepath modifyable from somewhere..
+        bool ObjectInfoLib::load_object_visuals()
+        {
+            std::string rootAssetFilepath = "assets/";
+            std::string objPropertiesPath = rootAssetFilepath + "ObjectVisualProperties.json";
+            std::string modelsPath = rootAssetFilepath + "models/";
+            std::string texturesPath = rootAssetFilepath + "textures/";
+
+            Debug::log(
+                "@ObjectInfoLib::load_object_visuals "
+                "Reading object visual properties from file: " + objPropertiesPath + " "
+                "WARNING: If platform is web on json parse error, no sensible error message "
+                "gets thrown. If crashing occurs after this message make sure the file is "
+                "valid json!"
+            );
+
+            std::ifstream propertiesFile;
+            propertiesFile.open(objPropertiesPath);
+
+            if (!propertiesFile.is_open())
+            {
+                Debug::log(
+                    "@ObjectInfoLib::load_object_visuals "
+                    "Failed to open object visual properties file from: " + objPropertiesPath + " "
+                    "Make sure you entered correct filepath!",
+                    Debug::MessageType::PK_FATAL_ERROR
+                );
+                return false;
+            }
+
+            // Relying here that the file is valid json... i know fucking dumb
+            // but the fucking lib doesn't offer other error handling that try-catches
+            // so... it is what it is for now...
+            // TODO: Figure out some better way of dealing with this!
+            nlohmann::json jsonData = nlohmann::json::parse(propertiesFile);
+
+            Debug::log(
+                "@ObjectInfoLib::load_object_visuals "
+                "Loading textures and creating materials..."
+            );
 
             ResourceManager& resourceManager = Application::get()->getResourceManager();
+
             TextureSampler defaultTextureSampler;
-
-            // Test having just same model for all object types
-            ImageData* pDefaultImage = resourceManager.loadImage(
-                "assets/textures/default.jpg",
-                false,
-                true
-            );
-            ImageData* pTreeImage = resourceManager.loadImage(
-                "assets/textures/tree1.png",
-                false,
-                true
-            );
-            ImageData* pUnitTexImage = resourceManager.loadImage(
-                "assets/textures/characterTest.png",
-                false,
-                true
-            );
-            Texture* pDefaultTexture = resourceManager.createTexture(
-                pDefaultImage->getResourceID(),
-                defaultTextureSampler,
-                true
-            );
-            Texture* pTreeTexture = resourceManager.createTexture(
-                pTreeImage->getResourceID(),
-                defaultTextureSampler,
-                true
-            );
-            Texture* pUnitTexture = resourceManager.createTexture(
-                pUnitTexImage->getResourceID(),
-                defaultTextureSampler,
-                true
-            );
-            Material* pDefaultMaterial = resourceManager.createMaterial(
-                {pDefaultTexture->getResourceID()},
-                0, // specular texture res id
-                2.0f, // specular strength
-                8.0f, // shininess
-                0, // blendmap texture res id
-                { 1, 1, 1, 1 }, // color
-                false, // shadeless
-                true // persistent
-            );
-            Material* pTreeMaterial = resourceManager.createMaterial(
-                {pTreeTexture->getResourceID()},
-                0, // specular texture res id
-                0.0f, // specular strength
-                1.0f, // shininess
-                0, // blendmap texture res id
-                { 1, 1, 1, 1 }, // color
-                false, // shadeless
-                true // persistent
-            );
-            Material* pUnitMaterial = resourceManager.createMaterial(
-                {pUnitTexture->getResourceID()},
-                0, // specular texture res id
-                0.0f, // specular strength
-                1.0f, // shininess
-                0, // blendmap texture res id
-                { 1, 1, 1, 1 }, // color
-                false, // shadeless
-                true // persistent
-            );
-            Model* pDefaultModel = resourceManager.loadModel(
-                "assets/models/UnitCube.glb",
-                pDefaultMaterial->getResourceID(),
-                true
-            );
-            Model* pTreeModel1 = resourceManager.loadModel(
-                "assets/models/tree1.glb",
-                pTreeMaterial->getResourceID(),
-                true
-            );
-            Model* pUnitModel = resourceManager.loadModel(
-                "assets/models/characterTest.glb",
-                pUnitMaterial->getResourceID()
-            );
-
-            s_models.push_back(pDefaultModel);
-            s_models.push_back(pTreeModel1);
-            s_models.push_back(pUnitModel);
-
-            // TODO: Make below somehow more less dumb..
-            // Set these objects' visual properties
-            // *use 'i' since index of that list is equal to the object's type id
-            for (int i = 0; i < s_objects.size(); ++i)
+            std::vector<Material*> materials;
+            for (auto& materialData  : jsonData["materials"])
             {
-                VisualObjectInfo visualObjInfo;
-
-                // Below old way of using sprites for everything..
-                // NOTE: Also texture loading has changed
-                //  -> below should NOT BE USED anymore!
-                //TextureSampler spriteTextureSampler =
-                //{
-                //    TextureSamplerFilterMode::PK_SAMPLER_FILTER_MODE_LINEAR,
-                //    TextureSamplerAddressMode::PK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE,
-                //    2
-                //};
-                // NOTE: No fucking idea why load new textures for each object..
-                //s_pTextures.push_back(new WebTexture("assets/environment.png", spriteTextureSampler, 8));
-                //s_pTextures.push_back(new WebTexture("assets/MovementTest.png", spriteTextureSampler, 8));
-                //s_pTextures.push_back(new WebTexture("assets/landings.png", spriteTextureSampler, 4));
-
-                switch (i)
+                const std::string texturePath = texturesPath + materialData["texture"].get<std::string>();
+                Texture* pTexture = resourceManager.loadTexture(
+                    texturePath,
+                    defaultTextureSampler,
+                    true
+                );
+                if (!pTexture)
                 {
-                    case 1:
-                        visualObjInfo.pModel = pTreeModel1;
-                        break;
-                    case 2:
-                        visualObjInfo.rotateableSprite = true;
-                        visualObjInfo.pModel = pUnitModel;
-                        break;
-                    case 3:
-                        visualObjInfo.pModel = pDefaultModel;
-                        break;
-                    default:
-                        break;
+                    Debug::log(
+                        "@ObjectInfoLib::load_object_visuals "
+                        "Failed to load texture from: " + texturePath,
+                        Debug::MessageType::PK_FATAL_ERROR
+                    );
+                    propertiesFile.close();
+                    return false;
                 }
-                s_objectVisuals.push_back(visualObjInfo);
+                Material* pMaterial = resourceManager.createMaterial(
+                    { pTexture->getResourceID() },
+                    0, // specular texture res id
+                    0.0f, // specular strength
+                    1.0f, // shininess
+                    { 1, 1, 1, 1 }, // color
+                    false, // shadeless
+                    true // persistent
+                );
+                if (!pMaterial)
+                {
+                    Debug::log(
+                        "@ObjectInfoLib::load_object_visuals "
+                        "Failed to create material using texture: " + texturePath,
+                        Debug::MessageType::PK_FATAL_ERROR
+                    );
+                    propertiesFile.close();
+                    return false;
+                }
+                materials.push_back(pMaterial);
+                Debug::log("    Created material successfully using texture: " + texturePath);
             }
+
+            Debug::log(
+                "@ObjectInfoLib::load_object_visuals "
+                "Loading models..."
+            );
+
+            std::vector<Model*> models;
+            for (auto& modelProperties : jsonData["models"])
+            {
+                const std::string filepath = modelsPath + modelProperties["file"].get<std::string>();
+                const int materialIndex = modelProperties["material"];
+
+                if (materialIndex < 0 || materialIndex >= materials.size())
+                {
+                    Debug::log(
+                        "@ObjectInfoLib::load_object_visuals "
+                        "Invalid material index: " + std::to_string(materialIndex) + " "
+                        "for model: " + filepath + " "
+                        "available materials count: " + std::to_string(materials.size()),
+                        Debug::MessageType::PK_FATAL_ERROR
+                    );
+                    propertiesFile.close();
+                    return false;
+                }
+
+                Model* pModel = resourceManager.loadModel(
+                    filepath,
+                    materials[materialIndex]->getResourceID(),
+                    true
+                );
+
+                // Set default models if not set already
+                const std::string modelType = modelProperties["type"].get<std::string>();
+                if (!s_defaultStaticModel && modelType == "static")
+                    s_defaultStaticModel = pModel;
+                if (!s_defaultRiggedModel && modelType == "rigged")
+                    s_defaultRiggedModel = pModel;
+
+                if (!pModel)
+                {
+                    Debug::log(
+                        "@ObjectInfoLib::load_object_visuals "
+                        "Failed to load model from: " + filepath,
+                        Debug::MessageType::PK_FATAL_ERROR
+                    );
+                    propertiesFile.close();
+                    return false;
+                }
+                models.push_back(pModel);
+                Debug::log("    Loaded model successfully from: " + filepath + " using material index: " + std::to_string(materialIndex));
+            }
+
+            Debug::log(
+                "@ObjectInfoLib::load_object_visuals "
+                "Loading object properties..."
+            );
+            // create VisualObjInfo instances
+            int objectIndex = 0;
+            for (auto& objProperties : jsonData["objects"])
+            {
+                const int modelIndex = objProperties["model"];
+                if (modelIndex < 0 || modelIndex >= models.size())
+                {
+                    Debug::log(
+                        "@ObjectInfoLib::load_object_visuals "
+                        "Invalid model index: " + std::to_string(modelIndex) + " "
+                        "for object index: " + std::to_string(objectIndex),
+                        Debug::MessageType::PK_FATAL_ERROR
+                    );
+                    propertiesFile.close();
+                    return false;
+                }
+
+                std::vector<float> colliderScale = objProperties["scale"].get<std::vector<float>>();
+                if (colliderScale.size() != 3)
+                {
+                    Debug::log(
+                        "@ObjectInfoLib::load_object_visuals "
+                        "Invalid component count for object scale: " + std::to_string(colliderScale.size()) + " "
+                        "at index: " + std::to_string(objectIndex) + " "
+                        "required count is 3",
+                        Debug::MessageType::PK_FATAL_ERROR
+                    );
+                    propertiesFile.close();
+                    return false;
+                }
+
+                VisualObjectInfo visualInfo;
+                visualInfo.pModel = models[modelIndex];
+                visualInfo.colliderScale = vec3(
+                    colliderScale[0],
+                    colliderScale[1],
+                    colliderScale[2]
+                );
+                s_objectVisuals.push_back(visualInfo);
+                ++objectIndex;
+
+                Debug::log("    Created visual object info successfully");
+            }
+
+            propertiesFile.close();
+            return true;
         }
 
         void ObjectInfoLib::destroy()
@@ -659,31 +628,28 @@ namespace world
 
         pk::Model* ObjectInfoLib::get_default_static_model()
         {
-            if (s_models.empty())
+            if (!s_defaultStaticModel)
             {
                 Debug::log(
                     "@ObjectInfoLib::get_default_static_model "
-                    "No default static model assigned to required model slot: 0"
-                    "ObjectInfoLib models was empty",
+                    "No default static model assigned!",
                     Debug::MessageType::PK_FATAL_ERROR
                 );
-                return nullptr;
             }
-            return s_models[0];
+            return s_defaultStaticModel;
         }
 
         pk::Model* ObjectInfoLib::get_default_rigged_model()
         {
-            if (s_models.empty())
+            if (!s_defaultRiggedModel)
             {
                 Debug::log(
                     "@ObjectInfoLib::get_default_rigged_model "
-                    "No default rigged model assigned to required model slot: 2",
+                    "No default rigged model assigned!",
                     Debug::MessageType::PK_FATAL_ERROR
                 );
-                return nullptr;
             }
-            return s_models[2];
+            return s_defaultRiggedModel;
         }
     }
 }
