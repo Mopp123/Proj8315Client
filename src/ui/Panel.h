@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../../PortablePesukarhu/ppk.h"
+#include "core/input/InputEvent.h"
 #include "ecs/components/ui/ConstraintData.h"
 
 
@@ -15,7 +16,21 @@ public:
         HORIZONTAL = 1
     };
 
-private:
+    class PanelCursorPosEvent : public pk::CursorPosEvent
+    {
+    private:
+        pk::Scene* _pScene = nullptr;
+        Panel* _pPanel = nullptr;
+
+    public:
+        PanelCursorPosEvent(pk::Scene* pScene, Panel* pPanel) :
+            _pScene(pScene),
+            _pPanel(pPanel)
+        {}
+		virtual void func(int x, int y);
+    };
+
+protected:
     pk::Scene* _pScene = nullptr;
     pk::Font* _pDefaultFont = nullptr;
     entityID_t _entity;
@@ -40,7 +55,7 @@ private:
 
 public:
     Panel() {};
-    ~Panel() {};
+    virtual ~Panel() {};
 
     void create(
         pk::Scene* pScene,
@@ -113,6 +128,8 @@ public:
     void setActive(bool arg, entityID_t entity = 0);
 
     static pk::vec4 get_base_ui_color(unsigned int colorIndex);
+
+    inline entityID_t getEntity() const { return _entity; }
 
 private:
     pk::vec2 calcNewSlotPos();

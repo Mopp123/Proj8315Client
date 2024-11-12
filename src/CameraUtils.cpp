@@ -33,7 +33,7 @@ CameraController::CameraMouseButtonEvent::CameraMouseButtonEvent(CameraControlle
 
 void CameraController::CameraMouseButtonEvent::func(pk::InputMouseButtonName button, pk::InputAction action, int mods)
 {
-    pController->_enableMouseLook = button == pk::InputMouseButtonName::PK_INPUT_MOUSE_LEFT && action == pk::InputAction::PK_INPUT_PRESS;
+    pController->_enableMouseLook = button == pk::InputMouseButtonName::PK_INPUT_MOUSE_MIDDLE && action == pk::InputAction::PK_INPUT_PRESS;
 }
 
 

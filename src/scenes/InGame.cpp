@@ -131,7 +131,7 @@ void InGame::update()
 
         _mousePicker.update(true);
         // TODO: Maybe do this in mouse picker's OnMouseButton event?
-        _inGameUI.setSelectedInfo(
+        _inGameUI.getSelectedPanel().setSelectedInfo(
             _mousePicker.getSelectedTile(),
             _mousePicker.getSelectedTileX(),
             _mousePicker.getSelectedTileY()

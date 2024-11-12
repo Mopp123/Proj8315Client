@@ -26,6 +26,33 @@ static vec4 s_defaultUIColorsUIDark[] = {
 vec4* Panel::s_uiColor = s_defaultUIColorsUIDark;
 
 
+void Panel::PanelCursorPosEvent::func(int x, int y)
+{
+    // TODO: Make this somehow more efficient
+    // TODO: Make more efficeint the whole system how we get components from entity!
+    // -> that is up to date if accessing old pointers after pool resized, stuff, things...
+    Transform* pTransform = (Transform*)_pScene->getComponent(
+        _pPanel->getEntity(),
+        ComponentType::PK_TRANSFORM
+    );
+
+    float fx = (float)x;
+    float fy = (float)y;
+
+    const mat4& panelTMat = pTransform->getTransformationMatrix();
+    float panelX = panelTMat[0 + 3 * 4];
+    float panelY = panelTMat[1 + 3 * 4];
+    float panelWidth = panelTMat[0 + 0 * 4]; // NOTE: fucks up if rotated...
+    float panelHeight = panelTMat[1 + 1 * 4];
+
+
+    if (fx >= panelX && fx <= panelX + panelWidth && fy <= panelY && fy >= panelY - panelHeight)
+    {
+        Debug::log("___TEST___MOUSE OVER PANEL!");
+    }
+}
+
+
 void Panel::create(
     Scene* pScene,
     Font* pDefaultFont,
@@ -95,6 +122,9 @@ void Panel::create(
             textureCropping
         );
     }
+
+    InputManager* pInputManager = Application::get()->accessInputManager();
+    pInputManager->addCursorPosEvent(new PanelCursorPosEvent(pScene, this));
 }
 
 void Panel::createDefault(
