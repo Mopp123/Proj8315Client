@@ -1,5 +1,4 @@
 #include "SelectedPanel.h"
-
 #include "../../Proj8315Common/src/Common.h"
 #include "../../Proj8315Common/src/Tile.h"
 #include "Object.h"

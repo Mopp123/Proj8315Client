@@ -287,10 +287,21 @@ void InGameLocal::init()
         0,
         treeObjState
     );
+    uint64_t spruceTreeObjState = 0;
+    set_tile_thingid(spruceTreeObjState, 2);
+    gamecommon::ObjectInfo spruceTreeObj(
+        "Spruce Tree",
+        "Doesn't do anything2",
+        {
+            "Idle"
+        },
+        0,
+        spruceTreeObjState
+    );
     uint64_t palmTreeObjState = 0;
-    set_tile_thingid(palmTreeObjState, 2);
+    set_tile_thingid(palmTreeObjState, 3);
     gamecommon::ObjectInfo palmTreeObj(
-        "Palm Tree",
+        "Spruce Tree",
         "Doesn't do anything2",
         {
             "Idle"
@@ -299,7 +310,7 @@ void InGameLocal::init()
         palmTreeObjState
     );
     uint64_t movingObjState = 0;
-    set_tile_thingid(movingObjState, 3);
+    set_tile_thingid(movingObjState, 4);
     gamecommon::ObjectInfo movingObj(
         "Moving Object",
         "Capable of moving",
@@ -314,6 +325,7 @@ void InGameLocal::init()
         {
             emptyObj,
             treeObj,
+            spruceTreeObj,
             palmTreeObj,
             movingObj
         }
@@ -336,7 +348,7 @@ void InGameLocal::init()
     set_tile_terrtype(initialTileState, TileStateTerrType::TILE_STATE_terrTypeDirt);
     _testMapFull.resize(_testMapWidth * _testMapWidth * sizeof(uint64_t), initialTileState);
 
-    set_tile_thingid(_testMapFull[5 + 5 * _testMapWidth], 3);
+    set_tile_thingid(_testMapFull[5 + 5 * _testMapWidth], 4);
     set_tile_thingid(_testMapFull[6 + 7 * _testMapWidth], 1);
     set_tile_thingid(_testMapFull[5 + 8 * _testMapWidth], 2);
 
@@ -426,6 +438,13 @@ void InGameLocal::update()
         _mousePicker.getSelectedTileX(),
         _mousePicker.getSelectedTileY()
     );
+    if (pInputManager->isMouseButtonDown(InputMouseButtonName::PK_INPUT_MOUSE_RIGHT))
+        _inGameUI.getTileOptionsMenu().show(
+            _mousePicker.getSelectedTile(),
+            pInputManager->getMouseX(),
+            pInputManager->getMouseY()
+        );
+
 
     // Test put ramp on mouse click
     if (pInputManager->isMouseButtonDown(InputMouseButtonName::PK_INPUT_MOUSE_RIGHT))

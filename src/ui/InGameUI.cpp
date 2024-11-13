@@ -75,4 +75,5 @@ void InGameUI::create(InGame* pInGameScene, Scene* pScene, pk::Font* pFont)
         pClient->addOnMessageEvent(MESSAGE_TYPE__LogoutResponse, new OnMessageLogout);
 
     _selectedPanel.init(pScene, pFont);
+    _tileOptionsMenu.init(pScene, pFont);
 }

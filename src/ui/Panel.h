@@ -103,7 +103,7 @@ public:
     std::pair<entityID_t, pk::TextRenderable*> addText(std::string txt, pk::vec3 color);
     std::pair<entityID_t, pk::TextRenderable*> addDefaultText(std::string txt);
 
-    void addDefaultButton(
+    entityID_t addDefaultButton(
         std::string txt,
         pk::ui::OnClickEvent* onClick,
         float width

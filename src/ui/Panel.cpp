@@ -201,7 +201,7 @@ std::pair<entityID_t, TextRenderable*> Panel::addDefaultText(std::string txt)
     return  addText(txt, get_base_ui_color(3).toVec3());
 }
 
-void Panel::addDefaultButton(
+entityID_t Panel::addDefaultButton(
     std::string txt,
     ui::OnClickEvent* onClick,
     float width
@@ -242,6 +242,7 @@ void Panel::addDefaultButton(
     // atm fucks up because constraint and transform systems are in conflict?
     _pScene->addChild(_entity, buttonEntity);
     ++_slotCount;
+    return buttonEntity;
 }
 
 

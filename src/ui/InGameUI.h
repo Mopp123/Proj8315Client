@@ -5,6 +5,7 @@
 #include <vector>
 #include <string>
 #include "SelectedPanel.h"
+#include "TileOptionsMenu.h"
 
 
 class InGame;
@@ -42,6 +43,8 @@ private:
     // * If selected object -> this should follows object from tile
     // to another eventually!
     SelectedPanel _selectedPanel;
+    // That "right click dropdown menu"
+    TileOptionsMenu _tileOptionsMenu;
 
     // Panel what u can do when right clicking on a tile/object
     Panel _actionsPanel;
@@ -56,4 +59,5 @@ public:
     void create(InGame* pInGameScene, pk::Scene* pScene, pk::Font* pFont);
 
     inline SelectedPanel& getSelectedPanel() { return _selectedPanel; }
+    inline TileOptionsMenu& getTileOptionsMenu() { return _tileOptionsMenu; }
 };
