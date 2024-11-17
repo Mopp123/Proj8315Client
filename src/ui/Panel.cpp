@@ -2,6 +2,7 @@
 
 
 using namespace pk;
+using namespace pk::ui;
 
 
 static vec4 s_defaultUIColorsLight0[] = {
@@ -48,7 +49,6 @@ void Panel::PanelCursorPosEvent::func(int x, int y)
 
     if (fx >= panelX && fx <= panelX + panelWidth && fy <= panelY && fy >= panelY - panelHeight)
     {
-        Debug::log("___TEST___MOUSE OVER PANEL!");
     }
 }
 
@@ -201,7 +201,7 @@ std::pair<entityID_t, TextRenderable*> Panel::addDefaultText(std::string txt)
     return  addText(txt, get_base_ui_color(3).toVec3());
 }
 
-entityID_t Panel::addDefaultButton(
+UIFactoryButton Panel::addDefaultButton(
     std::string txt,
     ui::OnClickEvent* onClick,
     float width
@@ -220,7 +220,7 @@ entityID_t Panel::addDefaultButton(
         offsetFromPanel.y *= -1.0f;
 
     vec2 toAdd = calcNewSlotPos();
-    uint32_t buttonEntity = create_button(
+    UIFactoryButton button = create_button(
         txt,
         *_pDefaultFont,
         _horizontalConstraint,
@@ -240,11 +240,55 @@ entityID_t Panel::addDefaultButton(
         textureCropping
     );
     // atm fucks up because constraint and transform systems are in conflict?
-    _pScene->addChild(_entity, buttonEntity);
+    _pScene->addChild(_entity, button.rootEntity);
     ++_slotCount;
-    return buttonEntity;
+    return button;
 }
 
+pk::ui::UIFactoryButton Panel::addButton(
+    std::string txt,
+    OnClickEvent* onClick,
+    HorizontalConstraintProperties horizontalConstraint,
+    VerticalConstraintProperties verticalConstraint,
+    vec2 scale,
+    bool drawBorder
+)
+{
+    vec4 color = get_base_ui_color(2);
+    vec4 borderColor = color;
+    float borderThickness = 0.0f;
+    if (drawBorder)
+    {
+        borderColor = get_base_ui_color(3);
+        borderThickness = 1.0f;
+    }
+
+    Texture* pTexture = nullptr;
+    vec4 textureCropping(0, 0, 1, 1);
+
+    UIFactoryButton button = create_button(
+        txt,
+        *_pDefaultFont,
+        horizontalConstraint.type, horizontalConstraint.value,
+        verticalConstraint.type, verticalConstraint.value,
+        scale.x, scale.y,
+        onClick,
+        false,
+        color.toVec3(), // color
+        get_base_ui_color(3).toVec3(), // text color
+        get_base_ui_color(1).toVec3(), // text highlight color
+        get_base_ui_color(3).toVec3(), // background highlight color
+        borderColor, // border color
+        borderThickness,
+        pTexture,
+        textureCropping
+    );
+    // atm fucks up because constraint and transform systems are in conflict?
+    _pScene->addChild(_entity, button.rootEntity);
+    // Atm disabling adding to slot count since this overrides the "slot" thing completely...
+    //++_slotCount;
+    return button;
+}
 
 std::pair<entityID_t, pk::TextRenderable*> Panel::addDefaultInputField(
     std::string infoTxt,
@@ -326,6 +370,19 @@ vec2 Panel::calcNewSlotPos()
     return pos;
 }
 
+Rect2D Panel::getRect() const
+{
+    const Transform* pTransform = (const Transform*)_pScene->getComponent(
+        _entity,
+        ComponentType::PK_TRANSFORM
+    );
+    const mat4& tMat = pTransform->getTransformationMatrix();
+    int32_t x = tMat[0 + 3 * 4];
+    int32_t y = tMat[1 + 3 * 4];
+    uint32_t width = tMat[0 + 0 * 4];
+    uint32_t height = tMat[1 + 1 * 4];
+    return { x, y, width, height};
+}
 
 vec4 Panel::get_base_ui_color(unsigned int colorIndex)
 {

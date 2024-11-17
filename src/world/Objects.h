@@ -149,6 +149,7 @@ namespace world
 
         public:
             static gamecommon::ObjectInfo* get(int index);
+            static std::vector<gamecommon::ObjectInfo>& getObjectInfos();
             static VisualObjectInfo* get_visual(int index);
             static size_t get_size();
             static void create(const PK_byte* pData, size_t dataSize);

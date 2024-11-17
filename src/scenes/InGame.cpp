@@ -58,7 +58,7 @@ void InGame::createWorld()
     _mousePicker.init((Scene*)this, _pWorld);
 
     // Just to be safe create/init inGameUI here as well..
-    _inGameUI.create(this, (Scene*)this, _pDefaultFont);
+    _inGameUI.create(this, (Scene*)this, _pDefaultFont, _pSmallFont);
 }
 
 void InGame::init()

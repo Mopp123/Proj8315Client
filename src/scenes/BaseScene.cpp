@@ -31,6 +31,10 @@ void BaseScene::initBase()
         "assets/fonts/Matamata-Regular.otf",
         20
     );
+    _pSmallFont = resourceManager.createFont(
+        "assets/fonts/Matamata-Regular.otf",
+        18
+    );
 
     // Create directional light
     directionalLight = createEntity();

@@ -3,6 +3,7 @@
 #include "../../PortablePesukarhu/ppk.h"
 #include "core/input/InputEvent.h"
 #include "ecs/components/ui/ConstraintData.h"
+#include "ecs/factories/ui/UIFactories.h"
 
 
 #define UI_BASE_COLOR_COUNT 4
@@ -34,7 +35,6 @@ protected:
     pk::Scene* _pScene = nullptr;
     pk::Font* _pDefaultFont = nullptr;
     entityID_t _entity;
-
 
     pk::HorizontalConstraintType _horizontalConstraint;
     float _horizontalConstraintValue;
@@ -103,10 +103,19 @@ public:
     std::pair<entityID_t, pk::TextRenderable*> addText(std::string txt, pk::vec3 color);
     std::pair<entityID_t, pk::TextRenderable*> addDefaultText(std::string txt);
 
-    entityID_t addDefaultButton(
+    pk::ui::UIFactoryButton addDefaultButton(
         std::string txt,
         pk::ui::OnClickEvent* onClick,
         float width
+    );
+
+    pk::ui::UIFactoryButton addButton(
+        std::string txt,
+        pk::ui::OnClickEvent* onClick,
+        pk::HorizontalConstraintProperties horizontalConstraint,
+        pk::VerticalConstraintProperties verticalConstraint,
+        pk::vec2 scale,
+        bool drawBorder = false
     );
 
     std::pair<entityID_t, pk::TextRenderable*> addDefaultInputField(
@@ -126,6 +135,9 @@ public:
     );
 
     void setActive(bool arg, entityID_t entity = 0);
+
+    // Returns current up to date pos and scale of the panel
+    pk::Rect2D getRect() const; // :D
 
     static pk::vec4 get_base_ui_color(unsigned int colorIndex);
 

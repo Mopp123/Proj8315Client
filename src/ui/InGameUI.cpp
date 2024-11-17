@@ -42,12 +42,12 @@ void InGameUI::OnMessageLogout::onMessage(const GC_byte* data, size_t dataSize)
 // TODO:
 // * Some func to add and store status and attribute strings/values more clearly
 // * Display "really" selected object's info
-void InGameUI::create(InGame* pInGameScene, Scene* pScene, pk::Font* pFont)
+void InGameUI::create(InGame* pInGameScene, Scene* pScene, pk::Font* pFont, pk::Font* pSmallFont)
 {
     _pInGameScene = pInGameScene;
     _pScene = pScene;
 
-    const vec2 settingsPanelScale(212, 25);
+    const vec2 settingsPanelScale(212, 30);
     const vec2 settingsPanelSlotScale(100, 24);
     _settingsPanel.createDefault(
         _pScene,
@@ -74,6 +74,6 @@ void InGameUI::create(InGame* pInGameScene, Scene* pScene, pk::Font* pFont)
     if (pClient)
         pClient->addOnMessageEvent(MESSAGE_TYPE__LogoutResponse, new OnMessageLogout);
 
-    _selectedPanel.init(pScene, pFont);
-    _tileOptionsMenu.init(pScene, pFont);
+    _selectedPanel.init(pScene, pSmallFont);
+    _tileOptionsMenu.init(pScene, pSmallFont, &_selectedPanel);
 }

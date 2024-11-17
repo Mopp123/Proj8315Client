@@ -56,7 +56,7 @@ public:
     // NOTE:
     // *If testing locally give pInGameScene as nullptr
     // *pScene is required to be the current scene casted to "raw scene"
-    void create(InGame* pInGameScene, pk::Scene* pScene, pk::Font* pFont);
+    void create(InGame* pInGameScene, pk::Scene* pScene, pk::Font* pFont, pk::Font* pSmallFont);
 
     inline SelectedPanel& getSelectedPanel() { return _selectedPanel; }
     inline TileOptionsMenu& getTileOptionsMenu() { return _tileOptionsMenu; }

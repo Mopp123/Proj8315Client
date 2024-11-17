@@ -261,7 +261,7 @@ void InGameLocal::init()
     // Set clear color
     Application::get()->getMasterRenderer().setClearColor({ 0, 0, 0, 1});
 
-    _inGameUI.create(nullptr, (Scene*)this, _pDefaultFont);
+    _inGameUI.create(nullptr, (Scene*)this, _pDefaultFont, _pSmallFont);
 
     _pCamController = new CameraController(activeCamera, 30.0f);
     Transform* pCamTransform = (Transform*)getComponent(activeCamera, ComponentType::PK_TRANSFORM);
@@ -301,7 +301,7 @@ void InGameLocal::init()
     uint64_t palmTreeObjState = 0;
     set_tile_thingid(palmTreeObjState, 3);
     gamecommon::ObjectInfo palmTreeObj(
-        "Spruce Tree",
+        "Palm Tree",
         "Doesn't do anything2",
         {
             "Idle"
@@ -351,6 +351,7 @@ void InGameLocal::init()
     set_tile_thingid(_testMapFull[5 + 5 * _testMapWidth], 4);
     set_tile_thingid(_testMapFull[6 + 7 * _testMapWidth], 1);
     set_tile_thingid(_testMapFull[5 + 8 * _testMapWidth], 2);
+    set_tile_thingid(_testMapFull[6 + 8 * _testMapWidth], 3);
 
     const int testAreaWidth = 5;
     test_area(
@@ -439,10 +440,12 @@ void InGameLocal::update()
         _mousePicker.getSelectedTileY()
     );
     if (pInputManager->isMouseButtonDown(InputMouseButtonName::PK_INPUT_MOUSE_RIGHT))
-        _inGameUI.getTileOptionsMenu().show(
-            _mousePicker.getSelectedTile(),
+        _inGameUI.getTileOptionsMenu().open(
             pInputManager->getMouseX(),
-            pInputManager->getMouseY()
+            pInputManager->getMouseY(),
+            _mousePicker.getSelectedTile(),
+            _mousePicker.getSelectedTileX(),
+            _mousePicker.getSelectedTileY()
         );
 
 

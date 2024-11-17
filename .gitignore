@@ -4,6 +4,7 @@ compile_commands.json
 
 build/
 
+assets/*.json
 assets/*.ttf
 assets/*.gltf
 assets/*.glb

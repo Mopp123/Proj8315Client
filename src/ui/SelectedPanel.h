@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Panel.h"
+#include "graphics/Swapchain.h"
 #include <vector>
 
 

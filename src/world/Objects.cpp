@@ -353,6 +353,11 @@ namespace world
             return &s_objects[index];
         }
 
+        std::vector<gamecommon::ObjectInfo>& ObjectInfoLib::getObjectInfos()
+        {
+            return s_objects;
+        }
+
         VisualObjectInfo* ObjectInfoLib::get_visual(int index)
         {
             if (index < 0 || index >= s_objectVisuals.size())
