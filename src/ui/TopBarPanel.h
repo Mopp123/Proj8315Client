@@ -6,6 +6,15 @@
 class TopBarPanel : public Panel
 {
 protected:
+    class OnClickClose : public pk::ui::OnClickEvent
+    {
+    private:
+        TopBarPanel* _pPanel = nullptr;
+    public:
+        OnClickClose(TopBarPanel* pPanel) : _pPanel(pPanel) {}
+        virtual void onClick(pk::InputMouseButtonName button);
+    };
+
     entityID_t _topBarImgEntity = 0;
     entityID_t _topBarTitleEntity = 0;
     pk::ui::UIFactoryButton _topBarCloseButton;
@@ -17,9 +26,10 @@ public:
         const std::string title,
         pk::HorizontalConstraintProperties horizontalConstraint,
         pk::VerticalConstraintProperties verticalConstraint,
-        const pk::vec2& scale,
-        pk::ui::OnClickEvent* pCloseButtonOnClick
+        const pk::vec2& scale
     );
+
+    virtual void close() = 0;
 
 protected:
     void setComponentsActive(bool arg);

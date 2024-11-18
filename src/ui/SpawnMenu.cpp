@@ -13,12 +13,6 @@ using namespace gamecommon;
 using namespace net;
 
 
-void SpawnMenu::OnClickClose::onClick(pk::InputMouseButtonName button)
-{
-    _pMenu->close();
-}
-
-
 void SpawnMenu::MenuItemOnClick::onClick(pk::InputMouseButtonName button)
 {
     Debug::log("___TEST___spawning object: " + std::to_string(_itemIndex));
@@ -34,8 +28,7 @@ void SpawnMenu::init(pk::Scene* pScene, pk::Font* pFont)
         "Admin Spawn menu",
         { HorizontalConstraintType::PIXEL_CENTER_HORIZONTAL, -scale.x * 0.5f },
         { VerticalConstraintType::PIXEL_CENTER_VERTICAL, scale.y * 0.5f },
-        scale,
-        new OnClickClose(this)
+        scale
     );
     _layoutType = LayoutFillType::VERTICAL;
     for (int i = 0; i < _maxSpawnButtons; ++i)

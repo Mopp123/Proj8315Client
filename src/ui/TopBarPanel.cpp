@@ -13,14 +13,19 @@ using namespace gamecommon;
 using namespace net;
 
 
+void TopBarPanel::OnClickClose::onClick(pk::InputMouseButtonName button)
+{
+    _pPanel->close();
+}
+
+
 void TopBarPanel::initBase(
     pk::Scene* pScene,
     pk::Font* pFont,
     const std::string title,
     HorizontalConstraintProperties horizontalConstraint,
     VerticalConstraintProperties verticalConstraint,
-    const vec2& scale,
-    OnClickEvent* pCloseButtonOnClick
+    const vec2& scale
 )
 {
     vec2 slotScale(200, 24);
@@ -61,7 +66,7 @@ void TopBarPanel::initBase(
     // Add close button
     _topBarCloseButton = addButton(
         "X",
-        pCloseButtonOnClick,
+        new OnClickClose(this),
         closeButtonHorizontalConstraint,
         verticalConstraint,
         { topBarHeight - 1, topBarHeight - 1 }, // scale

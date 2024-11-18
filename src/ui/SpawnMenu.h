@@ -9,15 +9,6 @@
 class SpawnMenu : public TopBarPanel
 {
 private:
-    class OnClickClose : public pk::ui::OnClickEvent
-    {
-    private:
-        SpawnMenu* _pMenu = nullptr;
-    public:
-        OnClickClose(SpawnMenu* pMenu) : _pMenu(pMenu) {}
-        virtual void onClick(pk::InputMouseButtonName button);
-    };
-
     class MenuItemOnClick : public pk::ui::OnClickEvent
     {
     private:
@@ -38,7 +29,7 @@ public:
     void init(pk::Scene* pScene, pk::Font* pFont);
 
     void open(uint64_t tileData);
-    void close();
+    virtual void close();
 
 private:
     void displaySpawnButtons(const std::vector<gamecommon::ObjectInfo>& objects);
