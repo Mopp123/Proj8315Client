@@ -28,8 +28,16 @@ void InGame::OnMessagePostLogin_TEST::onMessage(const GC_byte* data, size_t data
 
     Client* pClient = Client::get_instance();
     _sceneRef.loggedIn = true;
-    pClient->user.name = _sceneRef.testUserName;
-    pClient->user.isLoggedIn = true;
+
+    pClient->user.set(
+        "", // id
+        _sceneRef.testUserName,
+        true, // isLoggedIn
+        true, // isAdmin
+        0, // tileX
+        0, // tileZ
+        "" // factionName
+    );
     _sceneRef.createWorld();
 }
 

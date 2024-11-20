@@ -34,7 +34,7 @@ void InGameUI::OnClickLogout::onClick(pk::InputMouseButtonName button)
 
 void InGameUI::OnMessageLogout::onMessage(const GC_byte* data, size_t dataSize)
 {
-    Client::get_instance()->user.isLoggedIn = false;
+    Client::get_instance()->user = NULL_USER;
     Application::get()->switchScene(new MainMenu);
 }
 
