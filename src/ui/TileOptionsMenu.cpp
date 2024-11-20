@@ -40,6 +40,20 @@ static void menu_item_func_cancel(TileOptionsMenu* pMenu)
 }
 
 
+void TileOptionsMenu::MenuMouseButtonEvent::func(
+    InputMouseButtonName button,
+    InputAction action,
+    int mods
+)
+{
+    if (!pMenu->isMouseOver())
+    {
+        if (action != InputAction::PK_INPUT_RELEASE)
+            pMenu->close();
+    }
+}
+
+
 void TileOptionsMenu::MenuItemOnClick::onClick(pk::InputMouseButtonName button)
 {
     if (_itemIndex >= _pMenu->_activeItems.size())
@@ -92,10 +106,14 @@ void TileOptionsMenu::init(pk::Scene* pScene, pk::Font* pFont, Panel* pSelectedT
         );
     }
 
+    Application::get()->accessInputManager()->addMouseButtonEvent(new MenuMouseButtonEvent(this));
+
     close();
 
     // Create admin menus which can be opened from here
     _spawnMenu.init(pScene, pFont);
+
+    setLayer(1);
 }
 
 void TileOptionsMenu::open(float screenX, float screenY, uint64_t tileData, int tileX, int tileY)
@@ -149,12 +167,14 @@ void TileOptionsMenu::open(float screenX, float screenY, uint64_t tileData, int 
     // Prevent collapsing on top of the "selected tile panel"
     // NOTE: This is quite dumb atm and assuming the "selected tile panel"
     // always to be in bottom left corner
+    /*
     Rect2D selectedPanelRect = _pSelectedTilePanel->getRect();
     if (useX < selectedPanelRect.offsetX + selectedPanelRect.width && useY - menuHeight < selectedPanelRect.offsetY)
     {
         float distToTopEdge = selectedPanelRect.height - (useY - menuHeight);
         useY += distToTopEdge;
     }
+    */
 
     ConstraintData* pConstraintData = (ConstraintData*)_pScene->getComponent(
         _entity,

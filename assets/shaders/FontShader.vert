@@ -2,7 +2,7 @@ precision mediump float;
 
 attribute vec2 vertexPos;
 
-attribute vec2 pos;
+attribute vec3 pos;
 attribute vec2 scale;
 attribute vec2 texOffset;
 attribute vec4 color;
@@ -19,8 +19,10 @@ varying vec4 var_color;
 
 void main()
 {
-    vec2 vpos = vertexPos;
-    gl_Position = pushConstants.projMat * vec4((vpos * scale) + pos, 0, 1.0);
-    var_uvCoord = (vpos * vec2(1.0, -1.0) + texOffset) / pushConstants.atlasRows;
+    vec2 scaledVertex = vertexPos * scale;
+    vec3 positionedVertex = vec3(scaledVertex, 0.0) + pos;
+
+    gl_Position = pushConstants.projMat * vec4(positionedVertex, 1.0);
+    var_uvCoord = (vertexPos * vec2(1.0, -1.0) + texOffset) / pushConstants.atlasRows;
     var_color = color;
 }

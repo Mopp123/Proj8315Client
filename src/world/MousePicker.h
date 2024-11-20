@@ -9,20 +9,6 @@ namespace  world
     class MousePicker
     {
     private:
-        class PickerMouseButtonEvent : public pk::MouseButtonEvent
-        {
-        private:
-            MousePicker* _pMousePicker = nullptr;
-            PK_ubyte _clickState = 0;
-        public:
-            PickerMouseButtonEvent(MousePicker* pMousePicker) :
-                _pMousePicker(pMousePicker)
-            {}
-		    virtual void func(pk::InputMouseButtonName button, pk::InputAction action, int mods);
-        };
-
-        friend class PickerMouseButtonEvent;
-
         pk::Scene* _pScene = nullptr;
         World* _pWorld = nullptr;;
 

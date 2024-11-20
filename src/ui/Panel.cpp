@@ -27,29 +27,53 @@ static vec4 s_defaultUIColorsUIDark[] = {
 vec4* Panel::s_uiColor = s_defaultUIColorsUIDark;
 
 
+int Panel::s_pickedPanels = 0;
+
+
 void Panel::PanelCursorPosEvent::func(int x, int y)
 {
-    // TODO: Make this somehow more efficient
-    // TODO: Make more efficeint the whole system how we get components from entity!
-    // -> that is up to date if accessing old pointers after pool resized, stuff, things...
+    // check activeness by looking at "root entity's" transform's activeness
+    // -> fucking stupid way of doing this but it'll do for now..
     Transform* pTransform = (Transform*)_pScene->getComponent(
         _pPanel->getEntity(),
         ComponentType::PK_TRANSFORM
     );
+    if (!pTransform)
+    {
+        Debug::log(
+            "@Panel::PanelCursorPosEvent::func "
+            "Panel's root entity doesn't have valid Transform component!",
+            Debug::MessageType::PK_FATAL_ERROR
+        );
+        return;
+    }
+    if (!pTransform->isActive())
+    {
+        _pPanel->_isMouseOver = false;
+        return;
+    }
 
     float fx = (float)x;
     float fy = (float)y;
 
-    const mat4& panelTMat = pTransform->getTransformationMatrix();
-    float panelX = panelTMat[0 + 3 * 4];
-    float panelY = panelTMat[1 + 3 * 4];
-    float panelWidth = panelTMat[0 + 0 * 4]; // NOTE: fucks up if rotated...
-    float panelHeight = panelTMat[1 + 1 * 4];
-
+    Rect2D panelRect = _pPanel->getRect();
+    float panelX = panelRect.offsetX;
+    float panelY = panelRect.offsetY;
+    float panelWidth = panelRect.width;
+    float panelHeight = panelRect.height;
 
     if (fx >= panelX && fx <= panelX + panelWidth && fy <= panelY && fy >= panelY - panelHeight)
     {
+        _pPanel->_isMouseOver = true;
+        ++s_pickedPanels;
     }
+    else
+    {
+        _pPanel->_isMouseOver = false;
+        if (s_pickedPanels - 1 >= 0)
+            --s_pickedPanels;
+    }
+
 }
 
 
@@ -356,6 +380,24 @@ void Panel::setActive(bool arg, entityID_t entity)
         setActive(arg, child);
 }
 
+void Panel::setLayer(int layer)
+{
+    for (Component* pComponent : _pScene->getAllComponents(_entity))
+    {
+        ComponentType type = pComponent->getType();
+        if (type == ComponentType::PK_RENDERABLE_GUI)
+        {
+            GUIRenderable* pRenderable = (GUIRenderable*)pComponent;
+            pRenderable->setLayer(layer);
+        }
+        else if (type == ComponentType::PK_RENDERABLE_TEXT)
+        {
+            TextRenderable* pRenderable = (TextRenderable*)pComponent;
+            pRenderable->setLayer(layer);
+        }
+    }
+}
+
 vec2 Panel::calcNewSlotPos()
 {
     vec2 pos(0, 0);
@@ -402,4 +444,9 @@ vec4 Panel::get_base_ui_color(unsigned int colorIndex)
     color.z /= 255;
     color.w /= 255;
     return color;
+}
+
+bool Panel::is_mouse_over_ui()
+{
+    return s_pickedPanels > 0;
 }

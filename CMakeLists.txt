@@ -34,6 +34,7 @@ file (
     "${PROJECT_SOURCE_DIR}/PortablePesukarhu/core/platform/web/*.cpp"
 
     "${PROJECT_SOURCE_DIR}/PortablePesukarhu/ecs/components/*.cpp"
+    "${PROJECT_SOURCE_DIR}/PortablePesukarhu/ecs/components/ui/*.cpp"
     "${PROJECT_SOURCE_DIR}/PortablePesukarhu/ecs/components/renderable/*.cpp"
     "${PROJECT_SOURCE_DIR}/PortablePesukarhu/ecs/systems/*.cpp"
     "${PROJECT_SOURCE_DIR}/PortablePesukarhu/ecs/systems/ui/*.cpp"

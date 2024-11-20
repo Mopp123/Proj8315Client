@@ -129,23 +129,26 @@ void InGame::update()
         vec3 camPivotPoint = _pCamController->getPivotPoint();
         _pCamController->setPivotPointHeight(_pWorld->getTerrainHeight(camPivotPoint.x, camPivotPoint.z));
 
-        _mousePicker.update(true);
-        // TODO: Maybe do this in mouse picker's OnMouseButton event?
-        _inGameUI.getSelectedPanel().setSelectedInfo(
-            _mousePicker.getSelectedTile(),
-            _mousePicker.getSelectedTileX(),
-            _mousePicker.getSelectedTileY()
-        );
-        // TODO: Maybe handle this input stuff somewhere else... maybe using the input events rather than this
-        InputManager* pInputManager = Application::get()->accessInputManager();
-        if (pInputManager->isMouseButtonDown(InputMouseButtonName::PK_INPUT_MOUSE_RIGHT))
-            _inGameUI.getTileOptionsMenu().open(
-                pInputManager->getMouseX(),
-                pInputManager->getMouseY(),
+        if (!Panel::is_mouse_over_ui())
+        {
+            _mousePicker.update(true);
+            // TODO: Maybe do this in mouse picker's OnMouseButton event?
+            _inGameUI.getSelectedPanel().setSelectedInfo(
                 _mousePicker.getSelectedTile(),
                 _mousePicker.getSelectedTileX(),
                 _mousePicker.getSelectedTileY()
             );
+            // TODO: Maybe handle this input stuff somewhere else... maybe using the input events rather than this
+            InputManager* pInputManager = Application::get()->accessInputManager();
+            if (pInputManager->isMouseButtonDown(InputMouseButtonName::PK_INPUT_MOUSE_RIGHT))
+                _inGameUI.getTileOptionsMenu().open(
+                    pInputManager->getMouseX(),
+                    pInputManager->getMouseY(),
+                    _mousePicker.getSelectedTile(),
+                    _mousePicker.getSelectedTileX(),
+                    _mousePicker.getSelectedTileY()
+                );
+        }
 
         _pWorld->update(camPivotPoint.x, camPivotPoint.z);
 

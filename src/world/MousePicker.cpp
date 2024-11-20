@@ -37,37 +37,6 @@ namespace world
     }
 
 
-	void MousePicker::PickerMouseButtonEvent::func(
-        InputMouseButtonName button,
-        InputAction action,
-        int mods
-    )
-    {
-        // NOTE: Atm need to set selected with right clicking as well for TileOptionsMenu to work properly
-        if (button == InputMouseButtonName::PK_INPUT_MOUSE_LEFT || button == InputMouseButtonName::PK_INPUT_MOUSE_RIGHT)
-        {
-            if (action == InputAction::PK_INPUT_PRESS && _clickState == 0)
-            {
-                int32_t obsSpaceX = 0;
-                int32_t obsSpaceY = 0;
-                _pMousePicker->getPickedObserveSpaceCoords(obsSpaceX, obsSpaceY);
-                uint64_t tile = _pMousePicker->_pWorld->getTile(obsSpaceX, obsSpaceY);
-                _pMousePicker->setSelectedTile(
-                    tile,
-                    _pMousePicker->_tileX,
-                    _pMousePicker->_tileY
-                );
-
-                _clickState += 1;
-            }
-            else if (action == InputAction::PK_INPUT_RELEASE)
-            {
-                _clickState = 0;
-            }
-        }
-    }
-
-
     void MousePicker::init(pk::Scene* pScene, World* pWorld)
     {
         if (!pScene)
@@ -154,11 +123,9 @@ namespace world
             _cursorEntity,
             pCursorMesh->getResourceID()
         );
-
-        InputManager* pInputManager = Application::get()->accessInputManager();
-        pInputManager->addMouseButtonEvent(new PickerMouseButtonEvent(this));
     }
 
+    static int s_clickState = 0;
     void MousePicker::update(bool clampToTile)
     {
         Camera* pCamera = (Camera*)_pScene->getComponent(_pScene->activeCamera, ComponentType::PK_CAMERA);
@@ -168,8 +135,9 @@ namespace world
         viewMat.inverse();
 
         // NOTE: Below could be done rather with CursorPosEvent?
-        int mouseX = Application::get()->accessInputManager()->getMouseX();
-        int mouseY = Application::get()->accessInputManager()->getMouseY();
+        InputManager* pInputManager = Application::get()->accessInputManager();
+        int mouseX = pInputManager->getMouseX();
+        int mouseY = pInputManager->getMouseY();
 
         vec3 screenToWorldSpace = screen_to_world_space(mouseX, mouseY, projMat, viewMat);
         screenToWorldSpace.normalize();
@@ -192,6 +160,19 @@ namespace world
         int observeSpaceTileX = 0;
         int observeSpaceTileY = 0;
         getPickedObserveSpaceCoords(observeSpaceTileX, observeSpaceTileY);
+
+        // TODO: Maybe do all this using the cursor pos and mouse button events?
+        bool selectTileKeydown = pInputManager->isMouseButtonDown(InputMouseButtonName::PK_INPUT_MOUSE_LEFT) || pInputManager->isMouseButtonDown(InputMouseButtonName::PK_INPUT_MOUSE_RIGHT);
+        if (selectTileKeydown && s_clickState == 0)
+        {
+            uint64_t tile = _pWorld->getTile(observeSpaceTileX, observeSpaceTileY);
+            _selectedTile = tile;
+            _selectedTileX = _tileX;
+            _selectedTileY = _tileY;
+            ++s_clickState;
+        }
+        if (!selectTileKeydown)
+            s_clickState = 0;
 
         if (clampToTile)
         {

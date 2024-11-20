@@ -32,6 +32,8 @@ public:
     };
 
 protected:
+    friend class PanelCursorPosEvent;
+
     pk::Scene* _pScene = nullptr;
     pk::Font* _pDefaultFont = nullptr;
     entityID_t _entity;
@@ -51,7 +53,11 @@ protected:
 
     int _slotCount = 0;
 
+    bool _isMouseOver = false;
+
     static pk::vec4* s_uiColor;
+
+    static int s_pickedPanels;
 
 public:
     Panel() {};
@@ -136,11 +142,16 @@ public:
 
     void setActive(bool arg, entityID_t entity = 0);
 
+    void setLayer(int layer);
+
     // Returns current up to date pos and scale of the panel
     pk::Rect2D getRect() const; // :D
 
     static pk::vec4 get_base_ui_color(unsigned int colorIndex);
 
+    static bool is_mouse_over_ui();
+
+    inline bool isMouseOver() const { return _isMouseOver; }
     inline entityID_t getEntity() const { return _entity; }
 
 private:

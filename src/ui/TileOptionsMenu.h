@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Panel.h"
+#include "core/input/InputEvent.h"
 #include "ecs/factories/ui/UIFactories.h"
 #include <vector>
 #include "SpawnMenu.h"
@@ -19,6 +20,14 @@ struct DropDownMenuItem
 class TileOptionsMenu : public Panel
 {
 private:
+    class MenuMouseButtonEvent : public pk::MouseButtonEvent
+    {
+    public:
+        TileOptionsMenu* pMenu = nullptr;
+        MenuMouseButtonEvent(TileOptionsMenu* pMenu) : pMenu(pMenu) {}
+		virtual void func(pk::InputMouseButtonName button, pk::InputAction action, int mods);
+    };
+
     class MenuItemOnClick : public pk::ui::OnClickEvent
     {
     private:

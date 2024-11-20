@@ -429,24 +429,27 @@ void InGameLocal::update()
 
     vec3 camPivotPoint = _pCamController->getPivotPoint();
 
-    _mousePicker.update(true);
 
 
     // Test change selected obj info
     // TODO: Maybe do this in mouse picker's OnMouseButton event?
-    _inGameUI.getSelectedPanel().setSelectedInfo(
-        _mousePicker.getSelectedTile(),
-        _mousePicker.getSelectedTileX(),
-        _mousePicker.getSelectedTileY()
-    );
-    if (pInputManager->isMouseButtonDown(InputMouseButtonName::PK_INPUT_MOUSE_RIGHT))
-        _inGameUI.getTileOptionsMenu().open(
-            pInputManager->getMouseX(),
-            pInputManager->getMouseY(),
+    if (!Panel::is_mouse_over_ui())
+    {
+        _mousePicker.update(true);
+        _inGameUI.getSelectedPanel().setSelectedInfo(
             _mousePicker.getSelectedTile(),
             _mousePicker.getSelectedTileX(),
             _mousePicker.getSelectedTileY()
         );
+        if (pInputManager->isMouseButtonDown(InputMouseButtonName::PK_INPUT_MOUSE_RIGHT))
+            _inGameUI.getTileOptionsMenu().open(
+                pInputManager->getMouseX(),
+                pInputManager->getMouseY(),
+                _mousePicker.getSelectedTile(),
+                _mousePicker.getSelectedTileX(),
+                _mousePicker.getSelectedTileY()
+            );
+    }
 
 
     // Test put ramp on mouse click
