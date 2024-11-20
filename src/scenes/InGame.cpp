@@ -136,6 +136,16 @@ void InGame::update()
             _mousePicker.getSelectedTileX(),
             _mousePicker.getSelectedTileY()
         );
+        // TODO: Maybe handle this input stuff somewhere else... maybe using the input events rather than this
+        InputManager* pInputManager = Application::get()->accessInputManager();
+        if (pInputManager->isMouseButtonDown(InputMouseButtonName::PK_INPUT_MOUSE_RIGHT))
+            _inGameUI.getTileOptionsMenu().open(
+                pInputManager->getMouseX(),
+                pInputManager->getMouseY(),
+                _mousePicker.getSelectedTile(),
+                _mousePicker.getSelectedTileX(),
+                _mousePicker.getSelectedTileY()
+            );
 
         _pWorld->update(camPivotPoint.x, camPivotPoint.z);
 

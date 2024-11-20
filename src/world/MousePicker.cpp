@@ -43,7 +43,8 @@ namespace world
         int mods
     )
     {
-        if (button == InputMouseButtonName::PK_INPUT_MOUSE_LEFT)
+        // NOTE: Atm need to set selected with right clicking as well for TileOptionsMenu to work properly
+        if (button == InputMouseButtonName::PK_INPUT_MOUSE_LEFT || button == InputMouseButtonName::PK_INPUT_MOUSE_RIGHT)
         {
             if (action == InputAction::PK_INPUT_PRESS && _clickState == 0)
             {

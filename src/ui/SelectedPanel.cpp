@@ -25,6 +25,32 @@ static std::string temperature_value_to_string(TileStateTemperature value)
     }
 }
 
+// *Need to also give temperature to distinguish between sand dunes and snow dunes...
+static std::string terrain_type_value_to_string(
+    TileStateTerrType terrainType,
+    TileStateTemperature temperatureValue
+)
+{
+    switch (terrainType)
+    {
+        case TILE_STATE_terrTypeDirt : return "Dirt";
+        case TILE_STATE_terrTypeWater : return "Water";
+        case TILE_STATE_terrTypeRock : return "Rock";
+        case TILE_STATE_terrTypeFertile : return "Fertile soil";
+        case TILE_STATE_terrTypeDunes :
+        {
+            if (temperatureValue == TileStateTemperature::TILE_STATE_cold || temperatureValue == TileStateTemperature::TILE_STATE_freezing)
+                return "Snow";
+            else
+                return "Sand";
+        }
+        case TILE_STATE_terrTypePending1 : return "Type pending1";
+        case TILE_STATE_terrTypePending2 : return "Type pending2";
+        default:
+            return "Error type: " + std::to_string(terrainType);
+    }
+}
+
 
 void SelectedPanel::init(pk::Scene* pScene, pk::Font* pFont)
 {
@@ -162,6 +188,7 @@ void SelectedPanel::init(pk::Scene* pScene, pk::Font* pFont)
 void SelectedPanel::setSelectedInfo(uint64_t tile, int tileX, int tileY)
 {
     GC_ubyte object = gamecommon::get_tile_thingid(tile);
+    GC_ubyte terrainType = gamecommon::get_tile_terrtype(tile);
     GC_ubyte tileElevation = gamecommon::get_tile_terrelevation(tile);
     GC_ubyte tileTemperature = gamecommon::get_tile_temperature(tile);
     gamecommon::ObjectInfo* pObjectInfo = objects::ObjectInfoLib::get(object);
@@ -199,6 +226,16 @@ void SelectedPanel::setSelectedInfo(uint64_t tile, int tileX, int tileY)
 
 
     // Tile info
+    TextRenderable* pTileInfoTerrainTypeTxt = (TextRenderable*)_pScene->getComponent(
+        _tileInfoEntities[TileInfoSlotIndex::type],
+        ComponentType::PK_RENDERABLE_TEXT
+    );
+    const std::string terrainTypeStr = terrain_type_value_to_string(
+        (TileStateTerrType)terrainType,
+        (TileStateTemperature)tileTemperature
+    );
+    pTileInfoTerrainTypeTxt->accessStr() = "Type: " + terrainTypeStr;
+
     TextRenderable* pTileInfoElevationTxt = (TextRenderable*)_pScene->getComponent(
         _tileInfoEntities[TileInfoSlotIndex::elevation],
         ComponentType::PK_RENDERABLE_TEXT

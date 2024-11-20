@@ -1,6 +1,8 @@
 #include "SpawnMenu.h"
 #include "../../Proj8315Common/src/Tile.h"
+#include "../../Proj8315Common/src/messages/AdminMessages.h"
 #include "Object.h"
+#include "messages/Message.h"
 #include "world/Objects.h"
 #include "net/Client.h"
 
@@ -15,7 +17,50 @@ using namespace net;
 
 void SpawnMenu::MenuItemOnClick::onClick(pk::InputMouseButtonName button)
 {
-    Debug::log("___TEST___spawning object: " + std::to_string(_itemIndex));
+    Client* pClient = Client::get_instance();
+    if (!pClient)
+    {
+        Debug::log(
+            "@SpawnMenu::MenuItemOnClick::onClick "
+            "Client was nullptr!",
+            Debug::MessageType::PK_ERROR
+        );
+        return;
+    }
+    UserData& user = pClient->user;
+    if (!user.isLoggedIn)
+    {
+        Debug::log(
+            "@SpawnMenu::MenuItemOnClick::onClick "
+            "User isn't logged in!",
+            Debug::MessageType::PK_ERROR
+        );
+        return;
+    }
+
+    // Assuming here that it is already checked that the user is admin...
+    // (The following messages doesn't go through anyways if user isn't admin type)
+    pClient->send(
+        (int32_t)MESSAGE_TYPE__SpawnRequest,
+        {
+            {
+                (GC_byte*)&_itemIndex,
+                TILE_STATE_SIZE_thingID,
+                TILE_STATE_SIZE_thingID
+            },
+            {
+                (GC_byte*)&_pMenu->_selectedTileX,
+                sizeof(int32_t),
+                sizeof(int32_t)
+            },
+            {
+                (GC_byte*)&_pMenu->_selectedTileY,
+                sizeof(int32_t),
+                sizeof(int32_t)
+            }
+        }
+    );
+    _pMenu->close();
 }
 
 
@@ -42,8 +87,11 @@ void SpawnMenu::init(pk::Scene* pScene, pk::Font* pFont)
     close();
 }
 
-void SpawnMenu::open(uint64_t tileData)
+void SpawnMenu::open(uint64_t tileData, int32_t selectedTileX, int32_t selectedTileY)
 {
+    _selectedTileX = selectedTileX;
+    _selectedTileY = selectedTileY;
+
     setComponentsActive(true);
 
     std::vector<ObjectInfo>& spawnableObjects = ObjectInfoLib::getObjectInfos();

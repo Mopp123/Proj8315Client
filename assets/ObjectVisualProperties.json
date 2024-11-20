@@ -13,12 +13,12 @@
       "type": "static"
     },
     {
-      "file": "tree1.glb",
+      "file": "tree.glb",
       "material": 1,
       "type": "static"
     },
     {
-      "file": "tree2.glb",
+      "file": "spruceTree.glb",
       "material": 2,
       "type": "static"
     },

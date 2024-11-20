@@ -42,7 +42,6 @@ static void menu_item_func_cancel(TileOptionsMenu* pMenu)
 
 void TileOptionsMenu::MenuItemOnClick::onClick(pk::InputMouseButtonName button)
 {
-    Debug::log("___TEST___ON CLICK ITEM: " + std::to_string(_itemIndex));
     if (_itemIndex >= _pMenu->_activeItems.size())
     {
         Debug::log(
@@ -182,7 +181,7 @@ void TileOptionsMenu::close()
 
 void TileOptionsMenu::openSpawnMenu()
 {
-    _spawnMenu.open(_selectedTile);
+    _spawnMenu.open(_selectedTile, _selectedTileX, _selectedTileY);
 }
 
 void TileOptionsMenu::displayButton(float x, float y, int index, const std::string& txt)
