@@ -27,8 +27,8 @@ void SpawnMenu::MenuItemOnClick::onClick(pk::InputMouseButtonName button)
         );
         return;
     }
-    UserData& user = pClient->user;
-    if (!user.isLoggedIn)
+    const User& user = pClient->user;
+    if (!user.isLoggedIn())
     {
         Debug::log(
             "@SpawnMenu::MenuItemOnClick::onClick "

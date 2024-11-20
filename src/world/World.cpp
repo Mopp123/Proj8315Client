@@ -584,7 +584,7 @@ namespace world
 
         // Can receive world state and send location only after logging in
         Client* pClient = Client::get_instance();
-        if (pClient->isConnected() && pClient->user.isLoggedIn)
+        if (pClient->isConnected() && pClient->user.isLoggedIn())
         {
             if (!_initialized)
             {

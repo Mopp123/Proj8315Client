@@ -125,9 +125,18 @@ void MainMenu::OnMessageLogin::onMessage(const GC_byte* data, size_t dataSize)
     LoginResponse loginResponse(data, dataSize);
     if (loginResponse.getSuccess())
     {
-        Client* client = Client::get_instance();
+        Client* pClient = Client::get_instance();
 
-        client->user.name = _sceneRef.username;
+        pClient->user.set(
+            "", // id
+            _sceneRef.username,
+            true, // isLoggedIn
+            true, // isAdmin
+            0, // tileX
+            0, // tileZ
+            "" // factionName
+        );
+
         Faction userFaction = loginResponse.getFaction();
 
         if (userFaction != NULL_FACTION)
@@ -150,7 +159,7 @@ void MainMenu::OnMessageLogin::onMessage(const GC_byte* data, size_t dataSize)
             HorizontalConstraintType::PIXEL_CENTER_HORIZONTAL,
             VerticalConstraintType::PIXEL_CENTER_VERTICAL
         );
-        client->send((int32_t)MESSAGE_TYPE__ObjInfoLibRequest, {});
+        pClient->send((int32_t)MESSAGE_TYPE__ObjInfoLibRequest, {});
     }
     else
     {

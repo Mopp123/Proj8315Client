@@ -19,16 +19,6 @@ namespace net
     } MsgDataPart;
 
 
-    typedef struct UserData
-    {
-        std::string name= "";
-        bool hasFaction = false;
-        std::string faction = "";
-        bool isLoggedIn = false;
-        bool isAdmin = false;
-    } UserData;
-
-
     class OnMessageEvent
     {
     public:
@@ -50,7 +40,7 @@ namespace net
         std::unordered_map<int32_t, OnMessageEvent*> _onMessageEvents;
 
     public:
-        UserData user;
+        gamecommon::User user;
 
         Client(const std::string& hostname) : _hostname(hostname) {};
         virtual ~Client() {};
