@@ -2,6 +2,7 @@
 #include "Object.h"
 #include "Tile.h"
 #include "../../Proj8315Common/src/messages/Message.h"
+#include "../../Proj8315Common/src/messages/GeneralMessages.h"
 #include "MainMenu.h"
 #include "core/input/InputEvent.h"
 #include "world/Objects.h"
@@ -15,8 +16,22 @@ using namespace gamecommon;
 
 void InGame::OnMessageLogin_TEST::onMessage(const GC_byte* data, size_t dataSize)
 {
-    Debug::log("___TEST___recv login response");
+    LoginResponse loginResponse(data, dataSize);
+
+    int32_t x = loginResponse.getTileX();
+    int32_t z = loginResponse.getTileZ();
+
     Client* pClient = Client::get_instance();
+    pClient->user.set(
+        "", // id
+        _sceneRef.testUserName,
+        true, // isLoggedIn
+        loginResponse.isAdmin(), // isAdmin
+        x, // tileX
+        z, // tileZ
+        "" // factionName
+    );
+
     pClient->send((int32_t)MESSAGE_TYPE__ObjInfoLibRequest, {});
 }
 
@@ -26,19 +41,22 @@ void InGame::OnMessagePostLogin_TEST::onMessage(const GC_byte* data, size_t data
     world::objects::ObjectInfoLib::create(data, dataSize);
     Debug::log("___TEST___Obj info lib created");
 
-    Client* pClient = Client::get_instance();
     _sceneRef.loggedIn = true;
-
-    pClient->user.set(
-        "", // id
-        _sceneRef.testUserName,
-        true, // isLoggedIn
-        true, // isAdmin
-        0, // tileX
-        0, // tileZ
-        "" // factionName
-    );
     _sceneRef.createWorld();
+
+    // Set actual camera pos to the received tile coords
+    const User& user = Client::get_instance()->user;
+    world::World* pWorld = _sceneRef.getWorld();
+    float tileVisualScale = pWorld->getTileVisualScale();
+    float fx = (float)user.getX() * tileVisualScale;
+    float fz = (float)user.getZ() * tileVisualScale;
+    Debug::log(
+        "___TEST___recv login response! User admin status: " + std::to_string(user.isAdmin()) + " "
+        "coords: " + std::to_string(user.getX()) + ", " + std::to_string(user.getZ()) + " "
+        "setting visual pos to: " + std::to_string(fx) + ", " + std::to_string(fz) + " "
+        "tile scale: " + std::to_string(tileVisualScale)
+    );
+    _sceneRef.getCamController()->setPivotPoint({ fx, 0, fz });
 }
 
 

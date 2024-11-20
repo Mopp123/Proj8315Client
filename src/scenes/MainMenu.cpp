@@ -131,7 +131,7 @@ void MainMenu::OnMessageLogin::onMessage(const GC_byte* data, size_t dataSize)
             "", // id
             _sceneRef.username,
             true, // isLoggedIn
-            true, // isAdmin
+            loginResponse.isAdmin(), // isAdmin
             0, // tileX
             0, // tileZ
             "" // factionName

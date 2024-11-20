@@ -65,4 +65,7 @@ public:
     void init();
     void update();
     void lateUpdate();
+
+    inline world::World* getWorld() { return _pWorld; }
+    inline CameraController* getCamController() { return _pCamController; }
 };
