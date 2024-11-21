@@ -9,6 +9,8 @@ varying vec3 var_camPos;
 varying vec4 var_dirLightDir;
 varying vec4 var_dirLightColor;
 
+varying float var_distToCam;
+
 
 struct Material
 {
@@ -38,9 +40,17 @@ vec4 alter_brightness_contrast(vec4 color, float brightness, float contrast)
     return mix(color * brightness, mix(averageLuminance, color, contrast), 0.5);
 }
 
+// For gui to properly get rendered we have to discard some fragments
+// here... otherwise the 3d bleeds through gui when model's face
+// "impales" the camera (clipping due to zNear)
+// TODO: Some better way of dealing with this!
+const float overrideZNear = 1.0;
 
 void main(void)
 {
+    if (var_distToCam <= overrideZNear)
+        discard;
+
     vec3 normal = normalize(var_normal);
     vec3 lightDir = normalize(var_dirLightDir.xyz);
 

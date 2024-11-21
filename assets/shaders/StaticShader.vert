@@ -27,6 +27,8 @@ varying vec4 var_ambientColor;
 varying vec3 var_fragPos;
 varying vec3 var_camPos;
 
+varying float var_distToCam;
+
 void main()
 {
     vec4 worldPos = transformationMatrix * vec4(vertexPos, 1.0);
@@ -40,4 +42,5 @@ void main()
     var_fragPos = worldPos.xyz;
 
     var_camPos = common.camPos.xyz;
+    var_distToCam = gl_Position.w;
 }

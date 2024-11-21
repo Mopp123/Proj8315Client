@@ -9,6 +9,8 @@ varying vec3 var_camPos;
 varying vec4 var_dirLightDir;
 varying vec4 var_dirLightColor;
 
+varying float var_distToCam;
+
 
 struct Material
 {
@@ -19,9 +21,17 @@ struct Material
 };
 uniform Material material;
 
+// For gui to properly get rendered we have to discard some fragments
+// here... otherwise the 3d bleeds through gui when model's face
+// "impales" the camera (clipping due to zNear)
+// TODO: Some better way of dealing with this!
+const float overrideZNear = 1.0;
 
 void main()
 {
+    if (var_distToCam <= overrideZNear)
+        discard;
+
     float shadeless = material.properties.z;
     vec4 diffuseTexColor0 = texture2D(material.diffuseTexSampler0, var_uvCoord) * material.color;
 
