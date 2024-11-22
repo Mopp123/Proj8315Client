@@ -50,10 +50,6 @@ private:
     // Need to have this here atm so we dont overlap with it...
     Panel* _pSelectedTilePanel = nullptr;
 
-    uint64_t _selectedTile = 0;
-    int _selectedTileX = 0;
-    int _selectedTileY = 0;
-
     SpawnMenu _spawnMenu;
 
 public:
@@ -62,7 +58,7 @@ public:
     void open(float screenX, float screenY, uint64_t tileData, int tileX, int tileY);
     void close();
 
-    void openSpawnMenu();
+    inline SpawnMenu& getSpawnMenu() { return _spawnMenu; }
 
 private:
     void displayButton(float x, float y, int index, const std::string& txt);

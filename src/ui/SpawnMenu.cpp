@@ -66,7 +66,7 @@ void SpawnMenu::MenuItemOnClick::onClick(pk::InputMouseButtonName button)
 
 void SpawnMenu::init(pk::Scene* pScene, pk::Font* pFont)
 {
-    vec2 scale(208, 300);
+    vec2 scale(208, 155);
     initBase(
         pScene,
         pFont,
@@ -85,13 +85,12 @@ void SpawnMenu::init(pk::Scene* pScene, pk::Font* pFont)
         );
     }
     close();
+
+    setLayer(1);
 }
 
-void SpawnMenu::open(uint64_t tileData, int32_t selectedTileX, int32_t selectedTileY)
+void SpawnMenu::open()
 {
-    _selectedTileX = selectedTileX;
-    _selectedTileY = selectedTileY;
-
     setComponentsActive(true);
 
     std::vector<ObjectInfo>& spawnableObjects = ObjectInfoLib::getObjectInfos();
@@ -119,6 +118,13 @@ void SpawnMenu::close()
         for (Component* pComponent : components)
             pComponent->setActive(false);
     }
+}
+
+void SpawnMenu::setSelectedTile(uint64_t tileData, int32_t x, int32_t y)
+{
+    _selectedTileData = tileData;
+    _selectedTileX = x;
+    _selectedTileY = y;
 }
 
 void SpawnMenu::displaySpawnButtons(const std::vector<gamecommon::ObjectInfo>& objects)

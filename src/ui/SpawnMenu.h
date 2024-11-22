@@ -25,14 +25,17 @@ private:
     const size_t _maxSpawnButtons = 20;
     std::vector<pk::ui::UIFactoryButton> _spawnSelectionButtonEntities;
 
+    uint64_t _selectedTileData = 0;
     int32_t _selectedTileX = 0;
     int32_t _selectedTileY = 0;
 
 public:
     void init(pk::Scene* pScene, pk::Font* pFont);
 
-    void open(uint64_t tileData, int32_t selectedTileX, int32_t selectedTileY);
+    virtual void open();
     virtual void close();
+
+    void setSelectedTile(uint64_t tileData, int32_t x, int32_t y);
 
 private:
     void displaySpawnButtons(const std::vector<gamecommon::ObjectInfo>& objects);

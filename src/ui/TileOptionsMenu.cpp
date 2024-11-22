@@ -15,7 +15,7 @@ using namespace net;
 
 static void menu_item_func_spawn(TileOptionsMenu* pMenu)
 {
-    pMenu->openSpawnMenu();
+    pMenu->getSpawnMenu().open();
     pMenu->close();
 }
 
@@ -113,7 +113,7 @@ void TileOptionsMenu::init(pk::Scene* pScene, pk::Font* pFont, Panel* pSelectedT
     // Create admin menus which can be opened from here
     _spawnMenu.init(pScene, pFont);
 
-    setLayer(1);
+    setLayer(2);
 }
 
 void TileOptionsMenu::open(float screenX, float screenY, uint64_t tileData, int tileX, int tileY)
@@ -130,9 +130,8 @@ void TileOptionsMenu::open(float screenX, float screenY, uint64_t tileData, int 
         );
         return;
     }
-    _selectedTile = tileData;
-    _selectedTileX = tileX;
-    _selectedTileY = tileY;
+
+    _spawnMenu.setSelectedTile(tileData, tileX, tileY);
 
     std::vector<Component*> rootComponents = _pScene->getComponents(_entity);
     for (Component* pComponent: rootComponents)
@@ -199,11 +198,6 @@ void TileOptionsMenu::close()
         setButtonActive(b, false);
 }
 
-void TileOptionsMenu::openSpawnMenu()
-{
-    _spawnMenu.open(_selectedTile, _selectedTileX, _selectedTileY);
-}
-
 void TileOptionsMenu::displayButton(float x, float y, int index, const std::string& txt)
 {
     if (index >= _maxMenuItems)
@@ -261,6 +255,8 @@ void TileOptionsMenu::setButtonActive(UIFactoryButton& button, bool arg)
         pComponent->setActive(arg);
 }
 
+// Fucking disgusting but require some way to either open menu or do what the fuck we ever want
+// with any menu item...
 void TileOptionsMenu::updateActiveItemsList(uint64_t tile)
 {
     if (!_activeItems.empty())

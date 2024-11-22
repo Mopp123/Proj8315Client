@@ -73,7 +73,6 @@ void Panel::PanelCursorPosEvent::func(int x, int y)
         if (s_pickedPanels - 1 >= 0)
             --s_pickedPanels;
     }
-
 }
 
 
@@ -84,7 +83,6 @@ void Panel::create(
     VerticalConstraintType verticalType, float verticalValue,
     vec2 scale,
     LayoutFillType layoutType,
-    bool drawBackground,
     vec3 color,
     bool drawBorder,
     vec4 borderColor,
@@ -114,38 +112,24 @@ void Panel::create(
     _slotScale = slotScale;
 
     _entity = _pScene->createEntity();
-    // may not be needed..
-    vec2 pos(0, 0);
 
+    vec4 textureCropping(0, 0, 1, 1); // unused since no even texure atm?
 
-    Transform* pTransform = _pScene->createTransform(
-        _entity,
-        pos,
-        _scale
-    );
-
-    ConstraintData* pConstraint = _pScene->createUIConstraint(
-        _entity,
+    ImgCreationProperties imgCreationProperties;
+    imgCreationProperties.constraintProperties = {
         horizontalType,
         horizontalValue,
         verticalType,
         verticalValue
-    );
+    };
+    imgCreationProperties.width = _scale.x;
+    imgCreationProperties.height = _scale.y;
+    imgCreationProperties.color = _color;
+    imgCreationProperties.borderColor = _borderColor;
+    imgCreationProperties.borderThickness = borderThickness;
+    imgCreationProperties.textureCropping = textureCropping;
 
-    GUIRenderable* pBackground = nullptr;
-    Texture* pBackgroundTexture = nullptr; // unused atm
-    vec4 textureCropping(0, 0, 1, 1);
-    if (drawBackground)
-    {
-        pBackground = _pScene->createGUIRenderable(
-            _entity,
-            pBackgroundTexture,
-            _color,
-            _borderColor,
-            borderThickness,
-            textureCropping
-        );
-    }
+    _entity = create_image(imgCreationProperties);
 
     InputManager* pInputManager = Application::get()->accessInputManager();
     pInputManager->addCursorPosEvent(new PanelCursorPosEvent(pScene, this));
@@ -169,7 +153,6 @@ void Panel::createDefault(
         verticalType, verticalValue,
         scale,
         fillType,
-        true,
         get_base_ui_color(useColorIndex).toVec3(),
         false, // draw border
         { 0, 0, 0, 1 }, // border color
@@ -363,6 +346,9 @@ entityID_t Panel::addImage(
         pTexture,
         textureCropping
     );
+    // NOTE: Earlier this img wasn't added as child... don't remember was there
+    // a reason for it...
+    _pScene->addChild(_entity, imgEntity);
     // NOTE: Not sure should _slotCount increase when adding img...
     return imgEntity;
 }

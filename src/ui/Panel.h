@@ -70,7 +70,6 @@ public:
         pk::VerticalConstraintType verticalType, float verticalValue,
         pk::vec2 scale,
         LayoutFillType fillType = LayoutFillType::VERTICAL,
-        bool drawBackground = false,
         pk::vec3 color = pk::vec3(0, 0, 0),
         bool drawBorder = false,
         pk::vec4 borderColor = pk::vec4(0, 0, 0, 0), // dont remember why this was vec4 on Scene.create
