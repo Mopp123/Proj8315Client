@@ -261,8 +261,6 @@ void InGameLocal::init()
     // Set clear color
     Application::get()->getMasterRenderer().setClearColor({ 0, 0, 0, 1});
 
-    _inGameUI.create(nullptr, (Scene*)this, _pDefaultFont, _pSmallFont);
-
     _pCamController = new CameraController(activeCamera, 30.0f);
     Transform* pCamTransform = (Transform*)getComponent(activeCamera, ComponentType::PK_TRANSFORM);
 
@@ -342,6 +340,8 @@ void InGameLocal::init()
         4.0f
     );
     _mousePicker.init((Scene*)this, _pWorld);
+
+    _inGameUI.create(nullptr, (Scene*)this, _pDefaultFont, _pSmallFont);
 
 
     uint64_t initialTileState = 0;

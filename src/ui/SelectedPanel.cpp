@@ -10,48 +10,6 @@ using namespace world;
 using namespace gamecommon;
 
 
-static std::string temperature_value_to_string(TileStateTemperature value)
-{
-    switch (value)
-    {
-        case TileStateTemperature::TILE_STATE_mild : return "Mild";
-        case TileStateTemperature::TILE_STATE_warm : return "Warm";
-        case TileStateTemperature::TILE_STATE_hot : return "Hot";
-        case TileStateTemperature::TILE_STATE_burning : return "Burning";
-        case TileStateTemperature::TILE_STATE_chilly : return "Chilly";
-        case TileStateTemperature::TILE_STATE_cold : return "Cold";
-        case TileStateTemperature::TILE_STATE_freezing : return "Freezing";
-        default : return "Invalid temperature value";
-    }
-}
-
-// *Need to also give temperature to distinguish between sand dunes and snow dunes...
-static std::string terrain_type_value_to_string(
-    TileStateTerrType terrainType,
-    TileStateTemperature temperatureValue
-)
-{
-    switch (terrainType)
-    {
-        case TILE_STATE_terrTypeDirt : return "Dirt";
-        case TILE_STATE_terrTypeWater : return "Water";
-        case TILE_STATE_terrTypeRock : return "Rock";
-        case TILE_STATE_terrTypeFertile : return "Fertile soil";
-        case TILE_STATE_terrTypeDunes :
-        {
-            if (temperatureValue == TileStateTemperature::TILE_STATE_cold || temperatureValue == TileStateTemperature::TILE_STATE_freezing)
-                return "Snow";
-            else
-                return "Sand";
-        }
-        case TILE_STATE_terrTypePending1 : return "Type pending1";
-        case TILE_STATE_terrTypePending2 : return "Type pending2";
-        default:
-            return "Error type: " + std::to_string(terrainType);
-    }
-}
-
-
 void SelectedPanel::init(pk::Scene* pScene, pk::Font* pFont)
 {
     const vec2 selectedPanelScale(630, 160);

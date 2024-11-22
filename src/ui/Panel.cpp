@@ -255,8 +255,7 @@ UIFactoryButton Panel::addDefaultButton(
 pk::ui::UIFactoryButton Panel::addButton(
     std::string txt,
     OnClickEvent* onClick,
-    HorizontalConstraintProperties horizontalConstraint,
-    VerticalConstraintProperties verticalConstraint,
+    ConstraintProperties constraintProperties,
     vec2 scale,
     bool drawBorder
 )
@@ -276,8 +275,10 @@ pk::ui::UIFactoryButton Panel::addButton(
     UIFactoryButton button = create_button(
         txt,
         *_pDefaultFont,
-        horizontalConstraint.type, horizontalConstraint.value,
-        verticalConstraint.type, verticalConstraint.value,
+        constraintProperties.horizontalType,
+        constraintProperties.horizontalValue,
+        constraintProperties.verticalType,
+        constraintProperties.verticalValue,
         scale.x, scale.y,
         onClick,
         false,
@@ -297,7 +298,7 @@ pk::ui::UIFactoryButton Panel::addButton(
     return button;
 }
 
-std::pair<entityID_t, pk::TextRenderable*> Panel::addDefaultInputField(
+UIFactoryInputField Panel::addDefaultInputField(
     std::string infoTxt,
     int width,
     pk::ui::InputFieldOnSubmitEvent* onSubmitEvent,
@@ -307,7 +308,7 @@ std::pair<entityID_t, pk::TextRenderable*> Panel::addDefaultInputField(
     vec4 color = get_base_ui_color(2);
     const vec2 offsetFromPanel(4.0f, 4.0f);
     vec2 toAdd = calcNewSlotPos();
-    std::pair<entityID_t, pk::TextRenderable*> inputField = ui::create_input_field(
+    UIFactoryInputField inputField = ui::create_input_field(
         infoTxt, *_pDefaultFont,
         _horizontalConstraint,
         _horizontalConstraintValue + toAdd.x + offsetFromPanel.x,
@@ -321,8 +322,36 @@ std::pair<entityID_t, pk::TextRenderable*> Panel::addDefaultInputField(
         get_base_ui_color(3).toVec3(), // text highlight color
         get_base_ui_color(3).toVec3() // background highlight color
     );
-    _pScene->addChild(_entity, inputField.first);
+    _pScene->addChild(_entity, inputField.rootEntity);
     ++_slotCount;
+
+    return inputField;
+}
+
+UIFactoryInputField Panel::addInputField(
+    std::string infoTxt,
+    pk::ConstraintProperties constraintProperties,
+    int width,
+    pk::ui::InputFieldOnSubmitEvent* onSubmitEvent,
+    bool clearOnSubmit
+)
+{
+    vec4 color = get_base_ui_color(2);
+    UIFactoryInputField inputField = ui::create_input_field(
+        infoTxt, *_pDefaultFont,
+        constraintProperties.horizontalType,
+        constraintProperties.horizontalValue,
+        constraintProperties.verticalType,
+        constraintProperties.verticalValue,
+        width,
+        nullptr, // on submit event
+        false, // clear on submit
+        color.toVec3(), // color
+        get_base_ui_color(3).toVec3(), // text color
+        get_base_ui_color(3).toVec3(), // text highlight color
+        get_base_ui_color(3).toVec3() // background highlight color
+    );
+    _pScene->addChild(_entity, inputField.rootEntity);
 
     return inputField;
 }

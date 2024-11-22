@@ -71,11 +71,28 @@ void SpawnMenu::init(pk::Scene* pScene, pk::Font* pFont)
         pScene,
         pFont,
         "Admin Spawn menu",
-        { HorizontalConstraintType::PIXEL_CENTER_HORIZONTAL, -scale.x * 0.5f },
-        { VerticalConstraintType::PIXEL_CENTER_VERTICAL, scale.y * 0.5f },
+        {
+            HorizontalConstraintType::PIXEL_CENTER_HORIZONTAL,
+            -scale.x * 0.5f,
+            VerticalConstraintType::PIXEL_CENTER_VERTICAL,
+            scale.y * 0.5f
+        },
         scale
     );
     _layoutType = LayoutFillType::VERTICAL;
+
+    if (ObjectInfoLib::getObjectInfos().size() == 0)
+    {
+        Debug::log(
+            "@SpawnMenu::init "
+            "Object info lib was empty! "
+            "Make sure you init UI after Object info lib has been created!",
+            Debug::MessageType::PK_FATAL_ERROR
+        );
+        return;
+    }
+    // -1 since empty object
+    _maxSpawnButtons = ObjectInfoLib::getObjectInfos().size() - 1;
     for (int i = 0; i < _maxSpawnButtons; ++i)
     {
         // NOTE: we always ignore spawnable object at index 0 which is the "empty" object!
@@ -91,7 +108,8 @@ void SpawnMenu::init(pk::Scene* pScene, pk::Font* pFont)
 
 void SpawnMenu::open()
 {
-    setComponentsActive(true);
+    //setComponentsActive(true);
+    std::vector<Component*> components = _pScene->getAllComponents(_entity);
 
     std::vector<ObjectInfo>& spawnableObjects = ObjectInfoLib::getObjectInfos();
     if (spawnableObjects.empty())
@@ -132,11 +150,14 @@ void SpawnMenu::displaySpawnButtons(const std::vector<gamecommon::ObjectInfo>& o
     // This shit might fuck up stuff in the future...
     TopBarPanel::setComponentsActive(true);
 
-    if (objects.size() >= _spawnSelectionButtonEntities.size())
+    // -1 since objects contains the "empty" object as well
+    if (objects.size() - 1 > _spawnSelectionButtonEntities.size())
     {
         Debug::log(
             "@SpawnMenu::displaySpawnButtons "
-            "Not enought available buttons to display objects"
+            "Not enought available buttons to display objects. "
+            "Obj info lib length: " + std::to_string(objects.size()) + " "
+            "Available buttons: " + std::to_string(_spawnSelectionButtonEntities.size())
         );
         return;
     }

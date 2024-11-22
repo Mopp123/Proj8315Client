@@ -5,6 +5,8 @@
 #include "ecs/factories/ui/UIFactories.h"
 #include <vector>
 #include "SpawnMenu.h"
+#include "TerrainToolMenu.h"
+#include "TravelMenu.h"
 
 
 class TileOptionsMenu;
@@ -51,6 +53,8 @@ private:
     Panel* _pSelectedTilePanel = nullptr;
 
     SpawnMenu _spawnMenu;
+    TerrainToolMenu _terrainToolMenu;
+    TravelMenu _travelMenu;
 
 public:
     void init(pk::Scene* pScene, pk::Font* pFont, Panel* pSelectedTilePanel);
@@ -58,7 +62,9 @@ public:
     void open(float screenX, float screenY, uint64_t tileData, int tileX, int tileY);
     void close();
 
-    inline SpawnMenu& getSpawnMenu() { return _spawnMenu; }
+    inline SpawnMenu& accessSpawnMenu() { return _spawnMenu; }
+    inline TerrainToolMenu& accessTerrainToolMenu() { return _terrainToolMenu; }
+    inline TravelMenu& accessTravelMenu() { return _travelMenu; }
 
 private:
     void displayButton(float x, float y, int index, const std::string& txt);

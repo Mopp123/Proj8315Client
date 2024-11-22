@@ -117,14 +117,20 @@ public:
     pk::ui::UIFactoryButton addButton(
         std::string txt,
         pk::ui::OnClickEvent* onClick,
-        pk::HorizontalConstraintProperties horizontalConstraint,
-        pk::VerticalConstraintProperties verticalConstraint,
+        pk::ConstraintProperties constraintProperties,
         pk::vec2 scale,
         bool drawBorder = false
     );
 
-    std::pair<entityID_t, pk::TextRenderable*> addDefaultInputField(
+    pk::ui::UIFactoryInputField addDefaultInputField(
         std::string infoTxt,
+        int width,
+        pk::ui::InputFieldOnSubmitEvent* onSubmitEvent,
+        bool clearOnSubmit = false
+    );
+    pk::ui::UIFactoryInputField addInputField(
+        std::string infoTxt,
+        pk::ConstraintProperties constraintProperties,
         int width,
         pk::ui::InputFieldOnSubmitEvent* onSubmitEvent,
         bool clearOnSubmit = false

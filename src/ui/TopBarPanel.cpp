@@ -20,11 +20,10 @@ void TopBarPanel::OnClickClose::onClick(pk::InputMouseButtonName button)
 
 
 void TopBarPanel::initBase(
-    pk::Scene* pScene,
-    pk::Font* pFont,
+    Scene* pScene,
+    Font* pFont,
     const std::string title,
-    HorizontalConstraintProperties horizontalConstraint,
-    VerticalConstraintProperties verticalConstraint,
+    ConstraintProperties constraintProperties,
     const vec2& scale
 )
 {
@@ -32,8 +31,10 @@ void TopBarPanel::initBase(
     createDefault(
         pScene,
         pFont,
-        horizontalConstraint.type, horizontalConstraint.value,
-        verticalConstraint.type, verticalConstraint.value,
+        constraintProperties.horizontalType,
+        constraintProperties.horizontalValue,
+        constraintProperties.verticalType,
+        constraintProperties.verticalValue,
         scale,
         slotScale,
         Panel::LayoutFillType::HORIZONTAL,
@@ -44,8 +45,10 @@ void TopBarPanel::initBase(
     // Create top bar (atm just an img)
     // TODO: Maybe in the future make top bar as "button" which u can drag the panel around
     _topBarImgEntity = addImage(
-        horizontalConstraint.type, horizontalConstraint.value,
-        verticalConstraint.type, verticalConstraint.value,
+        constraintProperties.horizontalType,
+        constraintProperties.horizontalValue,
+        constraintProperties.verticalType,
+        constraintProperties.verticalValue,
         scale.x, topBarHeight,
         nullptr, // texture
         Panel::get_base_ui_color(2).toVec3(),
@@ -54,21 +57,28 @@ void TopBarPanel::initBase(
     // Add title text
     _topBarTitleEntity = addText(
         title,
-        horizontalConstraint.type, horizontalConstraint.value,
-        verticalConstraint.type, verticalConstraint.value
+        constraintProperties.horizontalType,
+        constraintProperties.horizontalValue,
+        constraintProperties.verticalType,
+        constraintProperties.verticalValue
     ).first;
 
-    HorizontalConstraintProperties closeButtonHorizontalConstraint =
+    pScene->addChild(_entity, _topBarImgEntity);
+    pScene->addChild(_entity, _topBarTitleEntity);
+
+    ConstraintProperties closeButtonConstraintProperties =
     {
-        horizontalConstraint.type,
-        horizontalConstraint.value + scale.x - topBarHeight
+        constraintProperties.horizontalType,
+        constraintProperties.horizontalValue + scale.x - topBarHeight,
+        constraintProperties.verticalType,
+        constraintProperties.verticalValue
+
     };
     // Add close button
     _topBarCloseButton = addButton(
         "X",
         new OnClickClose(this),
-        closeButtonHorizontalConstraint,
-        verticalConstraint,
+        closeButtonConstraintProperties,
         { topBarHeight - 1, topBarHeight - 1 }, // scale
         true
     );
@@ -76,8 +86,10 @@ void TopBarPanel::initBase(
 
 void TopBarPanel::setComponentsActive(bool arg)
 {
-    for(Component* pComponent : _pScene->getComponents(_entity))
+    for(Component* pComponent : _pScene->getAllComponents(_entity))
         pComponent->setActive(arg);
+
+    /*
     for(Component* pComponent : _pScene->getComponents(_topBarImgEntity))
         pComponent->setActive(arg);
     for(Component* pComponent : _pScene->getComponents(_topBarTitleEntity))
@@ -92,4 +104,5 @@ void TopBarPanel::setComponentsActive(bool arg)
         pComponent->setActive(arg);
     for(Component* pComponent : _pScene->getComponents(closeButtonTxtEntity))
         pComponent->setActive(arg);
+        */
 }

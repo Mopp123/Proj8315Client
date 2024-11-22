@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Panel.h"
+#include "ecs/components/ui/ConstraintData.h"
 #include "ecs/factories/ui/UIFactories.h"
 
 class TopBarPanel : public Panel
@@ -24,8 +25,7 @@ public:
         pk::Scene* pScene,
         pk::Font* pFont,
         const std::string title,
-        pk::HorizontalConstraintProperties horizontalConstraint,
-        pk::VerticalConstraintProperties verticalConstraint,
+        pk::ConstraintProperties constraintProperties,
         const pk::vec2& scale
     );
 

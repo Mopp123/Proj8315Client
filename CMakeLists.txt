@@ -5,7 +5,7 @@ set (proj_name "Proj8315Client")
 project(${proj_name})
 
 # set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Werror -std=c++17")
-set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=c++17")
+set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=c++17 -fexceptions")
 
 
 # add_compile_options()
@@ -74,6 +74,6 @@ set(assets_dir "../assets") # NOTE: This has to be relative from build to assets
 
 if (${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
     message(STATUS "___TEST___SYSTEM WAS EMSCRIPTEN!")
-    set_target_properties(${proj_name} PROPERTIES LINK_FLAGS "-sMIN_WEBGL_VERSION=2 -sMAX_WEBGL_VERSION=2 --shell-file ${html_shell_location} -o ${html_out} --preload-file ${assets_dir} --use-preload-plugins -sFETCH -sALLOW_MEMORY_GROWTH -l websocket.js")
+    set_target_properties(${proj_name} PROPERTIES LINK_FLAGS "-fexceptions -sMIN_WEBGL_VERSION=2 -sMAX_WEBGL_VERSION=2 --shell-file ${html_shell_location} -o ${html_out} --preload-file ${assets_dir} --use-preload-plugins -sFETCH -sALLOW_MEMORY_GROWTH -l websocket.js")
 endif()
 

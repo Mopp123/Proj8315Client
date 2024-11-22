@@ -6,6 +6,7 @@
 
 
 using namespace pk;
+using namespace pk::ui;
 using namespace net;
 using namespace gamecommon;
 
@@ -209,16 +210,27 @@ void MainMenu::init()
         Panel::LayoutFillType::VERTICAL
     );
 
-    std::pair<entityID_t, TextRenderable*> usernameInputField = _mainPanel.addDefaultInputField(
+    UIFactoryInputField usernameInputField = _mainPanel.addDefaultInputField(
         "Username",
         200,
         nullptr
     );
 
-    std::pair<entityID_t, TextRenderable*> passwordInputField =_mainPanel.addDefaultInputField(
+    UIFactoryInputField passwordInputField =_mainPanel.addDefaultInputField(
         "Password",
         200,
         nullptr
+    );
+
+    // TODO: better way to get input fields' content
+    // THIS FUCKS UP if component pools are resized during init!!!
+    TextRenderable* pUsernameInputFieldContent = (TextRenderable*)getComponent(
+        usernameInputField.contentEntity,
+        ComponentType::PK_RENDERABLE_TEXT
+    );
+    TextRenderable* pPasswordInputFieldContent = (TextRenderable*)getComponent(
+        passwordInputField.contentEntity,
+        ComponentType::PK_RENDERABLE_TEXT
     );
 
     const float buttonWidth = 297;
@@ -226,8 +238,8 @@ void MainMenu::init()
         "Login",
         new OnClickLogin(
             *this,
-            usernameInputField.second->accessStr(),
-            passwordInputField.second->accessStr()
+            pUsernameInputFieldContent->accessStr(),
+            pPasswordInputFieldContent->accessStr()
         ),
         buttonWidth
     );
@@ -260,27 +272,41 @@ void MainMenu::init()
     std::pair<entityID_t, TextRenderable*> registerInfoText = _registerPanel.addText("Register new user", Panel::get_base_ui_color(3).toVec3());
     _registerInfoEntity = registerInfoText.first;
 
-    std::pair<entityID_t, TextRenderable*> regUsernameInputField = _registerPanel.addDefaultInputField(
+    UIFactoryInputField regUsernameInputField = _registerPanel.addDefaultInputField(
         "Username",
         272,
         nullptr
     );
 
-    std::pair<entityID_t, TextRenderable*> regPasswordInputField = _registerPanel.addDefaultInputField(
+    UIFactoryInputField regPasswordInputField = _registerPanel.addDefaultInputField(
         "Password",
         272,
         nullptr
     );
 
-    std::pair<entityID_t, TextRenderable*> repasswordInputField = _registerPanel.addDefaultInputField(
+    UIFactoryInputField repasswordInputField = _registerPanel.addDefaultInputField(
         "Repeat password",
         200,
         nullptr
     );
 
-    std::string& registerUsernameStrRef = regUsernameInputField.second->accessStr();
-    std::string& registerPasswordStrRef = regPasswordInputField.second->accessStr();
-    std::string& registerRepasswordStrRef = repasswordInputField.second->accessStr();
+    // TODO: AGAIN! Better way to get input fields' content!
+    // THIS FUCKS UP if component pools are resized during init!!!
+    TextRenderable* pRegisterUsernameInputFieldContent = (TextRenderable*)getComponent(
+        regUsernameInputField.contentEntity,
+        ComponentType::PK_RENDERABLE_TEXT
+    );
+    TextRenderable* pRegisterPasswordInputFieldContent = (TextRenderable*)getComponent(
+        regPasswordInputField.contentEntity,
+        ComponentType::PK_RENDERABLE_TEXT
+    );
+    TextRenderable* pRegisterRePasswordInputFieldContent = (TextRenderable*)getComponent(
+        repasswordInputField.contentEntity,
+        ComponentType::PK_RENDERABLE_TEXT
+    );
+    std::string& registerUsernameStrRef = pRegisterUsernameInputFieldContent->accessStr();
+    std::string& registerPasswordStrRef = pRegisterPasswordInputFieldContent->accessStr();
+    std::string& registerRepasswordStrRef = pRegisterRePasswordInputFieldContent->accessStr();
 
     _registerPanel.addDefaultButton(
         "Register",

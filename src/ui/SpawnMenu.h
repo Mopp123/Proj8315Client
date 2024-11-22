@@ -22,7 +22,7 @@ private:
         virtual void onClick(pk::InputMouseButtonName button);
     };
 
-    const size_t _maxSpawnButtons = 20;
+    size_t _maxSpawnButtons = 0;
     std::vector<pk::ui::UIFactoryButton> _spawnSelectionButtonEntities;
 
     uint64_t _selectedTileData = 0;

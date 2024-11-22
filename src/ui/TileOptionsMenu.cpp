@@ -15,21 +15,28 @@ using namespace net;
 
 static void menu_item_func_spawn(TileOptionsMenu* pMenu)
 {
-    pMenu->getSpawnMenu().open();
+    pMenu->accessSpawnMenu().open();
+    pMenu->accessTerrainToolMenu().close();
+    pMenu->accessTravelMenu().close();
     pMenu->close();
 }
 
 
 static void menu_item_func_terrain(TileOptionsMenu* pMenu)
 {
-    Debug::log("@menu_item_func_terrain Not implemented yet!", Debug::MessageType::PK_ERROR);
+    pMenu->accessSpawnMenu().close();
+    pMenu->accessTerrainToolMenu().open();
+    pMenu->accessTravelMenu().close();
     pMenu->close();
 }
 
 
 static void menu_item_func_travel(TileOptionsMenu* pMenu)
 {
-    Debug::log("@menu_item_func_travel Not implemented yet!", Debug::MessageType::PK_ERROR);
+    pMenu->accessSpawnMenu().close();
+    pMenu->accessTerrainToolMenu().close();
+    pMenu->accessTravelMenu().open();
+    pMenu->close();
     pMenu->close();
 }
 
@@ -112,6 +119,8 @@ void TileOptionsMenu::init(pk::Scene* pScene, pk::Font* pFont, Panel* pSelectedT
 
     // Create admin menus which can be opened from here
     _spawnMenu.init(pScene, pFont);
+    _terrainToolMenu.init(pScene, pFont);
+    _travelMenu.init(pScene, pFont);
 
     setLayer(2);
 }
@@ -132,6 +141,8 @@ void TileOptionsMenu::open(float screenX, float screenY, uint64_t tileData, int 
     }
 
     _spawnMenu.setSelectedTile(tileData, tileX, tileY);
+    _terrainToolMenu.setSelectedTile(tileData, tileX, tileY);
+    _travelMenu.setTargetCoords(tileX, tileY);
 
     std::vector<Component*> rootComponents = _pScene->getComponents(_entity);
     for (Component* pComponent: rootComponents)
