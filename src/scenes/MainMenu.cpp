@@ -121,7 +121,6 @@ void MainMenu::OnMessageServerInfo::onMessage(const GC_byte* data, size_t dataSi
 
 void MainMenu::OnMessageRegister::onMessage(const GC_byte* data, size_t dataSize)
 {
-    Debug::log("___TEST___RECV REGISTER RESPONSE!");
     Client* client = Client::get_instance();
     const size_t expectedSize = 1 + MESSAGE_INFO_MESSAGE_LEN;
     if (dataSize >= expectedSize)
