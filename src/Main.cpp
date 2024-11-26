@@ -16,8 +16,6 @@ using namespace ui;
 
 int main(int argc, const char** argv)
 {
-    std::cout << "TESTING123!\n";
-
     // NOTE: ISSUES!
     // * need to create window and input manager to heap using
     // some "create func" like the other api/platform agnostic stuff..

@@ -191,8 +191,8 @@ namespace world
         pCursorTransform->setPos({ _worldCoords.x, _worldCoords.y + 0.25f, _worldCoords.z });
 
         // Object picking
-        // NOTE: Atm just testing here..
-        // TODO: Finalize how this should be handled...
+        // NOTE: Atm just testing here and INEFFICIENT AS HELL IF UPDATING THIS CONSTANTLY
+        // TODO: Finalize how this should be handled... + DO THIS ONLY WHEN CLICKING!
         /*
         std::vector<VisualObject>& tileObjects = _pWorld->accessVisualObjects();
         ResourceManager& resManager = Application::get()->getResourceManager();
