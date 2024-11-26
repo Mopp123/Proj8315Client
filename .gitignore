@@ -2,8 +2,15 @@
 *.swp
 compile_commands.json
 
-build/
-!build/.gitkeep
+build/CMakeFiles
+build/*.wasm
+build/*.txt
+build/Makefile
+build/*.data
+build/*.html
+build/*.js
+build/*.cmake
+build/*.json
 
 assets/*.json
 assets/*.ttf

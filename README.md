@@ -20,5 +20,6 @@ After building run `docker compose -f docker-compose.yml start` to start the sit
 NOTE: Currently Client site and Proj8315 Server has to be hosted from same address.
 
 ## Dependancies
-
-### Emscripten
+* Emscripten
+* PortablePesukarhu -engine
+* Proj8315Common (commong stuff for both server and client)
