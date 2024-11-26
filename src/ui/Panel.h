@@ -126,14 +126,16 @@ public:
         std::string infoTxt,
         int width,
         pk::ui::InputFieldOnSubmitEvent* onSubmitEvent,
-        bool clearOnSubmit = false
+        bool clearOnSubmit = false,
+        bool password = false
     );
     pk::ui::UIFactoryInputField addInputField(
         std::string infoTxt,
         pk::ConstraintProperties constraintProperties,
         int width,
         pk::ui::InputFieldOnSubmitEvent* onSubmitEvent,
-        bool clearOnSubmit = false
+        bool clearOnSubmit = false,
+        bool password = false
     );
 
     entityID_t addImage(

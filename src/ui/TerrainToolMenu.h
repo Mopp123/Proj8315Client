@@ -92,8 +92,8 @@ private:
     TypeSelection _typeSelection;
 
 
-    entityID_t _selectedRadiusTxtEntity = 0;
-    entityID_t _selectedElevationTxtEntity = 0;
+    pk::ui::UIFactoryInputField _selectedRadiusInputField;
+    pk::ui::UIFactoryInputField _selectedElevationInputField;
     // These mean what properties we have currently selected to apply
     // NOT what currently is in the selected tile!
     gamecommon::TileStateTemperature _selectedTemperature;

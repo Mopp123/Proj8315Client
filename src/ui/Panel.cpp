@@ -205,7 +205,7 @@ std::pair<entityID_t, TextRenderable*> Panel::addText(std::string txt, vec3 colo
 
 std::pair<entityID_t, TextRenderable*> Panel::addDefaultText(std::string txt)
 {
-    return  addText(txt, get_base_ui_color(3).toVec3());
+    return addText(txt, get_base_ui_color(3).toVec3());
 }
 
 UIFactoryButton Panel::addDefaultButton(
@@ -302,7 +302,8 @@ UIFactoryInputField Panel::addDefaultInputField(
     std::string infoTxt,
     int width,
     pk::ui::InputFieldOnSubmitEvent* onSubmitEvent,
-    bool clearOnSubmit
+    bool clearOnSubmit,
+    bool password
 )
 {
     vec4 color = get_base_ui_color(2);
@@ -320,7 +321,8 @@ UIFactoryInputField Panel::addDefaultInputField(
         color.toVec3(), // color
         get_base_ui_color(3).toVec3(), // text color
         get_base_ui_color(3).toVec3(), // text highlight color
-        get_base_ui_color(3).toVec3() // background highlight color
+        get_base_ui_color(1).toVec3(), // background highlight color,
+        password
     );
     _pScene->addChild(_entity, inputField.rootEntity);
     ++_slotCount;
@@ -333,7 +335,8 @@ UIFactoryInputField Panel::addInputField(
     pk::ConstraintProperties constraintProperties,
     int width,
     pk::ui::InputFieldOnSubmitEvent* onSubmitEvent,
-    bool clearOnSubmit
+    bool clearOnSubmit,
+    bool password
 )
 {
     vec4 color = get_base_ui_color(2);
@@ -349,7 +352,8 @@ UIFactoryInputField Panel::addInputField(
         color.toVec3(), // color
         get_base_ui_color(3).toVec3(), // text color
         get_base_ui_color(3).toVec3(), // text highlight color
-        get_base_ui_color(3).toVec3() // background highlight color
+        get_base_ui_color(1).toVec3(), // background highlight color
+        password
     );
     _pScene->addChild(_entity, inputField.rootEntity);
 

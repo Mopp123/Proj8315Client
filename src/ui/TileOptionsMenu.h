@@ -7,6 +7,8 @@
 #include "SpawnMenu.h"
 #include "TerrainToolMenu.h"
 #include "TravelMenu.h"
+#include "world/World.h"
+#include "CameraUtils.h"
 
 
 class TileOptionsMenu;
@@ -57,7 +59,13 @@ private:
     TravelMenu _travelMenu;
 
 public:
-    void init(pk::Scene* pScene, pk::Font* pFont, Panel* pSelectedTilePanel);
+    void init(
+        pk::Scene* pScene,
+        world::World* pWorld,
+        CameraController* pCamController,
+        pk::Font* pFont,
+        Panel* pSelectedTilePanel
+    );
 
     void open(float screenX, float screenY, uint64_t tileData, int tileX, int tileY);
     void close();

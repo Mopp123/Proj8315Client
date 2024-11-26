@@ -87,7 +87,13 @@ void TileOptionsMenu::MenuItemOnClick::onClick(pk::InputMouseButtonName button)
 }
 
 
-void TileOptionsMenu::init(pk::Scene* pScene, pk::Font* pFont, Panel* pSelectedTilePanel)
+void TileOptionsMenu::init(
+    pk::Scene* pScene,
+    world::World* pWorld,
+    CameraController* pCamController,
+    pk::Font* pFont,
+    Panel* pSelectedTilePanel
+)
 {
     _pSelectedTilePanel = pSelectedTilePanel;
 
@@ -120,7 +126,7 @@ void TileOptionsMenu::init(pk::Scene* pScene, pk::Font* pFont, Panel* pSelectedT
     // Create admin menus which can be opened from here
     _spawnMenu.init(pScene, pFont);
     _terrainToolMenu.init(pScene, pFont);
-    _travelMenu.init(pScene, pFont);
+    _travelMenu.init(pScene, pWorld, pCamController, pFont);
 
     setLayer(2);
 }
@@ -285,22 +291,19 @@ void TileOptionsMenu::updateActiveItemsList(uint64_t tile)
     GC_ubyte tileType = get_tile_terrtype(tile);
     GC_ubyte objectType = get_tile_thingid(tile);
 
-    /*
     Client* pClient = Client::get_instance();
-    if (!pClient)
+    if (!pClient->isConnected())
     {
         Debug::log(
             "@TileOptionsMenu::updateActiveItemsList "
-            "Client was nullptr!",
+            "Client wasn't connected",
             Debug::MessageType::PK_FATAL_ERROR
         );
         return;
     }
-    */
     bool isAdmin = true;
-    /*
-    UserData& userData = pClient->user;
-    if (!userData.isLoggedIn)
+    User& user = pClient->user;
+    if (!user.isLoggedIn())
     {
         Debug::log(
             "@TileOptionsMenu::updateActiveItemsList "
@@ -309,7 +312,7 @@ void TileOptionsMenu::updateActiveItemsList(uint64_t tile)
         );
         return;
     }
-    */
+    isAdmin = user.isAdmin();
 
     _activeItems.reserve(_maxMenuItems);
     DropDownMenuItem cancel = {
@@ -326,13 +329,14 @@ void TileOptionsMenu::updateActiveItemsList(uint64_t tile)
             "Alter terrain",
             menu_item_func_terrain
         };
-        DropDownMenuItem travel = {
-            "Travel",
-            menu_item_func_travel
-        };
         _activeItems.emplace_back(spawn);
         _activeItems.emplace_back(alterTerrain);
-        _activeItems.emplace_back(travel);
     }
+
+    DropDownMenuItem travel = {
+        "Travel",
+        menu_item_func_travel
+    };
+    _activeItems.emplace_back(travel);
     _activeItems.emplace_back(cancel);
 }

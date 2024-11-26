@@ -51,10 +51,6 @@ public:
     std::string testUserName = "asd";
     std::string testUserPassword = "asd";
 
-    bool waitingLogin = false;
-    bool loggedIn = false;
-    bool loggingOut = false;
-
     InGame();
     ~InGame();
 

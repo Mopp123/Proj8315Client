@@ -17,11 +17,13 @@ using namespace gamecommon;
 
 void InGameUI::OnClickLogout::onClick(pk::InputMouseButtonName button)
 {
-    if (_pInGameScene)
+    Client* pClient = Client::get_instance();
+
+    if (pClient->isConnected())
     {
-        Client::get_instance()->send((int32_t)MESSAGE_TYPE__LogoutRequest, {});
-        _pInGameScene->loggingOut = true;
-        _pInGameScene->setInfoText(
+        pClient->send((int32_t)MESSAGE_TYPE__LogoutRequest, {});
+        pScene->loggingOut = true;
+        pScene->setInfoText(
             "Logging out...",
             { 1, 1, 0 },
             0, 0,
@@ -42,9 +44,14 @@ void InGameUI::OnMessageLogout::onMessage(const GC_byte* data, size_t dataSize)
 // TODO:
 // * Some func to add and store status and attribute strings/values more clearly
 // * Display "really" selected object's info
-void InGameUI::create(InGame* pInGameScene, Scene* pScene, pk::Font* pFont, pk::Font* pSmallFont)
+void InGameUI::create(
+    BaseScene* pScene,
+    world::World* pWorld,
+    CameraController* pCamController,
+    pk::Font* pFont,
+    pk::Font* pSmallFont
+)
 {
-    _pInGameScene = pInGameScene;
     _pScene = pScene;
 
     const vec2 settingsPanelScale(212, 30);
@@ -60,7 +67,7 @@ void InGameUI::create(InGame* pInGameScene, Scene* pScene, pk::Font* pFont, pk::
     );
     _settingsPanel.addDefaultButton(
         "Logout",
-        new OnClickLogout(_pInGameScene),
+        new OnClickLogout(_pScene),
         100
     );
 
@@ -75,5 +82,5 @@ void InGameUI::create(InGame* pInGameScene, Scene* pScene, pk::Font* pFont, pk::
         pClient->addOnMessageEvent(MESSAGE_TYPE__LogoutResponse, new OnMessageLogout);
 
     _selectedPanel.init(pScene, pSmallFont);
-    _tileOptionsMenu.init(pScene, pSmallFont, &_selectedPanel);
+    _tileOptionsMenu.init(pScene, pWorld, pCamController, pSmallFont, &_selectedPanel);
 }

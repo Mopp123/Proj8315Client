@@ -341,7 +341,7 @@ void InGameLocal::init()
     );
     _mousePicker.init((Scene*)this, _pWorld);
 
-    _inGameUI.create(nullptr, (Scene*)this, _pDefaultFont, _pSmallFont);
+    _inGameUI.create(this, _pWorld, _pCamController, _pDefaultFont, _pSmallFont);
 
 
     uint64_t initialTileState = 0;

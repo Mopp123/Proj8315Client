@@ -13,18 +13,18 @@ private:
     {
     private:
         MainMenu& _sceneRef;
-        std::string& _usernameRef;
-        std::string& _passwordRef;
+        entityID_t _usernameInputField = 0;
+        entityID_t _passwordInputField = 0;
 
     public:
         OnClickLogin(
             MainMenu& sceneRef,
-            std::string& usernameRef,
-            std::string& passwordRef
+            entityID_t usernameInputField,
+            entityID_t passwordInputField
         ) :
             _sceneRef(sceneRef),
-            _usernameRef(usernameRef),
-            _passwordRef(passwordRef)
+            _usernameInputField(usernameInputField),
+            _passwordInputField(passwordInputField)
         {}
         virtual void onClick(pk::InputMouseButtonName button);
     };
@@ -54,17 +54,34 @@ private:
     class OnClickRegister : public pk::ui::OnClickEvent
     {
     private:
-        std::string& _usernameRef;
-        std::string& _passwordRef;
-        std::string& _repasswordRef;
+        MainMenu& _sceneRef;
+        entityID_t _usernameInputField = 0;
+        entityID_t _passwordInputField = 0;
+        entityID_t _repasswordInputField = 0;
     public:
         OnClickRegister(
-            std::string& usernameRef,
-            std::string& passwordRef,
-            std::string& repasswordRef
-        );
+            MainMenu& sceneRef,
+            entityID_t usernameInputField,
+            entityID_t passwordInputField,
+            entityID_t repasswordInputField
+        ) :
+            _sceneRef(sceneRef),
+            _usernameInputField(usernameInputField),
+            _passwordInputField(passwordInputField),
+            _repasswordInputField(repasswordInputField)
+        {}
         virtual void onClick(pk::InputMouseButtonName button);
     };
+
+
+    class OnMessageServerInfo : public net::OnMessageEvent
+    {
+    public:
+        MainMenu& sceneRef;
+        OnMessageServerInfo(MainMenu& sceneRef) : sceneRef(sceneRef) {}
+        virtual void onMessage(const GC_byte* data, size_t dataSize);
+    };
+
 
     class OnMessageRegister : public net::OnMessageEvent
     {
@@ -115,7 +132,9 @@ private:
     Panel _serverInfoPanel;
     Panel _registerPanel;
     Panel _popupInfoPanel;
+
     entityID_t _registerInfoEntity = NULL_ENTITY_ID;
+    entityID_t _serverInfoTxtEntity = NULL_ENTITY_ID;
 
     const int _mainMenuState = 0;
     const int _registerMenuState = 1;
@@ -124,6 +143,8 @@ private:
     bool _displayRegisterInfoPopup = false;
     const int _maxRegisterInfoPopupTimer = 70;
     int _registerInfoPopupTimer = _maxRegisterInfoPopupTimer;
+
+    bool _isServerInfoRequested = false;
 
 public:
     std::string username;
@@ -140,6 +161,8 @@ public:
     void setPopupInfoActive();
 
     void setRegisterInfoMsg(const std::string& str, const pk::vec3& color);
+
+    void setServerInfoMessage(const std::string& message);
 
     inline void triggerPopup() { _displayRegisterInfoPopup = true; }
 };

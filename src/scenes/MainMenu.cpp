@@ -3,6 +3,7 @@
 #include "../../Proj8315Common/src/messages/Message.h"
 #include "../../Proj8315Common/src/messages/GeneralMessages.h"
 #include "world/Objects.h"
+#include "InGame.h"
 
 
 using namespace pk;
@@ -15,19 +16,36 @@ void MainMenu::OnClickLogin::onClick(pk::InputMouseButtonName button)
 {
     if (button == InputMouseButtonName::PK_INPUT_MOUSE_LEFT)
     {
-        _sceneRef.username = _usernameRef;
-        _sceneRef.password = _passwordRef;
-        const size_t usernameLen = _usernameRef.length();
-        const size_t passwdLen = _passwordRef.length();
+        UIElemState* pUsernameComponent = (UIElemState*)_sceneRef.getComponent(
+            _usernameInputField,
+            ComponentType::PK_UIELEM_STATE
+        );
+        UIElemState* pPasswordComponent = (UIElemState*)_sceneRef.getComponent(
+            _passwordInputField,
+            ComponentType::PK_UIELEM_STATE
+        );
+
+        _sceneRef.username = pUsernameComponent->content;
+        _sceneRef.password = pPasswordComponent->content;
+        const size_t usernameLen = pUsernameComponent->content.length();
+        const size_t passwdLen = pPasswordComponent->content.length();
 
         if (usernameLen <= 0 || usernameLen > USER_NAME_SIZE)
         {
-            Debug::log("Invalid username length", Debug::MessageType::PK_ERROR);
+            Debug::log(
+                "Invalid username length: " + std::to_string(usernameLen) + " "
+                "max size: " + std::to_string(USER_NAME_SIZE),
+                Debug::MessageType::PK_ERROR
+            );
             return;
         }
-        if (passwdLen <= 0 || passwdLen > USER_NAME_SIZE)
+        if (passwdLen <= 0 || passwdLen > USER_PASSWD_SIZE)
         {
-            Debug::log("Invalid password length", Debug::MessageType::PK_ERROR);
+            Debug::log(
+                "Invalid password length: " + std::to_string(passwdLen) + " "
+                "max size: " + std::to_string(USER_PASSWD_SIZE),
+                Debug::MessageType::PK_ERROR
+            );
             return;
         }
 
@@ -38,12 +56,12 @@ void MainMenu::OnClickLogin::onClick(pk::InputMouseButtonName button)
             (int32_t)MESSAGE_TYPE__LoginRequest,
             {
                 {
-                    (GC_byte*)_usernameRef.data(),
+                    (GC_byte*)pUsernameComponent->content.data(),
                     usernameLen,
                     USER_NAME_SIZE
                 },
                 {
-                    (GC_byte*)_passwordRef.data(),
+                    (GC_byte*)pPasswordComponent->content.data(),
                     passwdLen,
                     USER_PASSWD_SIZE
                 }
@@ -64,30 +82,40 @@ void MainMenu::OnClickCancelRegister::onClick(pk::InputMouseButtonName button)
 }
 
 
-MainMenu::OnClickRegister::OnClickRegister(
-    std::string& usernameRef,
-    std::string& passwordRef,
-    std::string& repasswordRef
-) :
-    _usernameRef(usernameRef),
-    _passwordRef(passwordRef),
-    _repasswordRef(repasswordRef)
-{}
-
 void MainMenu::OnClickRegister::onClick(pk::InputMouseButtonName button)
 {
-    Debug::log(
-        "___TEST___registering user: " + _usernameRef + " "
-        "password: " + _passwordRef
+    UIElemState* pUsernameComponent = (UIElemState*)_sceneRef.getComponent(
+        _usernameInputField,
+        ComponentType::PK_UIELEM_STATE
     );
+    UIElemState* pPasswordComponent = (UIElemState*)_sceneRef.getComponent(
+        _passwordInputField,
+        ComponentType::PK_UIELEM_STATE
+    );
+    UIElemState* pRePasswordComponent = (UIElemState*)_sceneRef.getComponent(
+        _repasswordInputField,
+        ComponentType::PK_UIELEM_STATE
+    );
+    const std::string& usernameStr = pUsernameComponent->content;
+    const std::string& passwordStr = pPasswordComponent->content;
+    const std::string& repasswordStr = pRePasswordComponent->content;
+
     Client::get_instance()->send(
         MESSAGE_TYPE__UserRegisterRequest,
         {
-            { (GC_byte*)_usernameRef.data(), _usernameRef.size(), USER_NAME_SIZE },
-            { (GC_byte*)_passwordRef.data(), _passwordRef.size(), USER_PASSWD_SIZE },
-            { (GC_byte*)_repasswordRef.data(), _repasswordRef.size(), USER_PASSWD_SIZE }
+            { (GC_byte*)usernameStr.data(), usernameStr.size(), USER_NAME_SIZE },
+            { (GC_byte*)passwordStr.data(), passwordStr.size(), USER_PASSWD_SIZE },
+            { (GC_byte*)repasswordStr.data(), repasswordStr.size(), USER_PASSWD_SIZE }
         }
     );
+}
+
+
+void MainMenu::OnMessageServerInfo::onMessage(const GC_byte* data, size_t dataSize)
+{
+    ServerInfoResponse serverInfoResponse(data, dataSize);
+    if (dataSize == MESSAGE_REQUIRED_SIZE__ServerInfo)
+        sceneRef.setServerInfoMessage(serverInfoResponse.getMessage());
 }
 
 
@@ -133,8 +161,8 @@ void MainMenu::OnMessageLogin::onMessage(const GC_byte* data, size_t dataSize)
             _sceneRef.username,
             true, // isLoggedIn
             loginResponse.isAdmin(), // isAdmin
-            0, // tileX
-            0, // tileZ
+            loginResponse.getTileX(), // tileX
+            loginResponse.getTileZ(), // tileZ
             "" // factionName
         );
 
@@ -179,9 +207,9 @@ void MainMenu::OnMessageLogin::onMessage(const GC_byte* data, size_t dataSize)
 void MainMenu::OnMessagePostLogin::onMessage(const GC_byte* data, size_t dataSize)
 {
     world::objects::ObjectInfoLib::create(data, dataSize);
-    Debug::log("Obj info lib created. Switching to user menu");
+    Debug::log("Obj info lib created. Switching to in game!");
     ((BaseScene&)_sceneRef).setInfoText("Server data acquired", vec3(0.0f, 1.0f, 0.0f));
-    Application::get()->switchScene((Scene*)(new MainMenu));
+    Application::get()->switchScene((Scene*)(new InGame));
 }
 
 
@@ -210,36 +238,27 @@ void MainMenu::init()
         Panel::LayoutFillType::VERTICAL
     );
 
-    UIFactoryInputField usernameInputField = _mainPanel.addDefaultInputField(
+    entityID_t usernameInputField = _mainPanel.addDefaultInputField(
         "Username",
         200,
         nullptr
-    );
+    ).rootEntity;
 
-    UIFactoryInputField passwordInputField =_mainPanel.addDefaultInputField(
+    entityID_t passwordInputField =_mainPanel.addDefaultInputField(
         "Password",
         200,
-        nullptr
-    );
-
-    // TODO: better way to get input fields' content
-    // THIS FUCKS UP if component pools are resized during init!!!
-    TextRenderable* pUsernameInputFieldContent = (TextRenderable*)getComponent(
-        usernameInputField.contentEntity,
-        ComponentType::PK_RENDERABLE_TEXT
-    );
-    TextRenderable* pPasswordInputFieldContent = (TextRenderable*)getComponent(
-        passwordInputField.contentEntity,
-        ComponentType::PK_RENDERABLE_TEXT
-    );
+        nullptr,
+        false, // clear on submit
+        true // is password
+    ).rootEntity;
 
     const float buttonWidth = 297;
     _mainPanel.addDefaultButton(
         "Login",
         new OnClickLogin(
             *this,
-            pUsernameInputFieldContent->accessStr(),
-            pPasswordInputFieldContent->accessStr()
+            usernameInputField,
+            passwordInputField
         ),
         buttonWidth
     );
@@ -253,7 +272,7 @@ void MainMenu::init()
     );
 
     _mainPanel.addDefaultButton(
-        "Reqister new user",
+        "Register new user",
         new OnClickOpenRegisterMenu(*this),
         buttonWidth
     );
@@ -272,55 +291,43 @@ void MainMenu::init()
     std::pair<entityID_t, TextRenderable*> registerInfoText = _registerPanel.addText("Register new user", Panel::get_base_ui_color(3).toVec3());
     _registerInfoEntity = registerInfoText.first;
 
-    UIFactoryInputField regUsernameInputField = _registerPanel.addDefaultInputField(
+    entityID_t regUsernameInputField = _registerPanel.addDefaultInputField(
         "Username",
         272,
         nullptr
-    );
+    ).rootEntity;
 
-    UIFactoryInputField regPasswordInputField = _registerPanel.addDefaultInputField(
+    entityID_t regPasswordInputField = _registerPanel.addDefaultInputField(
         "Password",
         272,
-        nullptr
-    );
+        nullptr,
+        false, // clear on submit
+        true // is password
+    ).rootEntity;
 
-    UIFactoryInputField repasswordInputField = _registerPanel.addDefaultInputField(
+    entityID_t repasswordInputField = _registerPanel.addDefaultInputField(
         "Repeat password",
         200,
-        nullptr
-    );
+        nullptr,
+        false, // clear on submit
+        true // is password
+    ).rootEntity;
 
-    // TODO: AGAIN! Better way to get input fields' content!
-    // THIS FUCKS UP if component pools are resized during init!!!
-    TextRenderable* pRegisterUsernameInputFieldContent = (TextRenderable*)getComponent(
-        regUsernameInputField.contentEntity,
-        ComponentType::PK_RENDERABLE_TEXT
-    );
-    TextRenderable* pRegisterPasswordInputFieldContent = (TextRenderable*)getComponent(
-        regPasswordInputField.contentEntity,
-        ComponentType::PK_RENDERABLE_TEXT
-    );
-    TextRenderable* pRegisterRePasswordInputFieldContent = (TextRenderable*)getComponent(
-        repasswordInputField.contentEntity,
-        ComponentType::PK_RENDERABLE_TEXT
-    );
-    std::string& registerUsernameStrRef = pRegisterUsernameInputFieldContent->accessStr();
-    std::string& registerPasswordStrRef = pRegisterPasswordInputFieldContent->accessStr();
-    std::string& registerRepasswordStrRef = pRegisterRePasswordInputFieldContent->accessStr();
-
+    const float registerButtonWidth = 100.0f;
     _registerPanel.addDefaultButton(
         "Register",
         new OnClickRegister(
-            registerUsernameStrRef,
-            registerPasswordStrRef,
-            registerRepasswordStrRef
+            *this,
+            regUsernameInputField,
+            regPasswordInputField,
+            repasswordInputField
         ),
-        buttonWidth
+        registerButtonWidth
     );
     _registerPanel.addDefaultButton(
         "Cancel",
         new OnClickCancelRegister(*this),
-        buttonWidth
+        registerButtonWidth
     );
 
     Client::get_instance()->addOnMessageEvent(
@@ -337,11 +344,15 @@ void MainMenu::init()
         { 200, 24 }, // slot scale
         Panel::LayoutFillType::VERTICAL
     );
-    _serverInfoPanel.addDefaultText(
+   _serverInfoTxtEntity = _serverInfoPanel.addDefaultText(
         "Welcome!\n"
         "Some server message here..\n"
-    );
+    ).first;
 
+    Client::get_instance()->addOnMessageEvent(
+        MESSAGE_TYPE__ServerInfo,
+        new OnMessageServerInfo(*this)
+    );
 
     _popupInfoPanel.createDefault(
         this,
@@ -370,6 +381,14 @@ void MainMenu::init()
 
 void MainMenu::update()
 {
+    // Ask for server info after connected
+    Client* pClient = Client::get_instance();
+    if (pClient->isConnected() && !_isServerInfoRequested)
+    {
+        pClient->send(MESSAGE_TYPE__ServerInfo, {});
+        _isServerInfoRequested = true;
+    }
+
     InputManager* pInputManager = Application::get()->accessInputManager();
 
     if (_displayRegisterInfoPopup)
@@ -426,4 +445,14 @@ void MainMenu::setRegisterInfoMsg(const std::string& str, const pk::vec3& color)
     );
     pRenderable->accessStr() = str;
     pRenderable->color = color;
+}
+
+void MainMenu::setServerInfoMessage(const std::string& message)
+{
+    TextRenderable* pRenderable = (TextRenderable*)getComponent(
+        _serverInfoTxtEntity,
+        ComponentType::PK_RENDERABLE_TEXT
+    );
+    if (pRenderable)
+        pRenderable->accessStr() = message;
 }

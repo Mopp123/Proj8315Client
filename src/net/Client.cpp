@@ -37,4 +37,11 @@ namespace net
             return s_pInstance;
         }
     }
+
+    bool Client::isConnected() const
+    {
+        if (s_pInstance)
+            return _connected;
+        return false;
+    }
 }

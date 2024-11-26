@@ -65,7 +65,6 @@ namespace world
         {
             int32_t recvX = *(int32_t*)(data + MESSAGE_ENTRY_SIZE__header);
             int32_t recvY = *(int32_t*)(data + MESSAGE_ENTRY_SIZE__header + sizeof(int32_t));
-            Debug::log("___TEST___recv coords: " + std::to_string(recvX) + ", " + std::to_string(recvY));
             observerRef.lastReceivedMapX = recvX;
             observerRef.lastReceivedMapY = recvY;
 

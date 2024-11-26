@@ -1,5 +1,6 @@
 #include "TravelMenu.h"
 #include "ecs/factories/ui/UIFactories.h"
+#include "ecs/utils/ui/UIUtils.h"
 #include <stdexcept>
 
 
@@ -13,8 +14,16 @@ void TravelMenu::OnClickTravel::onClick(pk::InputMouseButtonName button)
 }
 
 
-void TravelMenu::init(pk::Scene* pScene, pk::Font* pFont)
+void TravelMenu::init(
+    pk::Scene* pScene,
+    world::World* pWorld,
+    CameraController* pCamController,
+    pk::Font* pFont
+)
 {
+    _pWorld = pWorld;
+    _pCamController = pCamController;
+
     vec2 scale(172, 87);
     initBase(
         pScene,
@@ -32,7 +41,7 @@ void TravelMenu::init(pk::Scene* pScene, pk::Font* pFont)
 
     const float inputFieldWidth = 60.0f;
     const float inputFieldY = scale.y * 0.5f - _slotScale.y - _slotPadding;
-    _inputFieldEntityX = addInputField(
+    _inputFieldX = addInputField(
         "x",
         {
             HorizontalConstraintType::PIXEL_CENTER_HORIZONTAL,
@@ -42,9 +51,9 @@ void TravelMenu::init(pk::Scene* pScene, pk::Font* pFont)
         },
         inputFieldWidth,
         nullptr
-    ).contentEntity;
+    );
 
-    _inputFieldEntityZ = addInputField(
+    _inputFieldZ = addInputField(
         "z",
         {
             HorizontalConstraintType::PIXEL_CENTER_HORIZONTAL,
@@ -54,7 +63,7 @@ void TravelMenu::init(pk::Scene* pScene, pk::Font* pFont)
         },
         inputFieldWidth,
         nullptr
-    ).contentEntity;
+    );
 
     const float buttonWidth = 70.0f;
     addButton(
@@ -110,37 +119,38 @@ void TravelMenu::travel()
         );
         return;
     }
-    Debug::log("___TEST___travelling to: " + std::to_string(x) + ", " + std::to_string(z));
+
+    const float tileVisualScale = _pWorld->getTileVisualScale();
+    _pCamController->setPivotPoint({ (float)x * tileVisualScale, 0, (float)z * tileVisualScale });
+    close();
 }
 
 void TravelMenu::setInputFieldContents(const std::string& targetX, const std::string& targetZ)
 {
-    TextRenderable* pRenderableTargetX = (TextRenderable*)_pScene->getComponent(
-        _inputFieldEntityX,
-        ComponentType::PK_RENDERABLE_TEXT
+    set_input_field_content(
+        targetX,
+        _inputFieldX.rootEntity,
+        _inputFieldX.contentEntity
     );
-    TextRenderable* pRenderableTargetZ = (TextRenderable*)_pScene->getComponent(
-        _inputFieldEntityZ,
-        ComponentType::PK_RENDERABLE_TEXT
+    set_input_field_content(
+        targetZ,
+        _inputFieldZ.rootEntity,
+        _inputFieldZ.contentEntity
     );
-    if (pRenderableTargetX)
-        pRenderableTargetX->accessStr() = targetX;
-    if (pRenderableTargetZ)
-        pRenderableTargetZ->accessStr() = targetZ;
 }
 
 void TravelMenu::getInputFieldContents(std::string& outTargetX, std::string& outTargetZ) const
 {
-    const TextRenderable* pRenderableTargetX = (const TextRenderable*)_pScene->getComponent(
-        _inputFieldEntityX,
-        ComponentType::PK_RENDERABLE_TEXT
+    const UIElemState* pInputFieldStateX = (const UIElemState*)_pScene->getComponent(
+        _inputFieldX.rootEntity,
+        ComponentType::PK_UIELEM_STATE
     );
-    const TextRenderable* pRenderableTargetZ = (const TextRenderable*)_pScene->getComponent(
-        _inputFieldEntityZ,
-        ComponentType::PK_RENDERABLE_TEXT
+    const UIElemState* pInputFieldStateZ = (const UIElemState*)_pScene->getComponent(
+        _inputFieldZ.rootEntity,
+        ComponentType::PK_UIELEM_STATE
     );
-    if (pRenderableTargetX)
-        outTargetX = pRenderableTargetX->getStr();
-    if (pRenderableTargetZ)
-        outTargetZ = pRenderableTargetZ->getStr();
+    if (pInputFieldStateX)
+        outTargetX = pInputFieldStateX->content;
+    if (pInputFieldStateZ)
+        outTargetZ = pInputFieldStateZ->content;
 }

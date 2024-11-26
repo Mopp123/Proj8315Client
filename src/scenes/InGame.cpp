@@ -10,7 +10,8 @@
 
 using namespace pk;
 using namespace net;
-
+using namespace world;
+using namespace world::objects;
 using namespace gamecommon;
 
 
@@ -41,7 +42,6 @@ void InGame::OnMessagePostLogin_TEST::onMessage(const GC_byte* data, size_t data
     world::objects::ObjectInfoLib::create(data, dataSize);
     Debug::log("___TEST___Obj info lib created");
 
-    _sceneRef.loggedIn = true;
     _sceneRef.createWorld();
 
     // Set actual camera pos to the received tile coords
@@ -70,7 +70,6 @@ InGame::~InGame()
 
 void InGame::createWorld()
 {
-    Debug::log("___TEST___Creating world...");
     Transform* pCamTransform = (Transform*)getComponent(activeCamera, ComponentType::PK_TRANSFORM);
 
     _pWorld = new world::World(
@@ -79,12 +78,11 @@ void InGame::createWorld()
         _observeAreaRadius,
         4.0f
     );
-    Debug::log("___TEST___Creating world -> SUCCESS");
     // Can create mousepicker only when the "world" is available
     _mousePicker.init((Scene*)this, _pWorld);
 
     // Just to be safe create/init inGameUI here as well..
-    _inGameUI.create(this, (Scene*)this, _pDefaultFont, _pSmallFont);
+    _inGameUI.create(this, _pWorld, _pCamController, _pDefaultFont, _pSmallFont);
 }
 
 void InGame::init()
@@ -94,18 +92,30 @@ void InGame::init()
     // Set clear color
     Application::get()->getMasterRenderer().setClearColor({ 0, 0, 0, 1});
 
+    /*
     Client* pClient = Client::get_instance();
     pClient->addOnMessageEvent(MESSAGE_TYPE__LoginResponse, new OnMessageLogin_TEST(*this));
     pClient->addOnMessageEvent(MESSAGE_TYPE__ObjInfoLibResponse, new OnMessagePostLogin_TEST(*this));
+    */
 
     _pCamController = new CameraController(activeCamera, 32.0f);
     // test setting cam pos initially to "server side equator" (worldPos * tileVisualScale)
-    _pCamController->setPivotPoint({ 128, 0, 4.0f * 128.0f });
+    //_pCamController->setPivotPoint({ 128, 0, 4.0f * 128.0f });
+
+    createWorld();
+
+    Client* pClient = Client::get_instance();
+    User& user = pClient->user;
+    const float tileVisualScale = _pWorld->getTileVisualScale();
+    float worldX = user.getX() * tileVisualScale;
+    float worldZ = user.getZ() * tileVisualScale;
+    _pCamController->setPivotPoint({ worldX, 0, worldZ });
 }
 
 void InGame::update()
 {
     // Attempt logging in some test user immediately
+    /*
     if (!loggedIn && !waitingLogin)
     {
         Client* pClient = Client::get_instance();
@@ -147,6 +157,7 @@ void InGame::update()
             );
         }
     }
+    */
 
     if (_pWorld)
     {
@@ -178,10 +189,9 @@ void InGame::update()
 
         _pWorld->update(camPivotPoint.x, camPivotPoint.z);
 
-        if (loggedIn && !loggingOut)
-            setInfoText(
-                "Delta: " + std::to_string(Timing::get_delta_time())
-            );
+        setInfoText(
+            "Delta: " + std::to_string(Timing::get_delta_time())
+        );
     }
 }
 

@@ -193,6 +193,7 @@ namespace world
         // Object picking
         // NOTE: Atm just testing here..
         // TODO: Finalize how this should be handled...
+        /*
         std::vector<VisualObject>& tileObjects = _pWorld->accessVisualObjects();
         ResourceManager& resManager = Application::get()->getResourceManager();
         float prevObjDist = 99999.0f;
@@ -242,6 +243,7 @@ namespace world
         }
         if (pPickedObject)
             pPickedObject->setColliderVisible(true);
+        */
     }
 
     void MousePicker::set3DCursorVisible(bool arg)

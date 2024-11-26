@@ -5,6 +5,7 @@
 #include "messages/Message.h"
 #include "world/Objects.h"
 #include "net/Client.h"
+#include "ecs/utils/ui/UIUtils.h"
 
 
 using namespace pk;
@@ -304,18 +305,18 @@ void TerrainToolMenu::init(pk::Scene* pScene, pk::Font* pFont)
     addDefaultText("NOTE: Elevation needs to be between 0 and 31");
 
     float numberInputFieldWidth = 50.0f;
-    _selectedRadiusTxtEntity = addDefaultInputField(
+    _selectedRadiusInputField = addDefaultInputField(
         "Apply radius",
         numberInputFieldWidth,
         nullptr
-    ).contentEntity;
+    );
     setRadiusInputFieldContent("1");
 
-    _selectedElevationTxtEntity = addDefaultInputField(
+    _selectedElevationInputField = addDefaultInputField(
         "Elevation",
         numberInputFieldWidth,
         nullptr
-    ).contentEntity;
+    );
     setElevationInputFieldContent("15");
 
     addDefaultButton(
@@ -385,36 +386,36 @@ void TerrainToolMenu::setSelectedType(gamecommon::TileStateTerrType type)
 
 const std::string& TerrainToolMenu::getSelectedRadius() const
 {
-    const TextRenderable* pRenderable = (const TextRenderable*)_pScene->getComponent(
-        _selectedRadiusTxtEntity,
-        ComponentType::PK_RENDERABLE_TEXT
+    const UIElemState* pState = (const UIElemState*)_pScene->getComponent(
+        _selectedRadiusInputField.rootEntity,
+        ComponentType::PK_UIELEM_STATE
     );
-    return pRenderable->getStr();
+    return pState->content;
 }
 
 const std::string& TerrainToolMenu::getSelectedElevation() const
 {
-    const TextRenderable* pRenderable = (const TextRenderable*)_pScene->getComponent(
-        _selectedElevationTxtEntity,
-        ComponentType::PK_RENDERABLE_TEXT
+    const UIElemState* pState = (const UIElemState*)_pScene->getComponent(
+        _selectedElevationInputField.rootEntity,
+        ComponentType::PK_UIELEM_STATE
     );
-    return pRenderable->getStr();
+    return pState->content;
 }
 
 void TerrainToolMenu::setRadiusInputFieldContent(const std::string& str)
 {
-    TextRenderable* pRenderable = (TextRenderable*)_pScene->getComponent(
-        _selectedRadiusTxtEntity,
-        ComponentType::PK_RENDERABLE_TEXT
+    set_input_field_content(
+        str,
+        _selectedRadiusInputField.rootEntity,
+        _selectedRadiusInputField.contentEntity
     );
-    pRenderable->accessStr() = str;
 }
 
 void TerrainToolMenu::setElevationInputFieldContent(const std::string& str)
 {
-    TextRenderable* pRenderable = (TextRenderable*)_pScene->getComponent(
-        _selectedElevationTxtEntity,
-        ComponentType::PK_RENDERABLE_TEXT
+    set_input_field_content(
+        str,
+        _selectedElevationInputField.rootEntity,
+        _selectedElevationInputField.contentEntity
     );
-    pRenderable->accessStr() = str;
 }

@@ -14,6 +14,8 @@ protected:
     entityID_t _infoTextEntity = NULL_ENTITY_ID;
 
 public:
+    bool loggingOut = false;
+
     BaseScene();
     virtual ~BaseScene();
     void initBase();

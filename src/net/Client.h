@@ -68,7 +68,8 @@ namespace net
         void clearOnMessageEvents();
 
         inline const std::string& getHostname() const { return _hostname; }
-        inline bool isConnected() const { return _connected; }
+        // *Safe to use even if the instance is nullptr -> if no instance obsiously not connected
+        bool isConnected() const;
 
         static Client* get_instance();
     };

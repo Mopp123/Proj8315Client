@@ -153,6 +153,16 @@ namespace net
             // Figure out the rest of the size from data
             for (const MsgDataPart& d : data)
             {
+                if (d.usedSize > d.maxSize)
+                {
+                    Debug::log(
+                        "@WebClient::send "
+                        "MsgDataPart's usedSize: " + std::to_string(d.usedSize) + " "
+                        "was greater than specified max size: " + std::to_string(d.maxSize),
+                        Debug::MessageType::PK_ERROR
+                    );
+                    return 0;
+                }
                 size_t sizeToCopy = d.usedSize;
                 size_t fullSize = d.maxSize;
                 sendBuf.resize(bufSize + fullSize);

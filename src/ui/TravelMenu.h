@@ -4,6 +4,9 @@
 #include "Tile.h"
 #include "TopBarPanel.h"
 #include "ecs/factories/ui/UIFactories.h"
+#include "world/World.h"
+#include "CameraUtils.h"
+
 
 class TravelMenu : public TopBarPanel
 {
@@ -16,13 +19,19 @@ private:
         void onClick(pk::InputMouseButtonName button);
     };
 
-    entityID_t _inputFieldEntityX = 0;
-    entityID_t _inputFieldEntityZ = 0;
+    pk::ui::UIFactoryInputField _inputFieldX;
+    pk::ui::UIFactoryInputField _inputFieldZ;
 
-
+    world::World* _pWorld = nullptr;
+    CameraController* _pCamController = nullptr;
 
 public:
-    void init(pk::Scene* pScene, pk::Font* pFont);
+    void init(
+        pk::Scene* pScene,
+        world::World* pWorld,
+        CameraController* pCamController,
+        pk::Font* pFont
+    );
 
     virtual void open();
     virtual void close();
