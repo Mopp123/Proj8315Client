@@ -339,13 +339,12 @@ void MainMenu::init()
         _pDefaultFont,
         HorizontalConstraintType::PIXEL_CENTER_HORIZONTAL, 4,
         VerticalConstraintType::PIXEL_CENTER_VERTICAL, 100,
-        { 300, 200 }, // scale
+        { 325, 265 }, // scale
         { 200, 24 }, // slot scale
         Panel::LayoutFillType::VERTICAL
     );
    _serverInfoTxtEntity = _serverInfoPanel.addDefaultText(
-        "Welcome!\n"
-        "Some server message here..\n"
+        "Fetching server message..."
     ).first;
 
     Client::get_instance()->addOnMessageEvent(
