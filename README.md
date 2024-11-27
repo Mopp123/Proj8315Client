@@ -15,6 +15,13 @@ To build the wasm and all necessary stuff you need to activate the Emscripten SD
 `./emsdk activate latest` and activate environment variables `source ./emsdk_env.sh`.
 You will need to download assets directory from: https://drive.google.com/drive/folders/1ERCEZnycuS7zqDqi603cqm3qWsqBnJG-
 and place this to the repository's root directory.
+
+Set the file's `assets/config.conf` first line to be your Proj8315Server's address:port.
+This needs to be done before build because of the Emscripten's virtual file system.
+Also if your server's address and/or port changes you need to rebuild.
+...That's quite inconvenient I know. It'll be fixed some day...
+(Make sure you don't have any additional spaces or empty lines)
+
 After this run `./build-wasm.sh . build/ site/` from this project's directory.
 NOTE: It's important that the asset dir is in the project directory because of the Emscripten's virtual file system!
 
@@ -22,7 +29,6 @@ To create docker image and container you may run `./build-docker.sh`
 
 ## Running
 After building run `docker compose -f docker-compose.yml start` to start the site.
-NOTE: Currently Client site and Proj8315 Server has to be hosted from same address.
 
 ## Dependancies
 * Emscripten
