@@ -2,10 +2,12 @@
 version: "3.7"
 
 services:
-  site:
-    container_name: proj_site_test
-    image: proj-site
+
+  proj8315-client-site:
+    container_name: proj8315-web-client
+    command: bash start-container.sh
+    image: proj8315-client
     volumes:
-      - ./public-html:/usr/local/apache2/htdocs
+      - ./site:/usr/src/app
     ports:
-      - 8080:80
+      - 80:80
