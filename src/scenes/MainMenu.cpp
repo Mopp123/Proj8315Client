@@ -339,7 +339,7 @@ void MainMenu::init()
         _pDefaultFont,
         HorizontalConstraintType::PIXEL_CENTER_HORIZONTAL, 4,
         VerticalConstraintType::PIXEL_CENTER_VERTICAL, 100,
-        { 325, 265 }, // scale
+        { 340, 280 }, // scale
         { 200, 24 }, // slot scale
         Panel::LayoutFillType::VERTICAL
     );
