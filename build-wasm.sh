@@ -51,7 +51,8 @@ else
         copy_to_site "html" $media_dir
         copy_to_site "js" $media_dir
         copy_to_site "wasm" $media_dir
-        copy_to_site "data" $media_dir
+        # Switched to hawing asset build script separately
+        #copy_to_site "data" $media_dir
     else
         echo -e "\e[33mWarning! Built files are not copied into site media!\e[0m"
     fi
