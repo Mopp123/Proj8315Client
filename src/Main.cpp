@@ -47,8 +47,8 @@ int main(int argc, const char** argv)
         );
         return 0;
     }
-    //const std::string fullHost = "ws://" + configStr;
-    //net::Client* pClient = (net::Client*)(new net::web::WebClient(fullHost));
+    const std::string fullHost = "ws://" + configStr;
+    net::Client* pClient = (net::Client*)(new net::web::WebClient(fullHost));
     application.switchScene((Scene*)(new MainMenu));
     application.run();
 
