@@ -52,6 +52,5 @@ int main(int argc, const char** argv)
     application.switchScene((Scene*)(new MainMenu));
     application.run();
 
-
     return 0;
 }
