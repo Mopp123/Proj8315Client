@@ -18,6 +18,16 @@
     <div class="emscripten_border">
         <canvas class="emscripten" id="canvas" oncontextmenu="event.preventDefault()"></canvas>
     </div>
+    <script async type="text/javascript" src="assets.js"></script>
     {{{ SCRIPT }}}
+    <script>
+      // To detect if module loaded
+      //  -> can use that to have some loading screen, etc...
+      var Module = {
+        onRuntimeInitialized: function() {
+          console.log("Module loaded");
+        }
+      };
+    </script>
 </body>
 </html>

@@ -123,7 +123,7 @@ namespace world
 
         // Create terrain
         _terrainEntity = _sceneRef.createEntity();
-        _sceneRef.createTransform(
+        Transform::create(
             _terrainEntity,
             { 0, 0, 0 },
             { 0, 0, 0, 1 },
@@ -227,7 +227,7 @@ namespace world
             pTerrainMaterial->getResourceID()
         );
 
-        TerrainRenderable* pTerrainRenderable = _sceneRef.createTerrainRenderable(
+        TerrainRenderable* pTerrainRenderable = TerrainRenderable::create(
             _terrainEntity,
             _pTerrainMesh->getResourceID(),
             pTerrainMaterial->getResourceID(),
@@ -255,7 +255,7 @@ namespace world
                 entityID_t visualObjEntity = _sceneRef.createEntity();
 
                 const vec3 originalGridPos(x * _tileVisualScale, 0, y * _tileVisualScale);
-                Transform* pTransform = _sceneRef.createTransform(
+                Transform* pTransform = Transform::create(
                     visualObjEntity,
                     originalGridPos,
                     { 0, 0, 0, 1},
@@ -264,7 +264,7 @@ namespace world
                 );
                 pTransform->setActive(true);
 
-                Static3DRenderable* pStaticRenderable = _sceneRef.createStatic3DRenderable(
+                Static3DRenderable* pStaticRenderable = Static3DRenderable::create(
                     visualObjEntity,
                     pDefaultStaticModel->getMesh(0)->getResourceID()
                 );
@@ -273,14 +273,14 @@ namespace world
                 // NOTE: ISSUE!
                 // This assumes we always use same skeleton
                 // -> requires that the model's skeleton config is also always the same..
-                SkinnedRenderable* pSkinnedRenderable = _sceneRef.createSkinnedRenderable(
+                SkinnedRenderable* pSkinnedRenderable = SkinnedRenderable::create(
                     visualObjEntity,
                     pDefaultRiggedModel->getResourceID(),
                     pDefaultRiggedMesh->getResourceID()
                 );
                 pSkinnedRenderable->setActive(false);
 
-                _sceneRef.createAnimationData(
+                AnimationData::create(
                     visualObjEntity,
                     ((Resource*)pDefaultAnimation)->getResourceID(),
                     AnimationMode::PK_ANIMATION_MODE_REPEAT,

@@ -63,7 +63,7 @@ namespace world
         _pWorld = pWorld;
 
         _cursorEntity = _pScene->createEntity();
-        Transform* pCursorTransform = pScene->createTransform(
+        Transform* pCursorTransform = Transform::create(
             _cursorEntity,
             { 0, 1, 0 },
             { 0, 0, 0, 1 },
@@ -119,7 +119,7 @@ namespace world
             pMaterial->getResourceID()
         );
 
-        Static3DRenderable* pCursorRenderable = _pScene->createStatic3DRenderable(
+        Static3DRenderable* pCursorRenderable = Static3DRenderable::create(
             _cursorEntity,
             pCursorMesh->getResourceID()
         );

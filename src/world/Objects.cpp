@@ -78,13 +78,13 @@ namespace world
 
             Scene* pScene = Application::get()->accessCurrentScene();
             _colliderEntity = pScene->createEntity();
-            pScene->createTransform(
+            Transform::create(
                 _colliderEntity,
                 { 0, 0, 0 },
                 { 0, 0, 0, 1 },
                 { defaultColliderSize, defaultColliderSize, defaultColliderSize }
             );
-            pScene->createStatic3DRenderable(
+            Static3DRenderable::create(
                 _colliderEntity,
                 pColliderModel->getMesh(0)->getResourceID()
             );

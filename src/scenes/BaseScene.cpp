@@ -23,7 +23,7 @@ void BaseScene::initBase()
     Application::get()->getMasterRenderer().setClearColor(Panel::get_base_ui_color(0));
 
     activeCamera = createEntity();
-    createCamera(activeCamera, { 0, 1.0f, 0 }, 0.0f, 0.0f);
+    Camera::create(activeCamera, { 0, 1.0f, 0 }, 0.0f, 0.0f);
     pk::Debug::log("@BaseScene::initBase Loading default font");
     pk::Application* pApp = pk::Application::get();
     pk::ResourceManager& resourceManager = pApp->getResourceManager();
@@ -40,7 +40,7 @@ void BaseScene::initBase()
     directionalLight = createEntity();
     pk::vec3 lightDirection(0.33f, -0.33f, -0.33f);
     lightDirection.normalize();
-    createDirectionalLight(
+    DirectionalLight::create(
         directionalLight,
         { 1.0f, 1.0f, 1.0f },
         lightDirection

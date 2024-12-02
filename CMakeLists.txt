@@ -5,7 +5,7 @@ set (proj_name "Proj8315Client")
 project(${proj_name})
 
 # set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Werror -std=c++17")
-set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=c++17 -fexceptions -O3")
+set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=c++17 -fexceptions")
 
 
 # add_compile_options()
@@ -36,6 +36,7 @@ file (
     "${PROJECT_SOURCE_DIR}/PortablePesukarhu/ecs/components/*.cpp"
     "${PROJECT_SOURCE_DIR}/PortablePesukarhu/ecs/components/ui/*.cpp"
     "${PROJECT_SOURCE_DIR}/PortablePesukarhu/ecs/components/renderable/*.cpp"
+    "${PROJECT_SOURCE_DIR}/PortablePesukarhu/ecs/components/lighting/*.cpp"
     "${PROJECT_SOURCE_DIR}/PortablePesukarhu/ecs/systems/*.cpp"
     "${PROJECT_SOURCE_DIR}/PortablePesukarhu/ecs/systems/ui/*.cpp"
     "${PROJECT_SOURCE_DIR}/PortablePesukarhu/ecs/factories/ui/*.cpp"
@@ -70,11 +71,17 @@ file (
 add_executable(${proj_name} ${source_files})
 
 set(html_shell_location "${PROJECT_SOURCE_DIR}/shell.html")
-set(html_out "Proj8315Client.html") # NOTE: This gets converted to camel case for some reason...
-set(assets_dir "../assets") # NOTE: This has to be relative from build to assets dir
+
+# NOTE: This gets converted to camel case for some reason...
+set(html_out "Proj8315Client.html")
+
+# NOTE: This has to be relative from build to assets dir
+# NOTE: Currently stopped building the asset thig here and switched to having own script for it!
+#   -> This was to be able to update assets without needing to build the code everytime as well
+#set(assets_dir "../assets")
 
 if (${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
     message(STATUS "___TEST___SYSTEM WAS EMSCRIPTEN!")
-    set_target_properties(${proj_name} PROPERTIES LINK_FLAGS "-O3 -fexceptions -sMIN_WEBGL_VERSION=2 -sMAX_WEBGL_VERSION=2 --shell-file ${html_shell_location} -o ${html_out} --preload-file ${assets_dir} --use-preload-plugins -sFETCH -sALLOW_MEMORY_GROWTH -l websocket.js")
+    set_target_properties(${proj_name} PROPERTIES LINK_FLAGS "-fexceptions -sMIN_WEBGL_VERSION=2 -sMAX_WEBGL_VERSION=2 --shell-file ${html_shell_location} -o ${html_out} -sFORCE_FILESYSTEM --use-preload-plugins -sFETCH -sALLOW_MEMORY_GROWTH -l websocket.js")
 endif()
 
