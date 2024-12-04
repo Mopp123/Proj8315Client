@@ -1,8 +1,5 @@
 #include "BaseScene.h"
-#include "core/Application.h"
-#include "core/Debug.h"
 #include "net/Client.h"
-#include "ui/Panel.h"
 
 using namespace pk;
 using namespace ui;
@@ -48,8 +45,10 @@ void BaseScene::initBase()
 
     _infoTextEntity = create_text(
         "", *_pDefaultFont,
-        HorizontalConstraintType::PIXEL_LEFT, 0,
-        VerticalConstraintType::PIXEL_TOP, 0
+        {
+            HorizontalConstraintType::PIXEL_LEFT, 0,
+            VerticalConstraintType::PIXEL_TOP, 0
+        }
     ).first;
 }
 

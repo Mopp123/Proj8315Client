@@ -91,19 +91,18 @@ void TileOptionsMenu::init(
     pk::Scene* pScene,
     world::World* pWorld,
     CameraController* pCamController,
-    pk::Font* pFont,
-    Panel* pSelectedTilePanel
+    pk::Font* pFont
 )
 {
-    _pSelectedTilePanel = pSelectedTilePanel;
-
     const vec2 panelScale(134, 160);
     const vec2 slotScale(130, 20);
     createDefault(
         pScene,
         pFont,
-        HorizontalConstraintType::PIXEL_LEFT, 0.0f,
-        VerticalConstraintType::PIXEL_BOTTOM, 60.0f,
+        {
+            HorizontalConstraintType::PIXEL_LEFT, 0.0f,
+            VerticalConstraintType::PIXEL_BOTTOM, 60.0f,
+        },
         panelScale,
         slotScale,
         Panel::LayoutFillType::VERTICAL,
@@ -166,8 +165,7 @@ void TileOptionsMenu::open(float screenX, float screenY, uint64_t tileData, int 
 
     tMat[1 + 1 * 4] = menuHeight;
 
-    // Push the menu somewhere else if goes out of bounds of the current window or collides with
-    // panel in "panels to avoid list"
+    // Push the menu somewhere else if goes out of bounds of the current window
     const Window* pWindow = Application::get()->getWindow();
     const Swapchain* pSwapchain = pWindow->getSwapchain();
     Extent2D viewportExtent = pSwapchain->getSurfaceExtent();
@@ -179,18 +177,6 @@ void TileOptionsMenu::open(float screenX, float screenY, uint64_t tileData, int 
         useX = viewportExtent.width - menuWidth;
     if (screenY - menuHeight < 0)
         useY = menuHeight;
-
-    // Prevent collapsing on top of the "selected tile panel"
-    // NOTE: This is quite dumb atm and assuming the "selected tile panel"
-    // always to be in bottom left corner
-    /*
-    Rect2D selectedPanelRect = _pSelectedTilePanel->getRect();
-    if (useX < selectedPanelRect.offsetX + selectedPanelRect.width && useY - menuHeight < selectedPanelRect.offsetY)
-    {
-        float distToTopEdge = selectedPanelRect.height - (useY - menuHeight);
-        useY += distToTopEdge;
-    }
-    */
 
     ConstraintData* pConstraintData = (ConstraintData*)_pScene->getComponent(
         _entity,

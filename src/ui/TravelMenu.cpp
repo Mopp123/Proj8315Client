@@ -1,6 +1,5 @@
 #include "TravelMenu.h"
-#include "ecs/factories/ui/UIFactories.h"
-#include "ecs/utils/ui/UIUtils.h"
+#include "Pesukarhu/ppk.h"
 #include <stdexcept>
 
 
@@ -35,9 +34,9 @@ void TravelMenu::init(
             VerticalConstraintType::PIXEL_CENTER_VERTICAL,
             scale.y * 0.5f,
         },
-        scale
+        scale,
+        LayoutFillType::VERTICAL
     );
-    _layoutType = LayoutFillType::VERTICAL;
 
     const float inputFieldWidth = 60.0f;
     const float inputFieldY = scale.y * 0.5f - _slotScale.y - _slotPadding;

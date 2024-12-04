@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Panel.h"
+#include "Pesukarhu/ppk.h"
 #include "net/Client.h"
 #include <vector>
 #include <string>
@@ -35,7 +35,7 @@ private:
 
     // Panel containing stuff like, logout, settings/preferences, etc..
     // Couldn't fugure out better name..
-    Panel _settingsPanel;
+    pk::ui::Panel _settingsPanel;
 
     // Contains info about currently selected tile and/or object.
     // TODO:
@@ -46,7 +46,7 @@ private:
     TileOptionsMenu _tileOptionsMenu;
 
     // Panel what u can do when right clicking on a tile/object
-    Panel _actionsPanel;
+    pk::ui::Panel _actionsPanel;
 
 public:
     InGameUI() {};

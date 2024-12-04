@@ -1,8 +1,6 @@
 #pragma once
 
-#include "Panel.h"
-#include "core/input/InputEvent.h"
-#include "ecs/factories/ui/UIFactories.h"
+#include "Pesukarhu/ppk.h"
 #include <vector>
 #include "SpawnMenu.h"
 #include "TerrainToolMenu.h"
@@ -21,7 +19,7 @@ struct DropDownMenuItem
 };
 
 
-class TileOptionsMenu : public Panel
+class TileOptionsMenu : public pk::ui::Panel
 {
 private:
     class MenuMouseButtonEvent : public pk::MouseButtonEvent
@@ -63,8 +61,7 @@ public:
         pk::Scene* pScene,
         world::World* pWorld,
         CameraController* pCamController,
-        pk::Font* pFont,
-        Panel* pSelectedTilePanel
+        pk::Font* pFont
     );
 
     void open(float screenX, float screenY, uint64_t tileData, int tileX, int tileY);

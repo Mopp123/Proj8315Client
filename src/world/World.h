@@ -5,7 +5,7 @@
 #include <unordered_map>
 #include <chrono>
 
-#include "../../PortablePesukarhu/ppk.h"
+#include "Pesukarhu/ppk.h"
 #include "../net/Client.h"
 #include "Objects.h"
 #include "Tile.h"

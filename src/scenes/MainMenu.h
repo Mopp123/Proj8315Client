@@ -1,8 +1,7 @@
 #pragma once
 
-#include "../../PortablePesukarhu/ppk.h"
+#include "Pesukarhu/ppk.h"
 #include "BaseScene.h"
-#include "ui/Panel.h"
 #include "net/Client.h"
 
 
@@ -128,10 +127,10 @@ private:
         virtual void onMessage(const GC_byte* data, size_t dataSize);
     };
 
-    Panel _mainPanel;
-    Panel _serverInfoPanel;
-    Panel _registerPanel;
-    Panel _popupInfoPanel;
+    pk::ui::Panel _mainPanel;
+    pk::ui::Panel _serverInfoPanel;
+    pk::ui::Panel _registerPanel;
+    pk::ui::Panel _popupInfoPanel;
 
     entityID_t _registerInfoEntity = NULL_ENTITY_ID;
     entityID_t _serverInfoTxtEntity = NULL_ENTITY_ID;

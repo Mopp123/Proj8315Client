@@ -3,11 +3,9 @@
 #include <vector>
 #include <unordered_map>
 
-#include "../../PortablePesukarhu/ppk.h"
+#include "Pesukarhu/ppk.h"
 #include "Tile.h"
 #include "../../Proj8315Common/src/Object.h"
-#include "ecs/components/renderable/SkinnedRenderable.h"
-#include "ecs/components/renderable/Static3DRenderable.h"
 
 
 namespace world

@@ -3,7 +3,7 @@
 #include "World.h"
 #include <string>
 #include "../../Proj8315Common/src/messages/ObjMessages.h"
-#include "../PortablePesukarhu/json.hpp"
+#include "Pesukarhu/json.hpp"
 #include <fstream>
 
 

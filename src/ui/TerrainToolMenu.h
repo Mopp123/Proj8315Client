@@ -1,13 +1,12 @@
 #pragma once
 
 #include "Tile.h"
-#include "TopBarPanel.h"
 #include "../../Proj8315Common/src/Object.h"
-#include "ecs/factories/ui/UIFactories.h"
+#include "Pesukarhu/ppk.h"
 #include <vector>
 
 
-class TerrainToolMenu : public TopBarPanel
+class TerrainToolMenu : public pk::ui::TopBarPanel
 {
 private:
     class TemperatureSelection : public TopBarPanel

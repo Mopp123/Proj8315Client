@@ -5,8 +5,8 @@
 #include "CameraUtils.h"
 #include "net/Client.h"
 #include "world/MousePicker.h"
-#include "ui/Panel.h"
 #include "ui/InGameUI.h"
+#include "Pesukarhu/ppk.h"
 
 
 class InGame : public BaseScene

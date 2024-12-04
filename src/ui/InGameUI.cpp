@@ -9,6 +9,7 @@
 
 
 using namespace pk;
+using namespace pk::ui;
 using namespace world;
 using namespace net;
 
@@ -59,8 +60,10 @@ void InGameUI::create(
     _settingsPanel.createDefault(
         _pScene,
         pFont,
-        HorizontalConstraintType::PIXEL_RIGHT, 0.0f,
-        VerticalConstraintType::PIXEL_TOP, 0.0f,
+        {
+            HorizontalConstraintType::PIXEL_RIGHT, 0.0f,
+            VerticalConstraintType::PIXEL_TOP, 0.0f,
+        },
         settingsPanelScale,
         settingsPanelSlotScale,
         Panel::LayoutFillType::HORIZONTAL
@@ -82,5 +85,5 @@ void InGameUI::create(
         pClient->addOnMessageEvent(MESSAGE_TYPE__LogoutResponse, new OnMessageLogout);
 
     _selectedPanel.init(pScene, pSmallFont);
-    _tileOptionsMenu.init(pScene, pWorld, pCamController, pSmallFont, &_selectedPanel);
+    _tileOptionsMenu.init(pScene, pWorld, pCamController, pSmallFont);
 }

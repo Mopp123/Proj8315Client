@@ -1,12 +1,11 @@
 #pragma once
 
-#include "TopBarPanel.h"
-#include "ecs/factories/ui/UIFactories.h"
+#include "Pesukarhu/ppk.h"
 #include "../../Proj8315Common/src/Object.h"
 #include <vector>
 
 
-class SpawnMenu : public TopBarPanel
+class SpawnMenu : public pk::ui::TopBarPanel
 {
 private:
     class MenuItemOnClick : public pk::ui::OnClickEvent

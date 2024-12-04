@@ -6,6 +6,7 @@
 
 
 using namespace pk;
+using namespace pk::ui;
 using namespace world;
 using namespace gamecommon;
 
@@ -17,8 +18,10 @@ void SelectedPanel::init(pk::Scene* pScene, pk::Font* pFont)
     createDefault(
         pScene,
         pFont,
-        HorizontalConstraintType::PIXEL_LEFT, 0.0f,
-        VerticalConstraintType::PIXEL_BOTTOM, 0.0f,
+        {
+            HorizontalConstraintType::PIXEL_LEFT, 0.0f,
+            VerticalConstraintType::PIXEL_BOTTOM, 0.0f,
+        },
         selectedPanelScale,
         selectedPanelSlotScale,
         Panel::LayoutFillType::HORIZONTAL,
@@ -27,12 +30,15 @@ void SelectedPanel::init(pk::Scene* pScene, pk::Font* pFont)
     // Draw little cosmetic line on "selected panel"
     const float clh = 20;
     addImage(
-        HorizontalConstraintType::PIXEL_LEFT, 0.0f,
-        VerticalConstraintType::PIXEL_BOTTOM, selectedPanelScale.y - clh,
+        {
+            HorizontalConstraintType::PIXEL_LEFT, 0.0f,
+            VerticalConstraintType::PIXEL_BOTTOM, selectedPanelScale.y - clh,
+        },
         selectedPanelScale.x, clh,
         nullptr, // texture
         Panel::get_base_ui_color(2).toVec3(),
-        { 0, 0, 1, 1 } // texture cropping
+        { 0, 0, 1, 1 }, // texture cropping
+        GUIFilterType::GUI_FILTER_TYPE_EMBOSS
     );
 
     ResourceManager& resManager = Application::get()->getResourceManager();
@@ -51,9 +57,12 @@ void SelectedPanel::init(pk::Scene* pScene, pk::Font* pFont)
     const float portraitWidth = 100;
     const float portraitHeight = 100;
     const float portraitCroppingScale = 1.0f / (float)_portraitTextureRows;
+
     _selectedPortraitEntity = addImage(
-        HorizontalConstraintType::PIXEL_LEFT, 32.0f,
-        VerticalConstraintType::PIXEL_BOTTOM, 42.0f,
+        {
+            HorizontalConstraintType::PIXEL_LEFT, 32.0f,
+            VerticalConstraintType::PIXEL_BOTTOM, 42.0f,
+        },
         portraitWidth, portraitHeight,
         pPortraiTexture, // texture
         { 1, 1, 1 },
@@ -62,8 +71,10 @@ void SelectedPanel::init(pk::Scene* pScene, pk::Font* pFont)
 
     _objectNameEntity = addText(
         "",
-        HorizontalConstraintType::PIXEL_LEFT, 32.0f,
-        VerticalConstraintType::PIXEL_BOTTOM, 42.0f + portraitHeight
+        {
+            HorizontalConstraintType::PIXEL_LEFT, 32.0f,
+            VerticalConstraintType::PIXEL_BOTTOM, 42.0f + portraitHeight
+        }
     ).first;
     const float textHeight = 20.0f; // can be found from BaseScene TODO: make that variable!
     const float propertiesTxtPaddingY = 4.0f;
@@ -71,8 +82,10 @@ void SelectedPanel::init(pk::Scene* pScene, pk::Font* pFont)
 
     // Draw line under "Status" and "Attributes"
     addImage(
-        HorizontalConstraintType::PIXEL_LEFT, 32.0f + portraitWidth + 8.0f,
-        VerticalConstraintType::PIXEL_BOTTOM, 42.0f + portraitHeight - propertiesTxtPaddingY - textHeight - 2,
+        {
+            HorizontalConstraintType::PIXEL_LEFT, 32.0f + portraitWidth + 8.0f,
+            VerticalConstraintType::PIXEL_BOTTOM, 42.0f + portraitHeight - propertiesTxtPaddingY - textHeight - 2,
+        },
         infoColumnWidth * 3, 1,
         nullptr, // texture
         Panel::get_base_ui_color(3).toVec3(),
@@ -118,8 +131,10 @@ void SelectedPanel::init(pk::Scene* pScene, pk::Font* pFont)
 
     // Draw line before "terrain data"
     addImage(
-        HorizontalConstraintType::PIXEL_LEFT, 32.0f + portraitWidth + 8.0f + infoColumnWidth * 2 + 2.0f,
-        VerticalConstraintType::PIXEL_BOTTOM, 42.0f + portraitHeight - propertiesTxtPaddingY - 105,
+        {
+            HorizontalConstraintType::PIXEL_LEFT, 32.0f + portraitWidth + 8.0f + infoColumnWidth * 2 + 2.0f,
+            VerticalConstraintType::PIXEL_BOTTOM, 42.0f + portraitHeight - propertiesTxtPaddingY - 105,
+        },
         1, 105,
         nullptr, // texture
         Panel::get_base_ui_color(3).toVec3(),
@@ -227,16 +242,20 @@ std::vector<entityID_t> SelectedPanel::addInfoColumn(
     std::vector<entityID_t> infoTxtEntities(infos.size());
     addText(
         title,
-        HorizontalConstraintType::PIXEL_LEFT, pos.x + 8.0f + columnWidth * columnIndex,
-        VerticalConstraintType::PIXEL_BOTTOM, pos.y - txtPaddingY - txtHeight
+        {
+            HorizontalConstraintType::PIXEL_LEFT, pos.x + 8.0f + columnWidth * columnIndex,
+            VerticalConstraintType::PIXEL_BOTTOM, pos.y - txtPaddingY - txtHeight
+        }
     );
 
     for (int i = 0; i < infos.size(); ++i)
     {
         infoTxtEntities[i] = addText(
             infos[i],
-            HorizontalConstraintType::PIXEL_LEFT, pos.x + 8.0f + columnWidth * columnIndex,
-            VerticalConstraintType::PIXEL_BOTTOM, pos.y - txtPaddingY - (txtHeight * (i + 2) + txtPaddingY)
+            {
+                HorizontalConstraintType::PIXEL_LEFT, pos.x + 8.0f + columnWidth * columnIndex,
+                VerticalConstraintType::PIXEL_BOTTOM, pos.y - txtPaddingY - (txtHeight * (i + 2) + txtPaddingY)
+            }
         ).first;
     }
     return infoTxtEntities;

@@ -28,32 +28,32 @@ include_directories (
 file (
     GLOB source_files
     # Engine files ---
-    "${PROJECT_SOURCE_DIR}/PortablePesukarhu/core/*.cpp"
-    "${PROJECT_SOURCE_DIR}/PortablePesukarhu/core/input/*.cpp"
-    "${PROJECT_SOURCE_DIR}/PortablePesukarhu/core/input/platform/web/*.cpp"
-    "${PROJECT_SOURCE_DIR}/PortablePesukarhu/core/platform/web/*.cpp"
+    "${PROJECT_SOURCE_DIR}/PortablePesukarhu/Pesukarhu/core/*.cpp"
+    "${PROJECT_SOURCE_DIR}/PortablePesukarhu/Pesukarhu/core/input/*.cpp"
+    "${PROJECT_SOURCE_DIR}/PortablePesukarhu/Pesukarhu/core/input/platform/web/*.cpp"
+    "${PROJECT_SOURCE_DIR}/PortablePesukarhu/Pesukarhu/core/platform/web/*.cpp"
 
-    "${PROJECT_SOURCE_DIR}/PortablePesukarhu/ecs/components/*.cpp"
-    "${PROJECT_SOURCE_DIR}/PortablePesukarhu/ecs/components/ui/*.cpp"
-    "${PROJECT_SOURCE_DIR}/PortablePesukarhu/ecs/components/renderable/*.cpp"
-    "${PROJECT_SOURCE_DIR}/PortablePesukarhu/ecs/components/lighting/*.cpp"
-    "${PROJECT_SOURCE_DIR}/PortablePesukarhu/ecs/systems/*.cpp"
-    "${PROJECT_SOURCE_DIR}/PortablePesukarhu/ecs/systems/ui/*.cpp"
-    "${PROJECT_SOURCE_DIR}/PortablePesukarhu/ecs/factories/ui/*.cpp"
-    "${PROJECT_SOURCE_DIR}/PortablePesukarhu/ecs/utils/ui/*.cpp"
+    "${PROJECT_SOURCE_DIR}/PortablePesukarhu/Pesukarhu/ecs/components/*.cpp"
+    "${PROJECT_SOURCE_DIR}/PortablePesukarhu/Pesukarhu/ecs/components/ui/*.cpp"
+    "${PROJECT_SOURCE_DIR}/PortablePesukarhu/Pesukarhu/ecs/components/renderable/*.cpp"
+    "${PROJECT_SOURCE_DIR}/PortablePesukarhu/Pesukarhu/ecs/components/lighting/*.cpp"
+    "${PROJECT_SOURCE_DIR}/PortablePesukarhu/Pesukarhu/ecs/systems/*.cpp"
+    "${PROJECT_SOURCE_DIR}/PortablePesukarhu/Pesukarhu/ecs/systems/ui/*.cpp"
 
-    "${PROJECT_SOURCE_DIR}/PortablePesukarhu/graphics/*.cpp"
-    "${PROJECT_SOURCE_DIR}/PortablePesukarhu/graphics/shaders/*.cpp"
-    "${PROJECT_SOURCE_DIR}/PortablePesukarhu/graphics/renderers/*.cpp"
-    "${PROJECT_SOURCE_DIR}/PortablePesukarhu/graphics/platform/web/*.cpp"
-    "${PROJECT_SOURCE_DIR}/PortablePesukarhu/graphics/platform/web/shaders/*.cpp"
-    "${PROJECT_SOURCE_DIR}/PortablePesukarhu/graphics/platform/opengl/*.cpp"
-    "${PROJECT_SOURCE_DIR}/PortablePesukarhu/graphics/platform/opengl/shaders/*.cpp"
+    "${PROJECT_SOURCE_DIR}/PortablePesukarhu/Pesukarhu/ui/*.cpp"
 
-    "${PROJECT_SOURCE_DIR}/PortablePesukarhu/resources/*.cpp"
-    "${PROJECT_SOURCE_DIR}/PortablePesukarhu/resources/platform/opengl/*.cpp"
+    "${PROJECT_SOURCE_DIR}/PortablePesukarhu/Pesukarhu/graphics/*.cpp"
+    "${PROJECT_SOURCE_DIR}/PortablePesukarhu/Pesukarhu/graphics/shaders/*.cpp"
+    "${PROJECT_SOURCE_DIR}/PortablePesukarhu/Pesukarhu/graphics/renderers/*.cpp"
+    "${PROJECT_SOURCE_DIR}/PortablePesukarhu/Pesukarhu/graphics/platform/web/*.cpp"
+    "${PROJECT_SOURCE_DIR}/PortablePesukarhu/Pesukarhu/graphics/platform/web/shaders/*.cpp"
+    "${PROJECT_SOURCE_DIR}/PortablePesukarhu/Pesukarhu/graphics/platform/opengl/*.cpp"
+    "${PROJECT_SOURCE_DIR}/PortablePesukarhu/Pesukarhu/graphics/platform/opengl/shaders/*.cpp"
 
-    "${PROJECT_SOURCE_DIR}/PortablePesukarhu/utils/*.cpp"
+    "${PROJECT_SOURCE_DIR}/PortablePesukarhu/Pesukarhu/resources/*.cpp"
+    "${PROJECT_SOURCE_DIR}/PortablePesukarhu/Pesukarhu/resources/platform/opengl/*.cpp"
+
+    "${PROJECT_SOURCE_DIR}/PortablePesukarhu/Pesukarhu/utils/*.cpp"
 
     # Game Common files ---
     "${PROJECT_SOURCE_DIR}/Proj8315Common/src/*.cpp"

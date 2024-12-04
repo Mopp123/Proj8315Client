@@ -1,13 +1,19 @@
 precision mediump float;
 
+#define FILTER_TYPE_NONE 0.0
+#define FILTER_TYPE_EMBOSS 1.0
+#define FILTER_TYPE_ENGRAVE 2.0
+
 varying vec2 var_uvCoord;
 varying vec4 var_color;
 varying vec2 var_fragPos;
 varying vec2 var_scale;
-varying vec4 var_borderColor;
-varying float var_borderThickness;
+varying float var_filter;
 
 uniform sampler2D texSampler;
+
+const float embossBorderThickness = 2.0;
+const float embossBorderBrightness = 1.5;
 
 void main()
 {
@@ -15,13 +21,29 @@ void main()
     if (texColor.a == 0.0)
         discard;
 
-    if (var_fragPos.x >= var_scale.x - var_borderThickness || var_fragPos.x <= var_borderThickness ||
-            var_fragPos.y <= -var_scale.y + var_borderThickness || var_fragPos.y >= -var_borderThickness)
+    vec4 finalColor = gl_FragColor = texColor * var_color;
+
+    bool emboss = bool(var_filter == FILTER_TYPE_EMBOSS);
+    bool engrave = bool(var_filter == FILTER_TYPE_ENGRAVE);
+
+    if (emboss || engrave)
     {
-        gl_FragColor = var_borderColor;
+        // left and bottom shadow
+        if (var_fragPos.x >= var_scale.x - embossBorderThickness || var_fragPos.y <= -var_scale.y + embossBorderThickness)
+        {
+            if (emboss)
+                finalColor = vec4(0, 0, 0, 1);
+            else
+                finalColor = finalColor * embossBorderBrightness;
+        }
+        // left and top bright
+        else if (var_fragPos.x <= embossBorderThickness || var_fragPos.y >= -embossBorderThickness)
+        {
+            if (emboss)
+                finalColor = finalColor * embossBorderBrightness;
+            else
+                finalColor = vec4(0, 0, 0, 1);
+        }
     }
-    else
-    {
-        gl_FragColor = texColor * var_color;
-    }
+    gl_FragColor = finalColor;
 }

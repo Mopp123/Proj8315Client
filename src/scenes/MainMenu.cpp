@@ -230,8 +230,10 @@ void MainMenu::init()
     _mainPanel.createDefault(
         this,
         _pDefaultFont,
-        HorizontalConstraintType::PIXEL_CENTER_HORIZONTAL, -304,
-        VerticalConstraintType::PIXEL_CENTER_VERTICAL, 115.0f * 0.5f,
+        {
+            HorizontalConstraintType::PIXEL_CENTER_HORIZONTAL, -304,
+            VerticalConstraintType::PIXEL_CENTER_VERTICAL, 115.0f * 0.5f,
+        },
         { 304, 115 }, // scale
         { 200, 24 }, // slot scale
         Panel::LayoutFillType::VERTICAL
@@ -280,8 +282,10 @@ void MainMenu::init()
     _registerPanel.createDefault(
         this,
         _pDefaultFont,
-        HorizontalConstraintType::PIXEL_CENTER_HORIZONTAL, -304,
-        VerticalConstraintType::PIXEL_CENTER_VERTICAL, 115.0f * 0.5f,
+        {
+            HorizontalConstraintType::PIXEL_CENTER_HORIZONTAL, -304,
+            VerticalConstraintType::PIXEL_CENTER_VERTICAL, 115.0f * 0.5f,
+        },
         { 377, 170 }, // scale
         { 200, 24 }, // slot scale
         Panel::LayoutFillType::VERTICAL
@@ -337,8 +341,10 @@ void MainMenu::init()
     _serverInfoPanel.createDefault(
         this,
         _pDefaultFont,
-        HorizontalConstraintType::PIXEL_CENTER_HORIZONTAL, 4,
-        VerticalConstraintType::PIXEL_CENTER_VERTICAL, 100,
+        {
+            HorizontalConstraintType::PIXEL_CENTER_HORIZONTAL, 4,
+            VerticalConstraintType::PIXEL_CENTER_VERTICAL, 100,
+        },
         { 340, 280 }, // scale
         { 200, 24 }, // slot scale
         Panel::LayoutFillType::VERTICAL
@@ -355,8 +361,10 @@ void MainMenu::init()
     _popupInfoPanel.createDefault(
         this,
         _pDefaultFont,
-        HorizontalConstraintType::PIXEL_CENTER_HORIZONTAL, -100,
-        VerticalConstraintType::PIXEL_CENTER_VERTICAL, 115.0f * 0.5f,
+        {
+            HorizontalConstraintType::PIXEL_CENTER_HORIZONTAL, -100,
+            VerticalConstraintType::PIXEL_CENTER_VERTICAL, 115.0f * 0.5f,
+        },
         { 200, 65 }, // scale
         { 200, 24 }, // slot scale
         Panel::LayoutFillType::VERTICAL

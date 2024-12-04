@@ -1,12 +1,11 @@
 #pragma once
 
-#include "Panel.h"
-#include "graphics/Swapchain.h"
+#include "Pesukarhu/ppk.h"
 #include <vector>
 
 
 // For displaying info about currently selected tile/object
-class SelectedPanel : public Panel
+class SelectedPanel : public pk::ui::Panel
 {
 private:
     enum TileInfoSlotIndex

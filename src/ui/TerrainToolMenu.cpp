@@ -5,7 +5,6 @@
 #include "messages/Message.h"
 #include "world/Objects.h"
 #include "net/Client.h"
-#include "ecs/utils/ui/UIUtils.h"
 
 
 using namespace pk;
@@ -39,9 +38,9 @@ void TerrainToolMenu::TemperatureSelection::init(pk::Scene* pScene, pk::Font* pF
             VerticalConstraintType::PIXEL_CENTER_VERTICAL,
             scale.y * 0.5f
         },
-        scale
+        scale,
+        LayoutFillType::VERTICAL
     );
-    _layoutType = LayoutFillType::VERTICAL;
 
     const float buttonWidth = 100.0f;
     addDefaultButton(
@@ -143,9 +142,9 @@ void TerrainToolMenu::TypeSelection::init(pk::Scene* pScene, pk::Font* pFont)
             VerticalConstraintType::PIXEL_CENTER_VERTICAL,
             scale.y * 0.5f,
         },
-        scale
+        scale,
+        LayoutFillType::VERTICAL
     );
-    _layoutType = LayoutFillType::VERTICAL;
 
     const float buttonWidth = 100.0f;
     addDefaultButton(
@@ -292,9 +291,9 @@ void TerrainToolMenu::init(pk::Scene* pScene, pk::Font* pFont)
             VerticalConstraintType::PIXEL_CENTER_VERTICAL,
             scale.y * 0.5f
         },
-        scale
+        scale,
+        LayoutFillType::VERTICAL
     );
-    _layoutType = LayoutFillType::VERTICAL;
 
     _temperatureSelection.pMenu = this;
     _temperatureSelection.init(pScene, pFont);

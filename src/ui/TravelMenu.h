@@ -2,13 +2,12 @@
 #pragma once
 
 #include "Tile.h"
-#include "TopBarPanel.h"
-#include "ecs/factories/ui/UIFactories.h"
 #include "world/World.h"
 #include "CameraUtils.h"
+#include "Pesukarhu/ppk.h"
 
 
-class TravelMenu : public TopBarPanel
+class TravelMenu : public pk::ui::TopBarPanel
 {
 private:
     class OnClickTravel : public pk::ui::OnClickEvent

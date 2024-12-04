@@ -77,9 +77,9 @@ void SpawnMenu::init(pk::Scene* pScene, pk::Font* pFont)
             VerticalConstraintType::PIXEL_CENTER_VERTICAL,
             scale.y * 0.5f
         },
-        scale
+        scale,
+        LayoutFillType::VERTICAL
     );
-    _layoutType = LayoutFillType::VERTICAL;
 
     if (ObjectInfoLib::getObjectInfos().size() == 0)
     {

@@ -3,10 +3,11 @@
 #include "BaseScene.h"
 #include "world/World.h"
 #include "CameraUtils.h"
-#include "ui/Panel.h"
 #include "ui/InGameUI.h"
 
 #include "world/MousePicker.h"
+
+#include "Pesukarhu/ppk.h"
 
 
 class InGameLocal : public BaseScene

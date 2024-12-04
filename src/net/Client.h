@@ -5,7 +5,6 @@
 #include <unordered_map>
 #include <utility>
 
-#include "../../PortablePesukarhu/ppk.h"
 #include "../../Proj8315Common/src/Common.h"
 
 
@@ -13,7 +12,7 @@ namespace net
 {
     typedef struct MsgDataPart
     {
-        PK_byte* data = nullptr;
+        GC_byte* data = nullptr;
         size_t usedSize = 0;
         size_t maxSize = 0;
     } MsgDataPart;
