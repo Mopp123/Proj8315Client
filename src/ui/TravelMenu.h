@@ -4,7 +4,7 @@
 #include "Tile.h"
 #include "world/World.h"
 #include "CameraUtils.h"
-#include "Pesukarhu/ppk.h"
+#include "pesukarhu/ppk.h"
 
 
 class TravelMenu : public pk::ui::TopBarPanel

@@ -6,7 +6,7 @@
 #include "net/Client.h"
 #include "world/MousePicker.h"
 #include "ui/InGameUI.h"
-#include "Pesukarhu/ppk.h"
+#include "pesukarhu/ppk.h"
 
 
 class InGame : public BaseScene

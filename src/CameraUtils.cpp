@@ -1,6 +1,6 @@
 #include "CameraUtils.h"
 
-#include "Pesukarhu/core/Debug.h"
+#include "pesukarhu/core/Debug.h"
 
 using namespace pk;
 

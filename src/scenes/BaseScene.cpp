@@ -49,7 +49,7 @@ void BaseScene::initBase()
             HorizontalConstraintType::PIXEL_LEFT, 0,
             VerticalConstraintType::PIXEL_TOP, 0
         }
-    ).first;
+    );
 }
 
 void BaseScene::setInfoText(

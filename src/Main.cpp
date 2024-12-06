@@ -1,4 +1,4 @@
-#include "Pesukarhu/ppk.h"
+#include "pesukarhu/ppk.h"
 
 #include "scenes/MainMenu.h"
 #include "scenes/InGame.h"
@@ -7,7 +7,7 @@
 #include "net/Client.h"
 #include "net/platform/web/WebClient.h"
 
-#include "Pesukarhu/utils/FileUtils.h"
+#include "pesukarhu/utils/FileUtils.h"
 #include <iostream>
 
 using namespace pk;

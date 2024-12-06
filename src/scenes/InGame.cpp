@@ -6,7 +6,7 @@
 #include "MainMenu.h"
 #include "world/Objects.h"
 
-#include "Pesukarhu/ppk.h"
+#include "pesukarhu/ppk.h"
 
 
 using namespace pk;

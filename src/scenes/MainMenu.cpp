@@ -291,8 +291,7 @@ void MainMenu::init()
         Panel::LayoutFillType::VERTICAL
     );
 
-    std::pair<entityID_t, TextRenderable*> registerInfoText = _registerPanel.addText("Register new user", Panel::get_base_ui_color(3).toVec3());
-    _registerInfoEntity = registerInfoText.first;
+    _registerInfoEntity = _registerPanel.addText("Register new user", Panel::get_base_ui_color(3).toVec3());
 
     entityID_t regUsernameInputField = _registerPanel.addDefaultInputField(
         "Username",
@@ -351,7 +350,7 @@ void MainMenu::init()
     );
    _serverInfoTxtEntity = _serverInfoPanel.addDefaultText(
         "Fetching server message..."
-    ).first;
+    );
 
     Client::get_instance()->addOnMessageEvent(
         MESSAGE_TYPE__ServerInfo,

@@ -75,7 +75,7 @@ void SelectedPanel::init(pk::Scene* pScene, pk::Font* pFont)
             HorizontalConstraintType::PIXEL_LEFT, 32.0f,
             VerticalConstraintType::PIXEL_BOTTOM, 42.0f + portraitHeight
         }
-    ).first;
+    );
     const float textHeight = 20.0f; // can be found from BaseScene TODO: make that variable!
     const float propertiesTxtPaddingY = 4.0f;
     const float infoColumnWidth = 140.0f;
@@ -256,7 +256,7 @@ std::vector<entityID_t> SelectedPanel::addInfoColumn(
                 HorizontalConstraintType::PIXEL_LEFT, pos.x + 8.0f + columnWidth * columnIndex,
                 VerticalConstraintType::PIXEL_BOTTOM, pos.y - txtPaddingY - (txtHeight * (i + 2) + txtPaddingY)
             }
-        ).first;
+        );
     }
     return infoTxtEntities;
 }

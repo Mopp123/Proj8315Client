@@ -1,8 +1,8 @@
 #pragma once
 
-#include "Pesukarhu/ppk.h"
-#include "Pesukarhu/core/input/InputEvent.h"
-#include "Pesukarhu/ecs/components/Transform.h"
+#include "pesukarhu/ppk.h"
+#include "pesukarhu/core/input/InputEvent.h"
+#include "pesukarhu/ecs/components/Transform.h"
 
 
 class CameraController

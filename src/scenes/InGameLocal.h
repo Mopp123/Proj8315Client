@@ -7,7 +7,7 @@
 
 #include "world/MousePicker.h"
 
-#include "Pesukarhu/ppk.h"
+#include "pesukarhu/ppk.h"
 
 
 class InGameLocal : public BaseScene

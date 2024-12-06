@@ -323,14 +323,14 @@ void TerrainToolMenu::init(pk::Scene* pScene, pk::Font* pFont)
         new OpenSelectionEvent(this, OpenSelectionEvent::SelectionType::TEMPERATURE),
         110.0f
     );
-    _selectedTemperatureTxtEntity = addDefaultText("").first;
+    _selectedTemperatureTxtEntity = addDefaultText("");
 
     addDefaultButton(
         "Type",
         new OpenSelectionEvent(this, OpenSelectionEvent::SelectionType::TYPE),
         110.0f
     );
-    _selectedTypeTxtEntity = addDefaultText("").first;
+    _selectedTypeTxtEntity = addDefaultText("");
 
     addDefaultButton(
         "Apply",

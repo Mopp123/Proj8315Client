@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Pesukarhu/ppk.h"
+#include "pesukarhu/ppk.h"
 #include "../../Proj8315Common/src/Object.h"
 #include <vector>
 

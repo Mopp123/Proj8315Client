@@ -1,5 +1,5 @@
 #include "MousePicker.h"
-#include "Pesukarhu/ppk.h"
+#include "pesukarhu/ppk.h"
 #include "world/Objects.h"
 
 
