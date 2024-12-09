@@ -10,7 +10,7 @@
 class TravelMenu : public pk::ui::TopBarPanel
 {
 private:
-    class OnClickTravel : public pk::ui::OnClickEvent
+    class OnClickTravel : public pk::ui::GUIButton::OnClickEvent
     {
     public:
         TravelMenu* pMenu;
@@ -18,8 +18,8 @@ private:
         void onClick(pk::InputMouseButtonName button);
     };
 
-    pk::ui::UIFactoryInputField _inputFieldX;
-    pk::ui::UIFactoryInputField _inputFieldZ;
+    pk::ui::InputField _inputFieldX;
+    pk::ui::InputField _inputFieldZ;
 
     world::World* _pWorld = nullptr;
     CameraController* _pCamController = nullptr;
@@ -37,8 +37,4 @@ public:
 
     void setTargetCoords(int32_t targetX, int32_t targetZ);
     void travel();
-
-private:
-    void setInputFieldContents(const std::string& targetX, const std::string& targetZ);
-    void getInputFieldContents(std::string& outTargetX, std::string& outTargetZ) const;
 };

@@ -117,7 +117,6 @@ void TileOptionsMenu::init(
             addDefaultButton("Item" + std::to_string(i), new MenuItemOnClick(this, i), slotScale.x)
         );
     }
-
     Application::get()->accessInputManager()->addMouseButtonEvent(new MenuMouseButtonEvent(this));
 
     close();
@@ -197,8 +196,8 @@ void TileOptionsMenu::close()
     for (Component* pComponent : components)
         pComponent->setActive(false);
 
-    for (UIFactoryButton b : _menuButtons)
-        setButtonActive(b, false);
+    for (GUIButton& b : _menuButtons)
+        b.setActive(false);
 }
 
 void TileOptionsMenu::displayButton(float x, float y, int index, const std::string& txt)
@@ -214,10 +213,10 @@ void TileOptionsMenu::displayButton(float x, float y, int index, const std::stri
         return;
     }
 
-    UIFactoryButton menuButton = _menuButtons[index];
-    setButtonActive(menuButton, true);
-    entityID_t buttonImg = menuButton.imgEntity;
-    entityID_t buttonTxt = menuButton.txtEntity;
+    GUIButton& menuButton = _menuButtons[index];
+    menuButton.setActive(true);
+    entityID_t buttonImg = menuButton.getImage().getEntity();
+    entityID_t buttonTxt = menuButton.getText().getEntity();
 
     ConstraintData* pImgConstraint = (ConstraintData*)_pScene->getComponent(
         buttonImg,
@@ -242,20 +241,6 @@ void TileOptionsMenu::displayButton(float x, float y, int index, const std::stri
         ComponentType::PK_RENDERABLE_TEXT
     );
     pTextRenderable->accessStr() = txt;
-}
-
-void TileOptionsMenu::setButtonActive(UIFactoryButton& button, bool arg)
-{
-    // Fucking awful way of getting all the components atm I know...
-    std::vector<Component*> buttonComponents = _pScene->getComponents(button.rootEntity);
-    std::vector<Component*> buttonImgComponents = _pScene->getComponents(button.imgEntity);
-    std::vector<Component*> buttonTxtComponents = _pScene->getComponents(button.txtEntity);
-    for (Component* pComponent : buttonComponents)
-        pComponent->setActive(arg);
-    for (Component* pComponent : buttonImgComponents)
-        pComponent->setActive(arg);
-    for (Component* pComponent : buttonTxtComponents)
-        pComponent->setActive(arg);
 }
 
 // Fucking disgusting but require some way to either open menu or do what the fuck we ever want

@@ -16,19 +16,12 @@ void MainMenu::OnClickLogin::onClick(pk::InputMouseButtonName button)
 {
     if (button == InputMouseButtonName::PK_INPUT_MOUSE_LEFT)
     {
-        UIElemState* pUsernameComponent = (UIElemState*)_sceneRef.getComponent(
-            _usernameInputField,
-            ComponentType::PK_UIELEM_STATE
-        );
-        UIElemState* pPasswordComponent = (UIElemState*)_sceneRef.getComponent(
-            _passwordInputField,
-            ComponentType::PK_UIELEM_STATE
-        );
-
-        _sceneRef.username = pUsernameComponent->content;
-        _sceneRef.password = pPasswordComponent->content;
-        const size_t usernameLen = pUsernameComponent->content.length();
-        const size_t passwdLen = pPasswordComponent->content.length();
+        const std::string username = _usernameInputField.getContent();
+        const std::string password = _passwordInputField.getContent();
+        _sceneRef.username = username;
+        _sceneRef.password = password;
+        const size_t usernameLen = username.length();
+        const size_t passwdLen = password.length();
 
         if (usernameLen <= 0 || usernameLen > USER_NAME_SIZE)
         {
@@ -56,12 +49,12 @@ void MainMenu::OnClickLogin::onClick(pk::InputMouseButtonName button)
             (int32_t)MESSAGE_TYPE__LoginRequest,
             {
                 {
-                    (GC_byte*)pUsernameComponent->content.data(),
+                    (GC_byte*)username.data(),
                     usernameLen,
                     USER_NAME_SIZE
                 },
                 {
-                    (GC_byte*)pPasswordComponent->content.data(),
+                    (GC_byte*)password.data(),
                     passwdLen,
                     USER_PASSWD_SIZE
                 }
@@ -84,28 +77,16 @@ void MainMenu::OnClickCancelRegister::onClick(pk::InputMouseButtonName button)
 
 void MainMenu::OnClickRegister::onClick(pk::InputMouseButtonName button)
 {
-    UIElemState* pUsernameComponent = (UIElemState*)_sceneRef.getComponent(
-        _usernameInputField,
-        ComponentType::PK_UIELEM_STATE
-    );
-    UIElemState* pPasswordComponent = (UIElemState*)_sceneRef.getComponent(
-        _passwordInputField,
-        ComponentType::PK_UIELEM_STATE
-    );
-    UIElemState* pRePasswordComponent = (UIElemState*)_sceneRef.getComponent(
-        _repasswordInputField,
-        ComponentType::PK_UIELEM_STATE
-    );
-    const std::string& usernameStr = pUsernameComponent->content;
-    const std::string& passwordStr = pPasswordComponent->content;
-    const std::string& repasswordStr = pRePasswordComponent->content;
+    const std::string username = _usernameInputField.getContent();
+    const std::string password = _passwordInputField.getContent();
+    const std::string repassword = _repasswordInputField.getContent();
 
     Client::get_instance()->send(
         MESSAGE_TYPE__UserRegisterRequest,
         {
-            { (GC_byte*)usernameStr.data(), usernameStr.size(), USER_NAME_SIZE },
-            { (GC_byte*)passwordStr.data(), passwordStr.size(), USER_PASSWD_SIZE },
-            { (GC_byte*)repasswordStr.data(), repasswordStr.size(), USER_PASSWD_SIZE }
+            { (GC_byte*)username.data(), username.size(), USER_NAME_SIZE },
+            { (GC_byte*)password.data(), password.size(), USER_PASSWD_SIZE },
+            { (GC_byte*)repassword.data(), repassword.size(), USER_PASSWD_SIZE }
         }
     );
 }
@@ -239,27 +220,29 @@ void MainMenu::init()
         Panel::LayoutFillType::VERTICAL
     );
 
-    entityID_t usernameInputField = _mainPanel.addDefaultInputField(
+    InputField loginUsernameInputField;
+    loginUsernameInputField = _mainPanel.addDefaultInputField(
         "Username",
         200,
         nullptr
-    ).rootEntity;
+    );
 
-    entityID_t passwordInputField =_mainPanel.addDefaultInputField(
+    InputField loginPasswordInputField;
+    loginPasswordInputField =_mainPanel.addDefaultInputField(
         "Password",
         200,
         nullptr,
         false, // clear on submit
         true // is password
-    ).rootEntity;
+    );
 
     const float buttonWidth = 297;
     _mainPanel.addDefaultButton(
         "Login",
         new OnClickLogin(
             *this,
-            usernameInputField,
-            passwordInputField
+            loginUsernameInputField,
+            loginPasswordInputField
         ),
         buttonWidth
     );
@@ -293,36 +276,39 @@ void MainMenu::init()
 
     _registerInfoEntity = _registerPanel.addText("Register new user", Panel::get_base_ui_color(3).toVec3());
 
-    entityID_t regUsernameInputField = _registerPanel.addDefaultInputField(
+    InputField registerUsernameInputField;
+    registerUsernameInputField = _registerPanel.addDefaultInputField(
         "Username",
         272,
         nullptr
-    ).rootEntity;
+    );
 
-    entityID_t regPasswordInputField = _registerPanel.addDefaultInputField(
+    InputField registerPasswordInputField;
+    registerPasswordInputField = _registerPanel.addDefaultInputField(
         "Password",
         272,
         nullptr,
         false, // clear on submit
         true // is password
-    ).rootEntity;
+    );
 
-    entityID_t repasswordInputField = _registerPanel.addDefaultInputField(
+    InputField registerRePasswordInputField;
+    registerRePasswordInputField = _registerPanel.addDefaultInputField(
         "Repeat password",
         200,
         nullptr,
         false, // clear on submit
         true // is password
-    ).rootEntity;
+    );
 
     const float registerButtonWidth = 100.0f;
     _registerPanel.addDefaultButton(
         "Register",
         new OnClickRegister(
             *this,
-            regUsernameInputField,
-            regPasswordInputField,
-            repasswordInputField
+            registerUsernameInputField,
+            registerPasswordInputField,
+            registerRePasswordInputField
         ),
         registerButtonWidth
     );

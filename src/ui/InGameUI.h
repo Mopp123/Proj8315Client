@@ -16,7 +16,7 @@ class InGame;
 class InGameUI
 {
 private:
-    class OnClickLogout : public pk::ui::OnClickEvent
+    class OnClickLogout : public pk::ui::GUIButton::OnClickEvent
     {
     public:
         BaseScene* pScene = nullptr;

@@ -92,14 +92,14 @@ void TravelMenu::close()
 
 void TravelMenu::setTargetCoords(int32_t targetX, int32_t targetZ)
 {
-    setInputFieldContents(std::to_string(targetX), std::to_string(targetZ));
+    _inputFieldX.setContent(std::to_string(targetX));
+    _inputFieldZ.setContent(std::to_string(targetZ));
 }
 
 void TravelMenu::travel()
 {
-    std::string xStr = "";
-    std::string zStr = "";
-    getInputFieldContents(xStr, zStr);
+    std::string xStr = _inputFieldX.getContent();
+    std::string zStr = _inputFieldZ.getContent();
     int32_t x = 0;
     int32_t z = 0;
     try
@@ -122,34 +122,4 @@ void TravelMenu::travel()
     const float tileVisualScale = _pWorld->getTileVisualScale();
     _pCamController->setPivotPoint({ (float)x * tileVisualScale, 0, (float)z * tileVisualScale });
     close();
-}
-
-void TravelMenu::setInputFieldContents(const std::string& targetX, const std::string& targetZ)
-{
-    set_input_field_content(
-        targetX,
-        _inputFieldX.rootEntity,
-        _inputFieldX.contentEntity
-    );
-    set_input_field_content(
-        targetZ,
-        _inputFieldZ.rootEntity,
-        _inputFieldZ.contentEntity
-    );
-}
-
-void TravelMenu::getInputFieldContents(std::string& outTargetX, std::string& outTargetZ) const
-{
-    const UIElemState* pInputFieldStateX = (const UIElemState*)_pScene->getComponent(
-        _inputFieldX.rootEntity,
-        ComponentType::PK_UIELEM_STATE
-    );
-    const UIElemState* pInputFieldStateZ = (const UIElemState*)_pScene->getComponent(
-        _inputFieldZ.rootEntity,
-        ComponentType::PK_UIELEM_STATE
-    );
-    if (pInputFieldStateX)
-        outTargetX = pInputFieldStateX->content;
-    if (pInputFieldStateZ)
-        outTargetZ = pInputFieldStateZ->content;
 }

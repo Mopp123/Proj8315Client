@@ -236,8 +236,9 @@ void TerrainToolMenu::OnClickApply::onClick(pk::InputMouseButtonName button)
         return;
     }
 
-    const std::string& radiusTxt = pMenu->getSelectedRadius();
-    const std::string& elevationTxt = pMenu->getSelectedElevation();
+
+    const std::string& radiusTxt = pMenu->getSelectedRadiusInputField().getContent();
+    const std::string& elevationTxt = pMenu->getSelectedElevationInputField().getContent();
     GC_ubyte radius = 1;
     GC_ubyte elevation = 0;
     // TODO: Maybe some error handling?
@@ -309,14 +310,14 @@ void TerrainToolMenu::init(pk::Scene* pScene, pk::Font* pFont)
         numberInputFieldWidth,
         nullptr
     );
-    setRadiusInputFieldContent("1");
+    _selectedRadiusInputField.setContent("1");
 
     _selectedElevationInputField = addDefaultInputField(
         "Elevation",
         numberInputFieldWidth,
         nullptr
     );
-    setElevationInputFieldContent("15");
+    _selectedElevationInputField.setContent("15");
 
     addDefaultButton(
         "Temperature",
@@ -360,7 +361,7 @@ void TerrainToolMenu::setSelectedTile(uint64_t tileData, int32_t x, int32_t y)
     _selectedTileData = tileData;
     _selectedTileX = x;
     _selectedTileY = y;
-    setElevationInputFieldContent(std::to_string(get_tile_terrelevation(_selectedTileData)));
+    _selectedElevationInputField.setContent(std::to_string(get_tile_terrelevation(_selectedTileData)));
 }
 
 void TerrainToolMenu::setSelectedTemperature(gamecommon::TileStateTemperature temperature)
@@ -381,40 +382,4 @@ void TerrainToolMenu::setSelectedType(gamecommon::TileStateTerrType type)
         ComponentType::PK_RENDERABLE_TEXT
     );
     pRenderable->accessStr() = "    Selected: " + terrain_type_value_to_string(_selectedType, _selectedTemperature);
-}
-
-const std::string& TerrainToolMenu::getSelectedRadius() const
-{
-    const UIElemState* pState = (const UIElemState*)_pScene->getComponent(
-        _selectedRadiusInputField.rootEntity,
-        ComponentType::PK_UIELEM_STATE
-    );
-    return pState->content;
-}
-
-const std::string& TerrainToolMenu::getSelectedElevation() const
-{
-    const UIElemState* pState = (const UIElemState*)_pScene->getComponent(
-        _selectedElevationInputField.rootEntity,
-        ComponentType::PK_UIELEM_STATE
-    );
-    return pState->content;
-}
-
-void TerrainToolMenu::setRadiusInputFieldContent(const std::string& str)
-{
-    set_input_field_content(
-        str,
-        _selectedRadiusInputField.rootEntity,
-        _selectedRadiusInputField.contentEntity
-    );
-}
-
-void TerrainToolMenu::setElevationInputFieldContent(const std::string& str)
-{
-    set_input_field_content(
-        str,
-        _selectedElevationInputField.rootEntity,
-        _selectedElevationInputField.contentEntity
-    );
 }

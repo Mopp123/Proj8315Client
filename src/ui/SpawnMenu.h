@@ -8,7 +8,7 @@
 class SpawnMenu : public pk::ui::TopBarPanel
 {
 private:
-    class MenuItemOnClick : public pk::ui::OnClickEvent
+    class MenuItemOnClick : public pk::ui::GUIButton::OnClickEvent
     {
     private:
         SpawnMenu* _pMenu = nullptr;
@@ -22,7 +22,7 @@ private:
     };
 
     size_t _maxSpawnButtons = 0;
-    std::vector<pk::ui::UIFactoryButton> _spawnSelectionButtonEntities;
+    std::vector<pk::ui::GUIButton> _spawnSelectionButtonEntities;
 
     uint64_t _selectedTileData = 0;
     int32_t _selectedTileX = 0;

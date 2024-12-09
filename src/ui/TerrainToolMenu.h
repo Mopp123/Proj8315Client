@@ -27,7 +27,7 @@ private:
         virtual void close();
     };
 
-    class SetValueEvent : public pk::ui::OnClickEvent
+    class SetValueEvent : public pk::ui::GUIButton::OnClickEvent
     {
     public:
         enum EventType
@@ -55,7 +55,7 @@ private:
         virtual void onClick(pk::InputMouseButtonName button);
     };
 
-    class OpenSelectionEvent : public pk::ui::OnClickEvent
+    class OpenSelectionEvent : public pk::ui::GUIButton::OnClickEvent
     {
     public:
         enum class SelectionType
@@ -74,7 +74,7 @@ private:
         virtual void onClick(pk::InputMouseButtonName button);
     };
 
-    class OnClickApply : public pk::ui::OnClickEvent
+    class OnClickApply : public pk::ui::GUIButton::OnClickEvent
     {
     public:
         TerrainToolMenu* pMenu;
@@ -91,8 +91,8 @@ private:
     TypeSelection _typeSelection;
 
 
-    pk::ui::UIFactoryInputField _selectedRadiusInputField;
-    pk::ui::UIFactoryInputField _selectedElevationInputField;
+    pk::ui::InputField _selectedRadiusInputField;
+    pk::ui::InputField _selectedElevationInputField;
     // These mean what properties we have currently selected to apply
     // NOT what currently is in the selected tile!
     gamecommon::TileStateTemperature _selectedTemperature;
@@ -115,13 +115,9 @@ public:
     void setSelectedTemperature(gamecommon::TileStateTemperature temperature);
     void setSelectedType(gamecommon::TileStateTerrType type);
 
-    const std::string& getSelectedRadius() const;
-    const std::string& getSelectedElevation() const;
+    inline pk::ui::InputField& getSelectedRadiusInputField() { return _selectedRadiusInputField; }
+    inline pk::ui::InputField& getSelectedElevationInputField() { return _selectedElevationInputField; }
 
     inline int32_t getSelectedTileX() const { return _selectedTileX; }
     inline int32_t getSelectedTileY() const { return _selectedTileY; }
-
-private:
-    void setRadiusInputFieldContent(const std::string& str);
-    void setElevationInputFieldContent(const std::string& str);
 };

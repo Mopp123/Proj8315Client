@@ -126,16 +126,8 @@ void SpawnMenu::open()
 void SpawnMenu::close()
 {
     setComponentsActive(false);
-    for (UIFactoryButton& b : _spawnSelectionButtonEntities)
-    {
-        std::vector<Component*> components = _pScene->getComponents(b.rootEntity);
-        std::vector<Component*> imgComponents = _pScene->getComponents(b.imgEntity);
-        std::vector<Component*> txtComponents = _pScene->getComponents(b.txtEntity);
-        components.insert(components.end(), imgComponents.begin(), imgComponents.end());
-        components.insert(components.end(), txtComponents.begin(), txtComponents.end());
-        for (Component* pComponent : components)
-            pComponent->setActive(false);
-    }
+    for (GUIButton& b : _spawnSelectionButtonEntities)
+        b.setActive(false);
 }
 
 void SpawnMenu::setSelectedTile(uint64_t tileData, int32_t x, int32_t y)
@@ -167,20 +159,8 @@ void SpawnMenu::displaySpawnButtons(const std::vector<gamecommon::ObjectInfo>& o
     {
         const ObjectInfo& objInfo = objects[i];
         std::string objName(objInfo.name);
-        UIFactoryButton& button = _spawnSelectionButtonEntities[i - 1];
-
-        std::vector<Component*> components = _pScene->getComponents(button.rootEntity);
-        std::vector<Component*> imgComponents = _pScene->getComponents(button.imgEntity);
-        std::vector<Component*> txtComponents = _pScene->getComponents(button.txtEntity);
-        components.insert(components.end(), imgComponents.begin(), imgComponents.end());
-        components.insert(components.end(), txtComponents.begin(), txtComponents.end());
-        for (Component* pComponent : components)
-            pComponent->setActive(true);
-
-        TextRenderable* pTxtRenderable = (TextRenderable*)_pScene->getComponent(
-            button.txtEntity,
-            ComponentType::PK_RENDERABLE_TEXT
-        );
-        pTxtRenderable->accessStr() = objName;
+        GUIButton& button = _spawnSelectionButtonEntities[i - 1];
+        button.setActive(true);
+        button.getText().setInternalStr(objName);
     }
 }

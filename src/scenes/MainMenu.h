@@ -3,23 +3,24 @@
 #include "pesukarhu/ppk.h"
 #include "BaseScene.h"
 #include "net/Client.h"
+#include "pesukarhu/ui/InputField.h"
 
 
 class MainMenu : public BaseScene
 {
 private:
-    class OnClickLogin : public pk::ui::OnClickEvent
+    class OnClickLogin : public pk::ui::GUIButton::OnClickEvent
     {
     private:
         MainMenu& _sceneRef;
-        entityID_t _usernameInputField = 0;
-        entityID_t _passwordInputField = 0;
+        pk::ui::InputField _usernameInputField;
+        pk::ui::InputField _passwordInputField;
 
     public:
         OnClickLogin(
             MainMenu& sceneRef,
-            entityID_t usernameInputField,
-            entityID_t passwordInputField
+            pk::ui::InputField usernameInputField,
+            pk::ui::InputField passwordInputField
         ) :
             _sceneRef(sceneRef),
             _usernameInputField(usernameInputField),
@@ -28,7 +29,7 @@ private:
         virtual void onClick(pk::InputMouseButtonName button);
     };
 
-    class OnClickOpenRegisterMenu : public pk::ui::OnClickEvent
+    class OnClickOpenRegisterMenu : public pk::ui::GUIButton::OnClickEvent
     {
     private:
         MainMenu& _menuRef;
@@ -39,7 +40,7 @@ private:
         virtual void onClick(pk::InputMouseButtonName button);
     };
 
-    class OnClickCancelRegister : public pk::ui::OnClickEvent
+    class OnClickCancelRegister : public pk::ui::GUIButton::OnClickEvent
     {
     private:
         MainMenu& _menuRef;
@@ -50,19 +51,19 @@ private:
         virtual void onClick(pk::InputMouseButtonName button);
     };
 
-    class OnClickRegister : public pk::ui::OnClickEvent
+    class OnClickRegister : public pk::ui::GUIButton::OnClickEvent
     {
     private:
         MainMenu& _sceneRef;
-        entityID_t _usernameInputField = 0;
-        entityID_t _passwordInputField = 0;
-        entityID_t _repasswordInputField = 0;
+        pk::ui::InputField _usernameInputField;
+        pk::ui::InputField _passwordInputField;
+        pk::ui::InputField _repasswordInputField;
     public:
         OnClickRegister(
             MainMenu& sceneRef,
-            entityID_t usernameInputField,
-            entityID_t passwordInputField,
-            entityID_t repasswordInputField
+            pk::ui::InputField usernameInputField,
+            pk::ui::InputField passwordInputField,
+            pk::ui::InputField repasswordInputField
         ) :
             _sceneRef(sceneRef),
             _usernameInputField(usernameInputField),

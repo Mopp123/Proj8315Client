@@ -30,7 +30,7 @@ private:
 		virtual void func(pk::InputMouseButtonName button, pk::InputAction action, int mods);
     };
 
-    class MenuItemOnClick : public pk::ui::OnClickEvent
+    class MenuItemOnClick : public pk::ui::GUIButton::OnClickEvent
     {
     private:
         TileOptionsMenu* _pMenu = nullptr;
@@ -46,7 +46,7 @@ private:
     const size_t _maxMenuItems = 10;
     float _buttonTxtDisplacementX = 0.0f;
 
-    std::vector<pk::ui::UIFactoryButton> _menuButtons;
+    std::vector<pk::ui::GUIButton> _menuButtons;
     std::vector<DropDownMenuItem> _activeItems;
 
     // Need to have this here atm so we dont overlap with it...
@@ -73,7 +73,6 @@ public:
 
 private:
     void displayButton(float x, float y, int index, const std::string& txt);
-    void setButtonActive(pk::ui::UIFactoryButton& button, bool arg);
 
     void updateActiveItemsList(uint64_t tile);
 };

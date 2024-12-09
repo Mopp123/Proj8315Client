@@ -43,13 +43,15 @@ void BaseScene::initBase()
         lightDirection
     );
 
-    _infoTextEntity = create_text(
+    GUIText infoText;
+    infoText.create(
         "", *_pDefaultFont,
         {
             HorizontalConstraintType::PIXEL_LEFT, 0,
             VerticalConstraintType::PIXEL_TOP, 0
         }
     );
+    _infoTextEntity = infoText.getEntity();
 }
 
 void BaseScene::setInfoText(
