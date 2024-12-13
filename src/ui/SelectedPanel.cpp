@@ -20,7 +20,7 @@ void SelectedPanel::init(pk::Scene* pScene, pk::Font* pFont)
         pFont,
         {
             HorizontalConstraintType::PIXEL_LEFT, 0.0f,
-            VerticalConstraintType::PIXEL_BOTTOM, 0.0f,
+            VerticalConstraintType::PIXEL_BOTTOM, selectedPanelScale.y,
         },
         selectedPanelScale,
         selectedPanelSlotScale,
@@ -32,7 +32,7 @@ void SelectedPanel::init(pk::Scene* pScene, pk::Font* pFont)
     addImage(
         {
             HorizontalConstraintType::PIXEL_LEFT, 0.0f,
-            VerticalConstraintType::PIXEL_BOTTOM, selectedPanelScale.y - clh,
+            VerticalConstraintType::PIXEL_BOTTOM, selectedPanelScale.y,
         },
         selectedPanelScale.x, clh,
         nullptr, // texture
@@ -58,10 +58,10 @@ void SelectedPanel::init(pk::Scene* pScene, pk::Font* pFont)
     const float portraitHeight = 100;
     const float portraitCroppingScale = 1.0f / (float)_portraitTextureRows;
 
-    _selectedPortraitEntity = addImage(
+    _pSelectedPortraitImg = addImage(
         {
             HorizontalConstraintType::PIXEL_LEFT, 32.0f,
-            VerticalConstraintType::PIXEL_BOTTOM, 42.0f,
+            VerticalConstraintType::PIXEL_BOTTOM, selectedPanelScale.y - 42.0f,
         },
         portraitWidth, portraitHeight,
         pPortraiTexture, // texture
@@ -69,11 +69,11 @@ void SelectedPanel::init(pk::Scene* pScene, pk::Font* pFont)
         { 0, 15, portraitCroppingScale, portraitCroppingScale } // texture cropping
     );
 
-    _objectNameEntity = addText(
+    _pObjectName = addText(
         "",
         {
             HorizontalConstraintType::PIXEL_LEFT, 32.0f,
-            VerticalConstraintType::PIXEL_BOTTOM, 42.0f + portraitHeight
+            VerticalConstraintType::PIXEL_BOTTOM, selectedPanelScale.y
         }
     );
     const float textHeight = 20.0f; // can be found from BaseScene TODO: make that variable!
@@ -84,7 +84,7 @@ void SelectedPanel::init(pk::Scene* pScene, pk::Font* pFont)
     addImage(
         {
             HorizontalConstraintType::PIXEL_LEFT, 32.0f + portraitWidth + 8.0f,
-            VerticalConstraintType::PIXEL_BOTTOM, 42.0f + portraitHeight - propertiesTxtPaddingY - textHeight - 2,
+            VerticalConstraintType::PIXEL_BOTTOM, selectedPanelScale.y - clh - propertiesTxtPaddingY - textHeight,
         },
         infoColumnWidth * 3, 1,
         nullptr, // texture
@@ -92,7 +92,7 @@ void SelectedPanel::init(pk::Scene* pScene, pk::Font* pFont)
         { 0, 0, 1, 1 } // texture cropping
     );
 
-    vec2 infoTxtPos(32.0f + portraitWidth + 8.0f, 42.0f + portraitHeight);
+    vec2 infoTxtPos(32.0f + portraitWidth + 8.0f, selectedPanelScale.y);
 
     // TODO: Object stat system
     _statusInfoEntities = addInfoColumn(
@@ -133,7 +133,7 @@ void SelectedPanel::init(pk::Scene* pScene, pk::Font* pFont)
     addImage(
         {
             HorizontalConstraintType::PIXEL_LEFT, 32.0f + portraitWidth + 8.0f + infoColumnWidth * 2 + 2.0f,
-            VerticalConstraintType::PIXEL_BOTTOM, 42.0f + portraitHeight - propertiesTxtPaddingY - 105,
+            VerticalConstraintType::PIXEL_BOTTOM, selectedPanelScale.y - clh - propertiesTxtPaddingY
         },
         1, 105,
         nullptr, // texture
@@ -168,18 +168,12 @@ void SelectedPanel::setSelectedInfo(uint64_t tile, int tileX, int tileY)
     std::string objNameStr(pObjectInfo->name, OBJECT_DATA_STRLEN_NAME);
 
     // Set obj name txt
-    TextRenderable* pObjNameTxt = (TextRenderable*)_pScene->getComponent(
-        _objectNameEntity,
-        ComponentType::PK_RENDERABLE_TEXT
-    );
-    pObjNameTxt->accessStr() = objNameStr;
+    TextRenderable* pObjNameRenderable = _pObjectName->getRenderable();
+    pObjNameRenderable->accessStr() = objNameStr;
 
     // Set portrait
     // NOTE: Atm assuming object ordering matches the "portraits texture atlas"
-    GUIRenderable* pPortraitImg = (GUIRenderable*)_pScene->getComponent(
-        _selectedPortraitEntity,
-        ComponentType::PK_RENDERABLE_GUI
-    );
+    GUIRenderable* pPortraitRenderable = _pSelectedPortraitImg->getRenderable();
     // Break down the objectID/index into x and y components in the "portraits img grid"
     int portraitX = (int)object % _portraitTextureRows;
     // *also make first row be the top row...
@@ -194,42 +188,30 @@ void SelectedPanel::setSelectedInfo(uint64_t tile, int tileX, int tileY)
             Debug::MessageType::PK_ERROR
         );
     }
-    pPortraitImg->textureCropping.x = portraitX;
-    pPortraitImg->textureCropping.y = portraitY;
+    pPortraitRenderable->textureCropping.x = portraitX;
+    pPortraitRenderable->textureCropping.y = portraitY;
 
 
     // Tile info
-    TextRenderable* pTileInfoTerrainTypeTxt = (TextRenderable*)_pScene->getComponent(
-        _tileInfoEntities[TileInfoSlotIndex::type],
-        ComponentType::PK_RENDERABLE_TEXT
-    );
+    TextRenderable* pTileInfoTerrainTypeRenderable = _tileInfoEntities[TileInfoSlotIndex::type]->getRenderable();
     const std::string terrainTypeStr = terrain_type_value_to_string(
         (TileStateTerrType)terrainType,
         (TileStateTemperature)tileTemperature
     );
-    pTileInfoTerrainTypeTxt->accessStr() = "Type: " + terrainTypeStr;
+    pTileInfoTerrainTypeRenderable->accessStr() = "Type: " + terrainTypeStr;
 
-    TextRenderable* pTileInfoElevationTxt = (TextRenderable*)_pScene->getComponent(
-        _tileInfoEntities[TileInfoSlotIndex::elevation],
-        ComponentType::PK_RENDERABLE_TEXT
-    );
-    pTileInfoElevationTxt->accessStr() = "Elevation: " + std::to_string(tileElevation);
+    TextRenderable* pTileInfoElevationRenderable = _tileInfoEntities[TileInfoSlotIndex::elevation]->getRenderable();
+    pTileInfoElevationRenderable->accessStr() = "Elevation: " + std::to_string(tileElevation);
 
-    TextRenderable* pTileInfoTemperatureTxt = (TextRenderable*)_pScene->getComponent(
-        _tileInfoEntities[TileInfoSlotIndex::temperature],
-        ComponentType::PK_RENDERABLE_TEXT
-    );
-    pTileInfoTemperatureTxt->accessStr() = "Temperature: " + temperature_value_to_string((TileStateTemperature)tileTemperature);
+    TextRenderable* pTileInfoTemperatureRenderable = _tileInfoEntities[TileInfoSlotIndex::temperature]->getRenderable();
+    pTileInfoTemperatureRenderable->accessStr() = "Temperature: " + temperature_value_to_string((TileStateTemperature)tileTemperature);
 
-    TextRenderable* pTileInfoPosTxt = (TextRenderable*)_pScene->getComponent(
-        _tileInfoEntities[TileInfoSlotIndex::position],
-        ComponentType::PK_RENDERABLE_TEXT
-    );
-    pTileInfoPosTxt->accessStr() = "Location: " + std::to_string(tileX) + ", " + std::to_string(tileY);
+    TextRenderable* pTileInfoPosRenderable = _tileInfoEntities[TileInfoSlotIndex::position]->getRenderable();
+    pTileInfoPosRenderable->accessStr() = "Location: " + std::to_string(tileX) + ", " + std::to_string(tileY);
 }
 
 // Returns created info txt entities (doesn't include the title)
-std::vector<entityID_t> SelectedPanel::addInfoColumn(
+std::vector<pk::ui::GUIText*> SelectedPanel::addInfoColumn(
     int columnIndex,
     float columnWidth,
     const pk::vec2& pos,
@@ -239,7 +221,7 @@ std::vector<entityID_t> SelectedPanel::addInfoColumn(
     const std::vector<std::string>& infos
 )
 {
-    std::vector<entityID_t> infoTxtEntities(infos.size());
+    std::vector<GUIText*> infoTxts(infos.size());
     addText(
         title,
         {
@@ -250,7 +232,7 @@ std::vector<entityID_t> SelectedPanel::addInfoColumn(
 
     for (int i = 0; i < infos.size(); ++i)
     {
-        infoTxtEntities[i] = addText(
+        infoTxts[i] = addText(
             infos[i],
             {
                 HorizontalConstraintType::PIXEL_LEFT, pos.x + 8.0f + columnWidth * columnIndex,
@@ -258,5 +240,5 @@ std::vector<entityID_t> SelectedPanel::addInfoColumn(
             }
         );
     }
-    return infoTxtEntities;
+    return infoTxts;
 }

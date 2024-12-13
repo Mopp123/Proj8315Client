@@ -46,7 +46,7 @@ private:
     const size_t _maxMenuItems = 10;
     float _buttonTxtDisplacementX = 0.0f;
 
-    std::vector<pk::ui::GUIButton> _menuButtons;
+    std::vector<pk::ui::GUIButton*> _menuButtons;
     std::vector<DropDownMenuItem> _activeItems;
 
     // Need to have this here atm so we dont overlap with it...

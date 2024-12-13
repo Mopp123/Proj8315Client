@@ -22,7 +22,7 @@ private:
     };
 
     size_t _maxSpawnButtons = 0;
-    std::vector<pk::ui::GUIButton> _spawnSelectionButtonEntities;
+    std::vector<pk::ui::GUIButton*> _spawnSelectionButtonEntities;
 
     uint64_t _selectedTileData = 0;
     int32_t _selectedTileX = 0;

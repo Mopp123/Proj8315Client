@@ -126,8 +126,8 @@ void SpawnMenu::open()
 void SpawnMenu::close()
 {
     setComponentsActive(false);
-    for (GUIButton& b : _spawnSelectionButtonEntities)
-        b.setActive(false);
+    for (GUIButton* b : _spawnSelectionButtonEntities)
+        b->setActive(false);
 }
 
 void SpawnMenu::setSelectedTile(uint64_t tileData, int32_t x, int32_t y)
@@ -159,8 +159,8 @@ void SpawnMenu::displaySpawnButtons(const std::vector<gamecommon::ObjectInfo>& o
     {
         const ObjectInfo& objInfo = objects[i];
         std::string objName(objInfo.name);
-        GUIButton& button = _spawnSelectionButtonEntities[i - 1];
-        button.setActive(true);
-        button.getText().setInternalStr(objName);
+        GUIButton* pButton = _spawnSelectionButtonEntities[i - 1];
+        pButton->setActive(true);
+        pButton->getText()->setInternalStr(objName);
     }
 }

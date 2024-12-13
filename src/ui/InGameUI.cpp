@@ -61,7 +61,7 @@ void InGameUI::create(
         _pScene,
         pFont,
         {
-            HorizontalConstraintType::PIXEL_RIGHT, 0.0f,
+            HorizontalConstraintType::PIXEL_RIGHT, -settingsPanelScale.x,
             VerticalConstraintType::PIXEL_TOP, 0.0f,
         },
         settingsPanelScale,

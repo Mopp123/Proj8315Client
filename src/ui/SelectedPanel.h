@@ -19,13 +19,13 @@ private:
 
     const int _portraitTextureRows = 16;
 
-    entityID_t _objectNameEntity = 0;
+    pk::ui::GUIText* _pObjectName = 0;
 
-    std::vector<entityID_t> _statusInfoEntities;
-    std::vector<entityID_t> _attributeInfoEntities;
-    std::vector<entityID_t> _tileInfoEntities;
+    std::vector<pk::ui::GUIText*> _statusInfoEntities;
+    std::vector<pk::ui::GUIText*> _attributeInfoEntities;
+    std::vector<pk::ui::GUIText*> _tileInfoEntities;
 
-    entityID_t _selectedPortraitEntity = 0;
+    pk::ui::GUIImage* _pSelectedPortraitImg = nullptr;
 
 public:
     SelectedPanel() {};
@@ -39,7 +39,7 @@ public:
 
 private:
     // Returns created info txt entities (doesn't include the title)
-    std::vector<entityID_t> addInfoColumn(
+    std::vector<pk::ui::GUIText*> addInfoColumn(
         int columnIndex,
         float columnWidth,
         const pk::vec2& pos,

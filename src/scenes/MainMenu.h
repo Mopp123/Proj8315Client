@@ -3,6 +3,7 @@
 #include "pesukarhu/ppk.h"
 #include "BaseScene.h"
 #include "net/Client.h"
+#include "pesukarhu/ui/GUIText.h"
 #include "pesukarhu/ui/InputField.h"
 
 
@@ -13,18 +14,18 @@ private:
     {
     private:
         MainMenu& _sceneRef;
-        pk::ui::InputField _usernameInputField;
-        pk::ui::InputField _passwordInputField;
+        pk::ui::InputField* _pUsernameInputField;
+        pk::ui::InputField* _pPasswordInputField;
 
     public:
         OnClickLogin(
             MainMenu& sceneRef,
-            pk::ui::InputField usernameInputField,
-            pk::ui::InputField passwordInputField
+            pk::ui::InputField* pUsernameInputField,
+            pk::ui::InputField* pPasswordInputField
         ) :
             _sceneRef(sceneRef),
-            _usernameInputField(usernameInputField),
-            _passwordInputField(passwordInputField)
+            _pUsernameInputField(pUsernameInputField),
+            _pPasswordInputField(pPasswordInputField)
         {}
         virtual void onClick(pk::InputMouseButtonName button);
     };
@@ -55,20 +56,20 @@ private:
     {
     private:
         MainMenu& _sceneRef;
-        pk::ui::InputField _usernameInputField;
-        pk::ui::InputField _passwordInputField;
-        pk::ui::InputField _repasswordInputField;
+        pk::ui::InputField* _pUsernameInputField;
+        pk::ui::InputField* _pPasswordInputField;
+        pk::ui::InputField* _pRepasswordInputField;
     public:
         OnClickRegister(
             MainMenu& sceneRef,
-            pk::ui::InputField usernameInputField,
-            pk::ui::InputField passwordInputField,
-            pk::ui::InputField repasswordInputField
+            pk::ui::InputField* pUsernameInputField,
+            pk::ui::InputField* pPasswordInputField,
+            pk::ui::InputField* pRepasswordInputField
         ) :
             _sceneRef(sceneRef),
-            _usernameInputField(usernameInputField),
-            _passwordInputField(passwordInputField),
-            _repasswordInputField(repasswordInputField)
+            _pUsernameInputField(pUsernameInputField),
+            _pPasswordInputField(pPasswordInputField),
+            _pRepasswordInputField(pRepasswordInputField)
         {}
         virtual void onClick(pk::InputMouseButtonName button);
     };
@@ -133,8 +134,8 @@ private:
     pk::ui::Panel _registerPanel;
     pk::ui::Panel _popupInfoPanel;
 
-    entityID_t _registerInfoEntity = NULL_ENTITY_ID;
-    entityID_t _serverInfoTxtEntity = NULL_ENTITY_ID;
+    pk::ui::GUIText* _pRegisterInfoEntity = nullptr;
+    pk::ui::GUIText* _pServerInfoTxtEntity = nullptr;
 
     const int _mainMenuState = 0;
     const int _registerMenuState = 1;

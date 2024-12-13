@@ -182,7 +182,7 @@ void TileOptionsMenu::open(float screenX, float screenY, uint64_t tileData, int 
         ComponentType::PK_UI_CONSTRAINT
     );
     pConstraintData->horizontalValue = useX;
-    pConstraintData->verticalValue = useY - menuHeight;
+    pConstraintData->verticalValue = useY;
 
     for (int i = 0; i < _activeItems.size(); ++i)
         displayButton(useX, useY, i, _activeItems[i].txt);
@@ -196,8 +196,8 @@ void TileOptionsMenu::close()
     for (Component* pComponent : components)
         pComponent->setActive(false);
 
-    for (GUIButton& b : _menuButtons)
-        b.setActive(false);
+    for (GUIButton* b : _menuButtons)
+        b->setActive(false);
 }
 
 void TileOptionsMenu::displayButton(float x, float y, int index, const std::string& txt)
@@ -213,10 +213,10 @@ void TileOptionsMenu::displayButton(float x, float y, int index, const std::stri
         return;
     }
 
-    GUIButton& menuButton = _menuButtons[index];
-    menuButton.setActive(true);
-    entityID_t buttonImg = menuButton.getImage().getEntity();
-    entityID_t buttonTxt = menuButton.getText().getEntity();
+    GUIButton* pMenuButton = _menuButtons[index];
+    pMenuButton->setActive(true);
+    entityID_t buttonImg = pMenuButton->getImage()->getEntity();
+    entityID_t buttonTxt = pMenuButton->getText()->getEntity();
 
     ConstraintData* pImgConstraint = (ConstraintData*)_pScene->getComponent(
         buttonImg,
@@ -227,7 +227,7 @@ void TileOptionsMenu::displayButton(float x, float y, int index, const std::stri
         ComponentType::PK_UI_CONSTRAINT
     );
 
-    float yPos = y - _slotScale.y - _slotPadding * 0.5f - (index * (_slotScale.y + _slotPadding));
+    float yPos = y - _slotPadding * 0.5f - (index * (_slotScale.y + _slotPadding));
     pImgConstraint->horizontalValue = x + _slotPadding * 0.5f;
     pImgConstraint->verticalValue = yPos;
 

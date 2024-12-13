@@ -12,6 +12,7 @@ BaseScene::BaseScene()
 BaseScene::~BaseScene()
 {
     Client::get_instance()->clearOnMessageEvents();
+    delete _pInfoText;
 }
 
 void BaseScene::initBase()
@@ -43,15 +44,13 @@ void BaseScene::initBase()
         lightDirection
     );
 
-    GUIText infoText;
-    infoText.create(
+    _pInfoText = new GUIText(
         "", *_pDefaultFont,
         {
             HorizontalConstraintType::PIXEL_LEFT, 0,
             VerticalConstraintType::PIXEL_TOP, 0
         }
     );
-    _infoTextEntity = infoText.getEntity();
 }
 
 void BaseScene::setInfoText(
@@ -63,16 +62,14 @@ void BaseScene::setInfoText(
     pk::VerticalConstraintType verticalConstraint
 )
 {
-    ConstraintData* pConstraintData =(ConstraintData*)getComponent(_infoTextEntity, ComponentType::PK_UI_CONSTRAINT);
+    ConstraintData* pConstraintData = _pInfoText->getConstraint();
     pConstraintData->horizontalType = horizontalConstraint;
     pConstraintData->horizontalValue = horizontalVal;
     pConstraintData->verticalType = verticalConstraint;
     pConstraintData->verticalValue = verticalVal;
 
-    TextRenderable* pRenderable =(TextRenderable*)getComponent(
-        _infoTextEntity,
-        ComponentType::PK_RENDERABLE_TEXT
-    );
+    TextRenderable* pRenderable = _pInfoText->getRenderable();
+
     pRenderable->accessStr() = txt;
     pRenderable->color = color;
 }

@@ -18,8 +18,8 @@ private:
         void onClick(pk::InputMouseButtonName button);
     };
 
-    pk::ui::InputField _inputFieldX;
-    pk::ui::InputField _inputFieldZ;
+    pk::ui::InputField* _pInputFieldX;
+    pk::ui::InputField* _pInputFieldZ;
 
     world::World* _pWorld = nullptr;
     CameraController* _pCamController = nullptr;

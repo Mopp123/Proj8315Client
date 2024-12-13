@@ -40,7 +40,7 @@ void TravelMenu::init(
 
     const float inputFieldWidth = 60.0f;
     const float inputFieldY = scale.y * 0.5f - _slotScale.y - _slotPadding;
-    _inputFieldX = addInputField(
+    _pInputFieldX = addInputField(
         "x",
         {
             HorizontalConstraintType::PIXEL_CENTER_HORIZONTAL,
@@ -52,7 +52,7 @@ void TravelMenu::init(
         nullptr
     );
 
-    _inputFieldZ = addInputField(
+    _pInputFieldZ = addInputField(
         "z",
         {
             HorizontalConstraintType::PIXEL_CENTER_HORIZONTAL,
@@ -92,14 +92,14 @@ void TravelMenu::close()
 
 void TravelMenu::setTargetCoords(int32_t targetX, int32_t targetZ)
 {
-    _inputFieldX.setContent(std::to_string(targetX));
-    _inputFieldZ.setContent(std::to_string(targetZ));
+    _pInputFieldX->setContent(std::to_string(targetX));
+    _pInputFieldZ->setContent(std::to_string(targetZ));
 }
 
 void TravelMenu::travel()
 {
-    std::string xStr = _inputFieldX.getContent();
-    std::string zStr = _inputFieldZ.getContent();
+    std::string xStr = _pInputFieldX->getContent();
+    std::string zStr = _pInputFieldZ->getContent();
     int32_t x = 0;
     int32_t z = 0;
     try

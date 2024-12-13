@@ -16,8 +16,8 @@ void MainMenu::OnClickLogin::onClick(pk::InputMouseButtonName button)
 {
     if (button == InputMouseButtonName::PK_INPUT_MOUSE_LEFT)
     {
-        const std::string username = _usernameInputField.getContent();
-        const std::string password = _passwordInputField.getContent();
+        const std::string username = _pUsernameInputField->getContent();
+        const std::string password = _pPasswordInputField->getContent();
         _sceneRef.username = username;
         _sceneRef.password = password;
         const size_t usernameLen = username.length();
@@ -77,9 +77,9 @@ void MainMenu::OnClickCancelRegister::onClick(pk::InputMouseButtonName button)
 
 void MainMenu::OnClickRegister::onClick(pk::InputMouseButtonName button)
 {
-    const std::string username = _usernameInputField.getContent();
-    const std::string password = _passwordInputField.getContent();
-    const std::string repassword = _repasswordInputField.getContent();
+    const std::string username = _pUsernameInputField->getContent();
+    const std::string password = _pPasswordInputField->getContent();
+    const std::string repassword = _pRepasswordInputField->getContent();
 
     Client::get_instance()->send(
         MESSAGE_TYPE__UserRegisterRequest,
@@ -220,15 +220,13 @@ void MainMenu::init()
         Panel::LayoutFillType::VERTICAL
     );
 
-    InputField loginUsernameInputField;
-    loginUsernameInputField = _mainPanel.addDefaultInputField(
+    InputField* pLoginUsernameInputField = _mainPanel.addDefaultInputField(
         "Username",
         200,
         nullptr
     );
 
-    InputField loginPasswordInputField;
-    loginPasswordInputField =_mainPanel.addDefaultInputField(
+    InputField* pLoginPasswordInputField =_mainPanel.addDefaultInputField(
         "Password",
         200,
         nullptr,
@@ -241,8 +239,8 @@ void MainMenu::init()
         "Login",
         new OnClickLogin(
             *this,
-            loginUsernameInputField,
-            loginPasswordInputField
+            pLoginUsernameInputField,
+            pLoginPasswordInputField
         ),
         buttonWidth
     );
@@ -274,17 +272,15 @@ void MainMenu::init()
         Panel::LayoutFillType::VERTICAL
     );
 
-    _registerInfoEntity = _registerPanel.addText("Register new user", Panel::get_base_ui_color(3).toVec3());
+    _pRegisterInfoEntity = _registerPanel.addText("Register new user", Panel::get_base_ui_color(3).toVec3());
 
-    InputField registerUsernameInputField;
-    registerUsernameInputField = _registerPanel.addDefaultInputField(
+    InputField* pRegisterUsernameInputField = _registerPanel.addDefaultInputField(
         "Username",
         272,
         nullptr
     );
 
-    InputField registerPasswordInputField;
-    registerPasswordInputField = _registerPanel.addDefaultInputField(
+    InputField* pRegisterPasswordInputField = _registerPanel.addDefaultInputField(
         "Password",
         272,
         nullptr,
@@ -292,8 +288,7 @@ void MainMenu::init()
         true // is password
     );
 
-    InputField registerRePasswordInputField;
-    registerRePasswordInputField = _registerPanel.addDefaultInputField(
+    InputField* pRegisterRePasswordInputField = _registerPanel.addDefaultInputField(
         "Repeat password",
         200,
         nullptr,
@@ -306,9 +301,9 @@ void MainMenu::init()
         "Register",
         new OnClickRegister(
             *this,
-            registerUsernameInputField,
-            registerPasswordInputField,
-            registerRePasswordInputField
+            pRegisterUsernameInputField,
+            pRegisterPasswordInputField,
+            pRegisterRePasswordInputField
         ),
         registerButtonWidth
     );
@@ -334,7 +329,7 @@ void MainMenu::init()
         { 200, 24 }, // slot scale
         Panel::LayoutFillType::VERTICAL
     );
-   _serverInfoTxtEntity = _serverInfoPanel.addDefaultText(
+    _pServerInfoTxtEntity = _serverInfoPanel.addDefaultText(
         "Fetching server message..."
     );
 
@@ -430,20 +425,14 @@ void MainMenu::setPopupInfoActive()
 
 void MainMenu::setRegisterInfoMsg(const std::string& str, const pk::vec3& color)
 {
-    TextRenderable* pRenderable = (TextRenderable*)getComponent(
-        _registerInfoEntity,
-        ComponentType::PK_RENDERABLE_TEXT
-    );
+    TextRenderable* pRenderable = _pRegisterInfoEntity->getRenderable();
     pRenderable->accessStr() = str;
     pRenderable->color = color;
 }
 
 void MainMenu::setServerInfoMessage(const std::string& message)
 {
-    TextRenderable* pRenderable = (TextRenderable*)getComponent(
-        _serverInfoTxtEntity,
-        ComponentType::PK_RENDERABLE_TEXT
-    );
+    TextRenderable* pRenderable = _pServerInfoTxtEntity->getRenderable();
     if (pRenderable)
         pRenderable->accessStr() = message;
 }

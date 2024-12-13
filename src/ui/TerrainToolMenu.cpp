@@ -237,8 +237,8 @@ void TerrainToolMenu::OnClickApply::onClick(pk::InputMouseButtonName button)
     }
 
 
-    const std::string& radiusTxt = pMenu->getSelectedRadiusInputField().getContent();
-    const std::string& elevationTxt = pMenu->getSelectedElevationInputField().getContent();
+    const std::string& radiusTxt = pMenu->getSelectedRadiusInputField()->getContent();
+    const std::string& elevationTxt = pMenu->getSelectedElevationInputField()->getContent();
     GC_ubyte radius = 1;
     GC_ubyte elevation = 0;
     // TODO: Maybe some error handling?
@@ -305,33 +305,33 @@ void TerrainToolMenu::init(pk::Scene* pScene, pk::Font* pFont)
     addDefaultText("NOTE: Elevation needs to be between 0 and 31");
 
     float numberInputFieldWidth = 50.0f;
-    _selectedRadiusInputField = addDefaultInputField(
+    _pSelectedRadiusInputField = addDefaultInputField(
         "Apply radius",
         numberInputFieldWidth,
         nullptr
     );
-    _selectedRadiusInputField.setContent("1");
+    _pSelectedRadiusInputField->setContent("1");
 
-    _selectedElevationInputField = addDefaultInputField(
+    _pSelectedElevationInputField = addDefaultInputField(
         "Elevation",
         numberInputFieldWidth,
         nullptr
     );
-    _selectedElevationInputField.setContent("15");
+    _pSelectedElevationInputField->setContent("15");
 
     addDefaultButton(
         "Temperature",
         new OpenSelectionEvent(this, OpenSelectionEvent::SelectionType::TEMPERATURE),
         110.0f
     );
-    _selectedTemperatureTxtEntity = addDefaultText("");
+    _pSelectedTemperatureTxt = addDefaultText("");
 
     addDefaultButton(
         "Type",
         new OpenSelectionEvent(this, OpenSelectionEvent::SelectionType::TYPE),
         110.0f
     );
-    _selectedTypeTxtEntity = addDefaultText("");
+    _pSelectedTypeTxt = addDefaultText("");
 
     addDefaultButton(
         "Apply",
@@ -361,25 +361,17 @@ void TerrainToolMenu::setSelectedTile(uint64_t tileData, int32_t x, int32_t y)
     _selectedTileData = tileData;
     _selectedTileX = x;
     _selectedTileY = y;
-    _selectedElevationInputField.setContent(std::to_string(get_tile_terrelevation(_selectedTileData)));
+    _pSelectedElevationInputField->setContent(std::to_string(get_tile_terrelevation(_selectedTileData)));
 }
 
 void TerrainToolMenu::setSelectedTemperature(gamecommon::TileStateTemperature temperature)
 {
     _selectedTemperature = temperature;
-    TextRenderable* pRenderable = (TextRenderable*)_pScene->getComponent(
-        _selectedTemperatureTxtEntity,
-        ComponentType::PK_RENDERABLE_TEXT
-    );
-    pRenderable->accessStr() = "    Selected: " + temperature_value_to_string(_selectedTemperature);
+    _pSelectedTemperatureTxt->setStr("    Selected: " + temperature_value_to_string(_selectedTemperature));
 }
 
 void TerrainToolMenu::setSelectedType(gamecommon::TileStateTerrType type)
 {
     _selectedType = type;
-    TextRenderable* pRenderable = (TextRenderable*)_pScene->getComponent(
-        _selectedTypeTxtEntity,
-        ComponentType::PK_RENDERABLE_TEXT
-    );
-    pRenderable->accessStr() = "    Selected: " + terrain_type_value_to_string(_selectedType, _selectedTemperature);
+    _pSelectedTypeTxt->setStr("    Selected: " + terrain_type_value_to_string(_selectedType, _selectedTemperature));
 }
